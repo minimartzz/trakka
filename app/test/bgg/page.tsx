@@ -4,7 +4,8 @@ import * as processors from "xml2js/lib/processors";
 
 const id: string = "272739";
 
-const fetchXmlData = async (): Promise<T | null> => {
+const fetchXmlData = async (): Promise<any | null> => {
+  // TODO: Fix this typing
   const type: string = "boardgame";
   const stats: string = "1";
   // const versions: string = "1";
@@ -27,6 +28,7 @@ const fetchXmlData = async (): Promise<T | null> => {
     return result;
   } catch (error) {
     console.error("Error fetching or parsing XML");
+    console.log(error);
     return null;
   }
 };
