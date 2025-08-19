@@ -2,7 +2,7 @@ import React from "react";
 import * as xml2js from "xml2js";
 import * as processors from "xml2js/lib/processors";
 
-const id: string = "363622";
+const id: string = "272739";
 
 const fetchXmlData = async (): Promise<T | null> => {
   const type: string = "boardgame";
