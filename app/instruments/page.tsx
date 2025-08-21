@@ -1,12 +1,20 @@
-import { createClient } from "@/utils/supabase/server";
+import { compGameLogTable } from "@/db/schema/compGameLog";
+import { groupTable } from "@/db/schema/group";
+import { profileTable } from "@/db/schema/profile";
+import { profileGroupTable } from "@/db/schema/profileGroup";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import React from "react";
 
-const Page = async () => {
-  const supabase = await createClient();
-  const { data: groups } = await supabase.from("groups").select();
-  console.log(groups);
+// Drizzle connection strings
+const client = postgres(process.env.DATABASE_URL!, { prepare: false });
+const db = drizzle(client);
 
-  return <pre>{JSON.stringify(groups, null, 2)}</pre>;
+const Page = async () => {
+  const results = await db.select().from(compGameLogTable);
+
+  return <pre>{JSON.stringify(results, null, 2)}</pre>;
 };
 
 export default Page;
