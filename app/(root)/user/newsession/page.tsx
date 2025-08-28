@@ -4,7 +4,9 @@ import React from "react";
 const page = () => {
   return (
     <>
-      <BGGSearchBar />
+      <div className="pt-20">
+        <BGGSearchBar />
+      </div>
     </>
   );
 };
