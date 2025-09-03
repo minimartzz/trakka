@@ -1,6 +1,7 @@
 import React from "react";
-// import Link from "next/link";
-// import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import SplitText from "@/components/gsap/SplitText";
 import {
   Card,
   CardContent,
@@ -10,15 +11,14 @@ import {
 } from "@/components/ui/card";
 // import { useAuth } from '@/contexts/AuthContext';
 import {
-  // Loader2,
-  // BarChart3,
+  Loader2,
+  BarChart3,
   Users,
   Calendar,
-  // ArrowRight,
-  // Play,
+  ArrowRight,
+  Play,
   TrendingUp,
 } from "lucide-react";
-import SplitText from "@/components/gsap/SplitText";
 
 const Index = () => {
   // const { user, loading } = useAuth();
@@ -37,16 +37,17 @@ const Index = () => {
       style={{ background: "var(--gradient-subtle)" }}
     >
       {/* Hero Section */}
-      <section className="mx-auto px-4 pt-70 pb-64 bg-[url('/test.jpg')] bg-cover">
+      <section className="container mx-auto px-4 pt-42 pb-42">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-6">
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tight">
               <span className="text-foreground">Game intelligence for</span>{" "}
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent">
                 <SplitText
                   text="board game enthusiasts"
+                  className="pb-2"
                   delay={100}
-                  duration={1.5}
+                  duration={0.6}
                   ease="power3.out"
                   splitType="chars"
                   from={{ opacity: 0, y: 40 }}
