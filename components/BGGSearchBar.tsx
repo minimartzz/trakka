@@ -1,7 +1,8 @@
 // TODO:
-// 1. Change this to a component
-// 2. Handle missing images -> Find and use question mark image from local
-// 3. Update loading sequence when finding entries
+// 1. Change the view on selection
+// 1. Handle missing images -> Find and use question mark image from local
+// 2. Update loading sequence when finding entries
+// 3. Handle what if no games are returned
 "use client";
 
 import {
@@ -98,7 +99,7 @@ const BGGSearchBar = ({ onSelect }) => {
       />
 
       {isDropdownOpen && searchResults.length > 0 && (
-        <ul className="absolute z-10 top-20 w-full max-w-md bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+        <ul className="z-10 top-20 w-full max-w-md bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
           {searchResults.map((result) => (
             <li
               key={result.id}

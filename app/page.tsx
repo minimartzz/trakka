@@ -139,7 +139,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-base leading-relaxed">
-                Get an up-href-date view of win rates, favorite games, player
+                Get an up-to-date view of win rates, favorite games, player
                 rankings, and more. Uncover insights with game-specific KPIs.
               </CardDescription>
             </CardContent>
@@ -170,7 +170,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Ready href level up your board gaming?
+              Ready to level up your board gaming?
             </h2>
             <p className="text-lg text-muted-foreground">
               Join thousands of players who are already tracking their games and

@@ -1,5 +1,6 @@
 "use client";
 import BGGSearchBar from "@/components/BGGSearchBar";
+import GroupSearchBar from "@/components/GroupSearchBar";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -71,6 +72,12 @@ const page = () => {
               <div className="space-y-2 pt-5">
                 <Label>Game Title</Label>
                 <BGGSearchBar onSelect={setGameDetails} />
+              </div>
+
+              {/* Tribe Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="tribe">Tribe (Optional)</Label>
+                {/* <GroupSearchBar /> */}
               </div>
             </div>
           </CardContent>
