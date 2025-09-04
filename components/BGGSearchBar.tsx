@@ -11,8 +11,9 @@ import {
 } from "@/utils/fetchBgg";
 import React from "react";
 import { useState, useEffect } from "react";
+import { Input } from "./ui/input";
 
-const BGGSearchBar = () => {
+const BGGSearchBar = ({ onSelect }) => {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<BGGDetailsInterface[]>([]);
   const [selectedItem, setSelectedItem] = useState<BGGDetailsInterface | null>(
@@ -75,6 +76,7 @@ const BGGSearchBar = () => {
       );
       if (response != null) {
         setSelectedItem(response[0]);
+        onSelect(response[0]);
       }
     } catch (e: any) {
       setError(e.mesasge);
@@ -84,44 +86,42 @@ const BGGSearchBar = () => {
   };
 
   return (
-    <div className="relative p-4">
-      <div className="flex flex-col items-center">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsDropdownOpen(query.length >= 3)}
-          onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
-          placeholder="Search titles..."
-          className="border p-2 rounded w-full max-w-md"
-        />
+    <div className="pt-1">
+      <Input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setIsDropdownOpen(query.length >= 3)}
+        onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+        placeholder="Enter game title"
+        // className="border p-2 rounded w-full max-w-md"
+      />
 
-        {isDropdownOpen && searchResults.length > 0 && (
-          <ul className="absolute z-10 top-20 w-full max-w-md bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
-            {searchResults.map((result) => (
-              <li
-                key={result.id}
-                onClick={() => handleSelect(result)}
-                className="p-2 cursor-pointer hover:bg-gray-100 text-black"
-              >
-                <div className="flex align-middle">
-                  <img
-                    src={result.thumbnail}
-                    alt={`thumbnal for ${result.title}`}
-                    className="rounded-md size-12"
-                  />
-                  <div className="flex grow flex-col ml-2 gap-y-0">
-                    <p className="m-0 text-base font-bold">{result.title}</p>
-                    <p className="m-0 text-sm font-light text-gray-500 italic">
-                      {result.yearPublished}
-                    </p>
-                  </div>
+      {isDropdownOpen && searchResults.length > 0 && (
+        <ul className="absolute z-10 top-20 w-full max-w-md bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+          {searchResults.map((result) => (
+            <li
+              key={result.id}
+              onClick={() => handleSelect(result)}
+              className="p-2 cursor-pointer hover:bg-gray-100 text-black"
+            >
+              <div className="flex align-middle">
+                <img
+                  src={result.thumbnail}
+                  alt={`thumbnal for ${result.title}`}
+                  className="rounded-md size-12"
+                />
+                <div className="flex grow flex-col ml-2 gap-y-0">
+                  <p className="m-0 text-base font-bold">{result.title}</p>
+                  <p className="m-0 text-sm font-light text-gray-500 italic">
+                    {result.yearPublished}
+                  </p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {loading && <p className="text-center mt-4">Loading details...</p>}
       {error && <p className="text-red-500 text-center mt-4">{error}</p>}
