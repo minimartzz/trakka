@@ -42,21 +42,19 @@ const Index = () => {
           <div className="space-y-6">
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tight">
               <span className="text-foreground">Game intelligence for</span>{" "}
-              <span className="bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent">
-                <SplitText
-                  text="board game enthusiasts"
-                  className="pb-2"
-                  delay={100}
-                  duration={0.6}
-                  ease="power3.out"
-                  splitType="chars"
-                  from={{ opacity: 0, y: 40 }}
-                  to={{ opacity: 1, y: 0 }}
-                  threshold={0.1}
-                  rootMargin="-100px"
-                  textAlign="center"
-                />
-              </span>
+              <SplitText
+                text="board game enthusiasts"
+                className="pb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent"
+                delay={100}
+                duration={0.6}
+                ease="power3.out"
+                splitType="chars"
+                from={{ opacity: 0, y: 40 }}
+                to={{ opacity: 1, y: 0 }}
+                threshold={0.1}
+                rootMargin="-100px"
+                textAlign="center"
+              />
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Professional board game tracking software that helps you make
