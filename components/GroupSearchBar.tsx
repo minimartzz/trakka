@@ -1,25 +1,45 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { db } from "@/utils/db";
 import { groupTable } from "@/db/schema/group";
 import createClient from "@/utils/supabase/client";
 
-interface SessionGroup {
+export interface SessionGroup {
   id: string;
   name: string;
 }
 
-const GroupSearchBar = async () => {
+interface GroupSearchBarProps {
+  onSelect: (item: SessionGroup) => void;
+}
+
+const GroupSearchBar = ({ onSelect }: GroupSearchBarProps) => {
+  const [allGroups, setAllGroups] = useState<SessionGroup[]>([]);
   const [showGroupDropdown, setShowGroupDropdown] = useState<boolean>(false);
   const [selectedGroup, setSelectedGroup] = useState<SessionGroup | null>(null);
   const [groupSearch, setGroupSearch] = useState<string>("");
 
   // Get all group info
   // TODO: Filter based on logged in user ID
-  const supabase = createClient();
-  const allGroups = await supabase.from("group").select("id, name");
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const response = await fetch("/api/group");
+        console.log(response);
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data: SessionGroup[] = await response.json();
+        setAllGroups(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchPosts();
+  }, []); // Empty dependency array means this runs once on mount
 
   const getFilteredGroups = (query: string) => {
     if (!query) return [];
@@ -59,6 +79,7 @@ const GroupSearchBar = async () => {
               key={group.id}
               onClick={() => {
                 setSelectedGroup(group);
+                onSelect(group);
                 setGroupSearch("");
                 setShowGroupDropdown(false);
               }}

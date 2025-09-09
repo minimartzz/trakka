@@ -14,7 +14,11 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 
-const BGGSearchBar = ({ onSelect }) => {
+const BGGSearchBar = ({
+  onSelect,
+}: {
+  onSelect: (item: BGGDetailsInterface) => void;
+}) => {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<BGGDetailsInterface[]>([]);
   const [selectedItem, setSelectedItem] = useState<BGGDetailsInterface | null>(

@@ -1,11 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { groupTable } from "@/db/schema/group";
-import createClient from "@/utils/supabase/client";
 
 interface Groups {
   id: string;
-  name: string;
+  group_id: string;
 }
 
 const page = () => {
@@ -30,11 +28,11 @@ const page = () => {
   }, []); // Empty dependency array means this runs once on mount
 
   return (
-    <div className="pt-200">
+    <div className="pt-20">
       <ul>
         {groups.map((group) => (
           <li key={group.id}>
-            <p>{group.name}</p>
+            <p>{group.group_id}</p>
           </li>
         ))}
       </ul>
