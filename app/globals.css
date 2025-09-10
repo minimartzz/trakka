@@ -22,6 +22,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-add-button: var(--add-button);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -72,6 +73,7 @@
   --border: oklch(91.78% 0.0104 261.79);
   --input: oklch(91.78% 0.0104 261.79);
   --ring: oklch(41.12% 0.1454 262.39);
+  --add-button: oklch(71.305% 0.22943 141.86);
   --gradient-primary: linear-gradient(
     135deg,
     oklch(41.12% 0.1454 262.39),

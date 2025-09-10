@@ -133,7 +133,7 @@ const BGGSearchBar = ({
 
       <div className="mt-8 text-center">
         {selectedItem && (
-          <div className="border p-6 rounded-lg shadow-lg">
+          <div className="border p-6 mb-8 rounded-lg">
             <h2 className="text-2xl font-bold mb-2">{selectedItem.title}</h2>
             <p className="text-gray-700">{selectedItem.weight}</p>
           </div>

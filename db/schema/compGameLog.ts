@@ -41,6 +41,8 @@ export const compGameLogTable = pgTable("comp_game_log", {
   month: smallint("month").notNull(),
   year: smallint("year").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  isFirstPlay: boolean("is_first_play").notNull(),
+  isTie: boolean("is_tie"),
 });
 
 export const compGameLogTableRelations = relations(

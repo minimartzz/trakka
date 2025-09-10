@@ -3,7 +3,7 @@
 // Inputs: date_played, game_id (from bgg), num_players, profile_id, is_vp, victory_points, is_winner
 import { v4 as uuidv4 } from "uuid";
 import { DrizzleDbType } from "./db";
-import { and, count, eq, max } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { compGameLogTable } from "@/db/schema/compGameLog";
 
 export const generateSessionId = (): string => {
@@ -34,53 +34,59 @@ export const getScore = (
   );
 };
 
-export const getFirstPlay = async (
-  gameId: string,
-  profileId: number,
-  db: DrizzleDbType
-): Promise<boolean> => {
-  const results = await db
-    .select({
-      count: count(),
-    })
-    .from(compGameLogTable)
-    .where(
-      and(
-        eq(compGameLogTable.gameId, gameId),
-        eq(compGameLogTable.profileId, profileId)
-      )
-    );
-  return results[0].count == 0;
+export const getFirstPlay = async (gameId: string, profileId: number) => {
+  try {
+    const response = await fetch("/api/check/firstplay", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ gameId, profileId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to check high score");
+    }
+    return data.isFirstPlay;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-export const getGroupHighScore = async (
+// TODO: This function needs reworking
+// CONSIDER: How to update the latest highscore if there is another highscore that exists
+export const getHighScore = async (
   gameId: string,
-  groupId: string,
-  score: number,
-  db: DrizzleDbType
-): Promise<boolean> => {
-  const results = await db
-    .select({
-      high_score: max(compGameLogTable.victoryPoints),
-    })
-    .from(compGameLogTable)
-    .where(
-      and(
-        eq(compGameLogTable.gameId, gameId),
-        eq(compGameLogTable.groupId, groupId)
-      )
-    );
+  score: number
+): Promise<boolean | undefined> => {
+  try {
+    const response = await fetch("/api/check/highscore", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ gameId, score }),
+    });
 
-  return results[0].high_score != null ? score >= results[0].high_score! : true;
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to check high score");
+    }
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const getDateInfo = (
-  datePlayed: string
+  datePlayed: Date
 ): { quarter: number; month: number; year: number } => {
-  const dateObj = new Date(datePlayed);
   return {
-    quarter: Math.floor((dateObj.getMonth() + 3) / 3),
-    month: dateObj.getMonth(),
-    year: dateObj.getFullYear(),
+    quarter: Math.floor((datePlayed.getMonth() + 3) / 3),
+    month: datePlayed.getMonth(),
+    year: datePlayed.getFullYear(),
   };
 };
