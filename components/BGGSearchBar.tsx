@@ -10,10 +10,9 @@ import {
   fetchBGGDetails,
   fetchBGGIds,
 } from "@/utils/fetchBgg";
-import React from "react";
-import { useState, useEffect } from "react";
-import { Input } from "./ui/input";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Input } from "./ui/input";
 
 const BGGSearchBar = ({
   onSelect,

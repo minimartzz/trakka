@@ -1,10 +1,8 @@
 "use client";
 import BGGSearchBar from "@/components/BGGSearchBar";
 import GroupSearchBar, { SessionGroup } from "@/components/GroupSearchBar";
-import MyComponent from "@/components/MyComponent";
 import PlayerInput from "@/components/PlayerInput";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -19,20 +17,18 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { compGameLogTable } from "@/db/schema/compGameLog";
 import { cn } from "@/lib/utils";
-import { db } from "@/utils/db";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import {
   generateSessionId,
   getDateInfo,
   getFirstPlay,
-  getHighScore,
   getScore,
   getWinContrib,
 } from "@/utils/sessionLog";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { CalendarIcon, Check, Plus, X } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { CalendarIcon, Plus, X } from "lucide-react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface Player {
@@ -46,7 +42,7 @@ interface Player {
 
 type NewSession = typeof compGameLogTable.$inferInsert;
 
-const page = () => {
+const Page = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [gameDetails, setGameDetails] = useState<BGGDetailsInterface | null>(
     null
@@ -665,4 +661,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

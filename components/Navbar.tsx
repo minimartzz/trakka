@@ -1,6 +1,4 @@
 "use client";
-import { Play } from "lucide-react";
-import React from "react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import { InteractiveHoverSignUp } from "./magicui/interactive-sign-up";

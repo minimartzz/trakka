@@ -2,9 +2,6 @@
 // Competitive Functions
 // Inputs: date_played, game_id (from bgg), num_players, profile_id, is_vp, victory_points, is_winner
 import { v4 as uuidv4 } from "uuid";
-import { DrizzleDbType } from "./db";
-import { and, count, eq } from "drizzle-orm";
-import { compGameLogTable } from "@/db/schema/compGameLog";
 
 export const generateSessionId = (): string => {
   const uuid = uuidv4();

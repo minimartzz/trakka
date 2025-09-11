@@ -1,10 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { db } from "@/utils/db";
-import { groupTable } from "@/db/schema/group";
-import createClient from "@/utils/supabase/client";
+import { useEffect, useState } from "react";
 
 export interface SessionGroup {
   id: string;

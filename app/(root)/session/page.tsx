@@ -1,14 +1,13 @@
-import BGGSearchBar from "@/components/BGGSearchBar";
 import React from "react";
 
-const page = () => {
+const Page = () => {
   return (
     <>
       <div className="pt-20">
-        <BGGSearchBar />
+        <h1>Placeholder</h1>
       </div>
     </>
   );
 };
 
-export default page;
+export default Page;

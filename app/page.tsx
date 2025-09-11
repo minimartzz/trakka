@@ -1,6 +1,3 @@
-import React from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import SplitText from "@/components/gsap/SplitText";
 import {
   Card,
@@ -10,15 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 // import { useAuth } from '@/contexts/AuthContext';
-import {
-  Loader2,
-  BarChart3,
-  Users,
-  Calendar,
-  ArrowRight,
-  Play,
-  TrendingUp,
-} from "lucide-react";
+import { Calendar, TrendingUp, Users } from "lucide-react";
 
 const Index = () => {
   // const { user, loading } = useAuth();

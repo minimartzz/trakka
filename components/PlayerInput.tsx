@@ -2,8 +2,8 @@
 // 1. Change it to automatically search for first name & @ for username
 "use client";
 import { useDebounce } from "@/app/hooks/useDebounce";
-import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface Profile {
   id: number;
