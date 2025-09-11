@@ -1,0 +1,46 @@
+﻿session_id,date_played,game_id,game_title,game_weight,game_length,num_players,user_id,group_id,is_vp,victory_points,is_winner,position,win_contrib,score,high_score,quarter,month,year
+7qglh3myk4l,2025-06-28,157969,Sheriff of Nottingham,1.6611,60,5,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,167,TRUE,1,,,,2,6,2025
+7qglh3myk4l,2025-06-28,157969,Sheriff of Nottingham,1.6611,60,5,12,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,164,,,,,,2,6,2025
+7qglh3myk4l,2025-06-28,157969,Sheriff of Nottingham,1.6611,60,5,11,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,163,,,,,,2,6,2025
+7qglh3myk4l,2025-06-28,157969,Sheriff of Nottingham,1.6611,60,5,4,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,122,,,,,,2,6,2025
+7qglh3myk4l,2025-06-28,157969,Sheriff of Nottingham,1.6611,60,5,5,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,87,,,,,,2,6,2025
+whadgib2h4,2025-06-28,420361,Trekking the World: Second Edition,1.9231,60,3,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,129,TRUE,,,,,2,6,2025
+whadgib2h4,2025-06-28,420361,Trekking the World: Second Edition,1.9231,60,3,4,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,114,,,,,,2,6,2025
+whadgib2h4,2025-06-28,420361,Trekking the World: Second Edition,1.9231,60,3,5,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,111,,,,,,2,6,2025
+8k6b5wblmpg,2025-06-28,366013,Heat: Pedal to the Metal,2.1992,60,6,5,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,FALSE,,TRUE,,,,,2,6,2025
+8k6b5wblmpg,2025-06-28,366013,Heat: Pedal to the Metal,2.1992,60,6,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,FALSE,,,,,,,2,6,2025
+8k6b5wblmpg,2025-06-28,366013,Heat: Pedal to the Metal,2.1992,60,6,4,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,FALSE,,,,,,,2,6,2025
+8k6b5wblmpg,2025-06-28,366013,Heat: Pedal to the Metal,2.1992,60,6,13,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,FALSE,,,,,,,2,6,2025
+8k6b5wblmpg,2025-06-28,366013,Heat: Pedal to the Metal,2.1992,60,6,11,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,FALSE,,,,,,,2,6,2025
+8k6b5wblmpg,2025-06-28,366013,Heat: Pedal to the Metal,2.1992,60,6,12,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,FALSE,,,,,,,2,6,2025
+cl7f60lt5tg,2025-06-28,272739,Clinic: Deluxe Edition,3.9954,150,3,13,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,83,TRUE,,,,,2,6,2025
+cl7f60lt5tg,2025-06-28,272739,Clinic: Deluxe Edition,3.9954,150,3,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,73,,,,,,2,6,2025
+cl7f60lt5tg,2025-06-28,272739,Clinic: Deluxe Edition,3.9954,150,3,8,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,54,,,,,,2,6,2025
+1xfbyp2384,2025-06-14,287941,Formosa Tea,3.413,90,4,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,161,TRUE,,,,,2,6,2025
+1xfbyp2384,2025-06-14,287941,Formosa Tea,3.413,90,4,13,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,120,,,,,,2,6,2025
+1xfbyp2384,2025-06-14,287941,Formosa Tea,3.413,90,4,14,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,85,,,,,,2,6,2025
+1xfbyp2384,2025-06-14,287941,Formosa Tea,3.413,90,4,15,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,84,,,,,,2,6,2025
+f4lfp7my1et,2025-06-14,371942,The White Castle,3.0382,80,3,14,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,67,TRUE,,,,,2,6,2025
+f4lfp7my1et,2025-06-14,371942,The White Castle,3.0382,80,3,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,57,,,,,,2,6,2025
+f4lfp7my1et,2025-06-14,371942,The White Castle,3.0382,80,3,13,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,52,,,,,,2,6,2025
+paetqpliwjh,2025-06-07,312484,Lost Ruins of Arnak,2.9313,120,4,13,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,82,TRUE,,,,,2,6,2025
+paetqpliwjh,2025-06-07,312484,Lost Ruins of Arnak,2.9313,120,4,16,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,79,,,,,,2,6,2025
+paetqpliwjh,2025-06-07,312484,Lost Ruins of Arnak,2.9313,120,4,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,78,,,,,,2,6,2025
+paetqpliwjh,2025-06-07,312484,Lost Ruins of Arnak,2.9313,120,4,5,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,77,,,,,,2,6,2025
+bz8l2axx20w,2025-06-01,313093,Four Humours,2.15,60,4,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,3,TRUE,,,,,2,6,2025
+bz8l2axx20w,2025-06-01,313093,Four Humours,2.15,60,4,11,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,2,,,,,,2,6,2025
+bz8l2axx20w,2025-06-01,313093,Four Humours,2.15,60,4,5,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,2,,,,,,2,6,2025
+bz8l2axx20w,2025-06-01,313093,Four Humours,2.15,60,4,6,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,0,,,,,,2,6,2025
+donb0tdy5u7,2025-05-30,337787,Summer Camp,1.8281,45,4,13,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,53,TRUE,,,,,2,5,2025
+donb0tdy5u7,2025-05-30,337787,Summer Camp,1.8281,45,4,6,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,49,,,,,,2,5,2025
+donb0tdy5u7,2025-05-30,337787,Summer Camp,1.8281,45,4,7,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,48,,,,,,2,5,2025
+donb0tdy5u7,2025-05-30,337787,Summer Camp,1.8281,45,4,1,a16cb5c8-8272-4fef-bf8d-5c0a532ce22d,TRUE,36,,,,,,2,5,2025
+4wx0f76k1pn,2025-07-25,358661,Andromeda's Edge,3.7185,160,3,8,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,180,TRUE,,,,,3,7,2025
+4wx0f76k1pn,2025-07-25,358661,Andromeda's Edge,3.7185,160,3,10,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,131,,,,,,3,7,2025
+4wx0f76k1pn,2025-07-25,358661,Andromeda's Edge,3.7185,160,3,9,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,114,,,,,,3,7,2025
+dcgl4xw8qa,2025-07-18,359871,Arcs,3.4198,120,3,9,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,35,TRUE,,,,,3,7,2025
+dcgl4xw8qa,2025-07-18,359871,Arcs,3.4198,120,3,10,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,29,,,,,,3,7,2025
+dcgl4xw8qa,2025-07-18,359871,Arcs,3.4198,120,3,8,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,28,,,,,,3,7,2025
+j3uetcktwbg,2025-07-18,363622,The Castles of Burgundy: Special Edition,2.8347,120,3,10,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,207,TRUE,,,,,3,7,2025
+j3uetcktwbg,2025-07-18,363622,The Castles of Burgundy: Special Edition,2.8347,120,3,9,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,203,,,,,,3,7,2025
+j3uetcktwbg,2025-07-18,363622,The Castles of Burgundy: Special Edition,2.8347,120,3,8,d22e291e-9040-4f77-8fc0-fe86793fad40,TRUE,201,,,,,,3,7,2025
