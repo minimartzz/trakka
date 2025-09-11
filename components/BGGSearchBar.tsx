@@ -13,6 +13,7 @@ import {
 import React from "react";
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
+import Image from "next/image";
 
 const BGGSearchBar = ({
   onSelect,
@@ -111,10 +112,14 @@ const BGGSearchBar = ({
               className="p-2 cursor-pointer hover:bg-gray-100 text-black"
             >
               <div className="flex align-middle">
-                <img
-                  src={result.thumbnail}
-                  alt={`thumbnal for ${result.title}`}
-                  className="rounded-md size-12"
+                <Image
+                  src={
+                    !result.thumbnail ? "/missing_icon.png" : result.thumbnail
+                  }
+                  alt={`thumbnail for ${result.title}`}
+                  width={48} // You must define width and height for local images
+                  height={48}
+                  className="rounded-md"
                 />
                 <div className="flex grow flex-col ml-2 gap-y-0">
                   <p className="m-0 text-base font-bold">{result.title}</p>
@@ -133,9 +138,114 @@ const BGGSearchBar = ({
 
       <div className="mt-8 text-center">
         {selectedItem && (
-          <div className="border p-6 mb-8 rounded-lg">
-            <h2 className="text-2xl font-bold mb-2">{selectedItem.title}</h2>
-            <p className="text-gray-700">{selectedItem.weight}</p>
+          <div>
+            <div className="sm:hidden grid grid-cols-1 border p-4 mb-8 rounded-lg justify-items-center">
+              <Image
+                src={
+                  !selectedItem.image ? "/missing_icon.png" : selectedItem.image
+                }
+                height="150"
+                width="150"
+                alt="Selected game picture"
+                className="rounded-2xl items-center"
+              />
+              <h2 className="text-2xl font-semibold mt-2 mb-2">
+                {selectedItem.title}
+                <span className="text-gray-500">
+                  {" "}
+                  {`(${selectedItem.yearPublished})`}
+                </span>
+              </h2>
+              <div className="flex justify-around w-full pt-3">
+                <div>
+                  <h3 className="pb-3">Playing Time</h3>
+                  <p className="text-xl font-semibold">
+                    {selectedItem.playingtime} mins
+                  </p>
+                </div>
+                <div>
+                  <h3 className="pb-2">Rating</h3>
+                  <div
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl text-white text-xl font-semibold 
+                      ${
+                        parseFloat(selectedItem.rating) == 0
+                          ? "bg-gray-600"
+                          : parseFloat(selectedItem.rating) < 5
+                          ? "bg-red-700 text-white"
+                          : parseFloat(selectedItem.rating) < 7.5
+                          ? "bg-orange-500 text-white"
+                          : "bg-green-600"
+                      }`}
+                  >
+                    {selectedItem.rating.length > 3
+                      ? selectedItem.rating.slice(0, 3)
+                      : selectedItem.rating}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="pb-3">Weight</h3>
+                  <p className="text-xl font-semibold">
+                    {selectedItem.weight.length > 4
+                      ? selectedItem.weight.slice(0, 4)
+                      : selectedItem.weight}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {/* Desktop and Tablet Layouts */}
+            <div className="hidden sm:flex border p-4 mb-8 rounded-lg justify-center">
+              <Image
+                src={selectedItem.image}
+                height="170"
+                width="170"
+                alt="Selected game picture"
+                className="rounded-2xl items-center mr-6"
+              />
+              <div className="grow">
+                <h2 className="text-2xl font-semibold mt-2 mb-6">
+                  {selectedItem.title}
+                  <span className="text-gray-500">
+                    {" "}
+                    {`(${selectedItem.yearPublished})`}
+                  </span>
+                </h2>
+                <div className="flex justify-around w-full pt-3">
+                  <div>
+                    <h3 className="pb-3">Playing Time</h3>
+                    <p className="text-xl font-semibold">
+                      {selectedItem.playingtime} mins
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="pb-2">Rating</h3>
+                    <div
+                      className={`w-12 h-12 flex items-center justify-center rounded-xl text-white text-xl font-semibold 
+                      ${
+                        parseFloat(selectedItem.rating) == 0
+                          ? "bg-gray-600"
+                          : parseFloat(selectedItem.rating) < 5
+                          ? "bg-red-700 text-white"
+                          : parseFloat(selectedItem.rating) < 7.5
+                          ? "bg-orange-500 text-white"
+                          : "bg-green-600"
+                      }`}
+                    >
+                      {selectedItem.rating.length > 3
+                        ? selectedItem.rating.slice(0, 3)
+                        : selectedItem.rating}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="pb-3">Weight</h3>
+                    <p className="text-xl font-semibold">
+                      {selectedItem.weight.length > 4
+                        ? selectedItem.weight.slice(0, 4)
+                        : selectedItem.weight}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

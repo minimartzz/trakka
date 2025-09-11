@@ -352,12 +352,12 @@ const page = () => {
 
                 {/* Tribe Selection */}
                 <div className="space-y-2">
-                  <Label htmlFor="tribe">Tribe (Optional)</Label>
+                  <Label htmlFor="tribe">Tribe</Label>
                   <GroupSearchBar onSelect={setGroup} />
                 </div>
 
                 {/* Player Selection */}
-                <div className="space-y-4 pt-8">
+                <div className="space-y-4 pt-6">
                   <div className="flex justify-between items-center">
                     <Label>Players</Label>
                     <Button
