@@ -3,6 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+  src: url("/fonts/Lora-VariableFont_wght.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Asimovian";
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+  src: url("/fonts/Asimovian.ttf") format("truetype");
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -50,6 +66,8 @@
       opacity: 0;
     }
   }
+  --font-lora: "Lora", sans-serif;
+  --font-asimovian: "Asimovian", sans-serif;
 }
 
 :root {
@@ -91,13 +109,13 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-background: oklch(98.51% 0 0);
-  --sidebar-foreground: oklch(37.03% 0.0119 285.81);
-  --sidebar-primary: oklch(21.03% 0.0059 285.89);
-  --sidebar-primary-foreground: oklch(98.51% 0 0);
-  --sidebar-accent: oklch(96.74% 0.0013 286.38);
-  --sidebar-accent-foreground: oklch(21.03% 0.0059 285.89);
+  --sidebar: oklch(0.2795 0.0368 260.03);
+  --sidebar-background: oklch(0.3717 0.0392 257.29);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.3717 0.0392 257.29);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.3717 0.0392 257.29);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(92.76% 0.0058 264.53);
   --sidebar-ring: oklch(62.31% 0.188 259.81);
 }
@@ -153,6 +171,15 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;

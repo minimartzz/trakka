@@ -1,8 +1,5 @@
 // TODO:
-// 1. Change the view on selection
-// 1. Handle missing images -> Find and use question mark image from local
-// 2. Update loading sequence when finding entries
-// 3. Handle what if no games are returned
+// 1. Remove the view once form is submitted
 "use client";
 
 import {
@@ -81,6 +78,7 @@ const BGGSearchBar = ({
       );
       if (response != null) {
         setSelectedItem(response[0]);
+        setQuery(response[0].title);
         onSelect(response[0]);
       }
     } catch (e: any) {

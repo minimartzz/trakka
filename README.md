@@ -34,7 +34,7 @@ Reference: https://github.com/dwyl/repo-badges
 # :notebook_with_decorative_cover: Table of Contents
 
 - [About the Project](#star2-about-the-project)
-- [Data](#handshake-contact)
+- [Details](#floppy_disk-details)
 - [Contact](#handshake-contact)
 - [Acknowledgements](#gem-acknowledgements)
 
@@ -44,9 +44,9 @@ Reference: https://github.com/dwyl/repo-badges
 
 Creating a unique board game experience by tracking your gaming statistics. Challenge your friends for a high score!
 
-## :floppy_disk: Data
+## :floppy_disk: Details
 
-{Data Details}
+Fonts: Asimovian, Lora
 
 ## :handshake: Contact
 
