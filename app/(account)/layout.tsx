@@ -35,8 +35,8 @@ export default async function AccountLayout({
             asChild
           >
             <Link href="/session/create">
-              <Play />
-              <span className="hidden sm:block font-semibold text-[16px]">
+              <Play className="text-white" />
+              <span className="hidden sm:block font-semibold text-[16px] text-white">
                 New Session
               </span>
             </Link>

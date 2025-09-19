@@ -29,6 +29,7 @@
     "drizzle-orm": "^0.44.4",
     "gsap": "^3.13.0",
     "lucide-react": "^0.544.0",
+    "motion": "^12.23.15",
     "next": "15.4.6",
     "next-themes": "^0.4.6",
     "postgres": "^3.4.7",

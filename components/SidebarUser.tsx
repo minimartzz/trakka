@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -20,10 +21,13 @@ import Image from "next/image";
 import {
   ChevronsUpDown,
   HelpCircle,
+  Moon,
   RefreshCcw,
   Settings,
+  Sun,
   User,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 const SidebarUser = ({
   user,
@@ -37,6 +41,17 @@ const SidebarUser = ({
   };
 }) => {
   const { isMobile } = useSidebar();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   const menuItems = [
     { icon: User, label: "Account", action: () => console.log("Account") },
     { icon: HelpCircle, label: "Help", action: () => console.log("Help") },
@@ -117,15 +132,34 @@ const SidebarUser = ({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
 
-            {/* List of Items */}
+            {/* List of Menu Items */}
             {menuItems.map((item) => (
-              <DropdownMenuGroup>
-                <DropdownMenuItem key={item.label}>
+              <DropdownMenuGroup key={item.label}>
+                <DropdownMenuItem
+                  key={item.label}
+                  className="mt-0.5"
+                  onClick={item.action}
+                >
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             ))}
+            {/* Item to toggle theme */}
+            <DropdownMenuGroup key="toggle-theme">
+              <DropdownMenuItem
+                className="mt-0.5"
+                key="toggle-theme"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+                {theme === "dark" ? "Toggle Light Mode" : "Toggle Dark Mode"}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
