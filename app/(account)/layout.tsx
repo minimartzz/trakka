@@ -30,7 +30,10 @@ export default async function AccountLayout({
             Welcome back, John
             {/* TODO: Make this Dynamic */}
           </h2>
-          <Button className="rounded-full h-10 px-2 mr-10" asChild>
+          <Button
+            className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
+            asChild
+          >
             <Link href="/session/create">
               <Play />
               <span className="hidden sm:block font-semibold text-[16px]">

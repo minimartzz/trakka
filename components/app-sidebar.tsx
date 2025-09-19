@@ -28,12 +28,15 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import SidebarUser from "@/components/SidebarUser";
 
 // Menu items
 const items = {
   // TODO: User info & Tribes
   user: {
-    name: "jlee",
+    firstName: "John",
+    lastName: "Lee",
+    username: "jlee",
     email: "johnlee@gmail.com",
     avatar:
       "https://cf.geekdo-images.com/-A_ABjMw4PdoAZrH-FjiiA__itemrep/img/jAfHCmAqiY2pdq-SvbhgJDxoqIc=/fit-in/246x300/filters:strip_icc()/pic5726930.png",
@@ -185,7 +188,9 @@ export function AppSidebar() {
           </Collapsible>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        <SidebarUser user={items.user} />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
