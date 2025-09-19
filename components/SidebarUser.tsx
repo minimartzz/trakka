@@ -21,6 +21,7 @@ import Image from "next/image";
 import {
   ChevronsUpDown,
   HelpCircle,
+  LogOut,
   Moon,
   RefreshCcw,
   Settings,
@@ -158,6 +159,15 @@ const SidebarUser = ({
                   <Moon className="h-4 w-4" />
                 )}
                 {theme === "dark" ? "Toggle Light Mode" : "Toggle Dark Mode"}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            {/* Sign Out */}
+            {/* TODO: Add Sign out functionality */}
+            <DropdownMenuGroup key="sign-out">
+              <DropdownMenuItem key="sign-out">
+                <LogOut className="h-4 w-4 text-destructive" />
+                <p className="text-destructive">Sign Out</p>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
