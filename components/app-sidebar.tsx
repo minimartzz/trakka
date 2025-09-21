@@ -73,10 +73,6 @@ export function AppSidebar() {
   const isCollapsed = sidebar.state === "collapsed";
   const [isTribesOpen, setIsTribesOpen] = useState<boolean>(true);
 
-  useEffect(() => {
-    console.log(pathname);
-  }, [pathname]);
-
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader />
@@ -136,28 +132,28 @@ export function AppSidebar() {
         {/* Tribes */}
         <SidebarGroup>
           <Collapsible open={isTribesOpen} onOpenChange={setIsTribesOpen}>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="hover:text-slate-300 cursor-pointer flex items-center justify-between py-2">
-                <span className="text-xs font-medium uppercase tracking-wide">
-                  {isCollapsed ? "T" : "TRIBES"}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0 hover:bg-slate-700"
-                    // TODO: Function for onClick to create new tribes
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
+            <SidebarGroupLabel className="hover:text-slate-300 cursor-pointer flex items-center justify-between py-2">
+              <span className="text-xs font-medium uppercase tracking-wide">
+                {isCollapsed ? "T" : "TRIBES"}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 hover:bg-slate-700"
+                  // TODO: Function for onClick to create new tribes
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+                <CollapsibleTrigger asChild>
                   <ChevronDown
                     className={`h-3 w-3 transition-transform ${
                       isTribesOpen ? "rotate-0" : "-rotate-90"
                     }`}
                   />
-                </div>
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
+                </CollapsibleTrigger>
+              </div>
+            </SidebarGroupLabel>
             <CollapsibleContent
               className={cn(
                 "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"

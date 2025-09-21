@@ -9,7 +9,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const groupId = params.id;
+  const groupId = (await params).id;
 
   try {
     const sqUser = db

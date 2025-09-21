@@ -17,3 +17,20 @@ export interface RecentGroupGames {
   sqUser: SqUser;
   sqGroup: SqGroup;
 }
+export interface CombinedRecentGroupGames {
+  sessionId: string;
+  gameTitle: string;
+  isPlayer: boolean;
+  isWinner: boolean;
+  isLoser: boolean;
+  isTied: boolean;
+  players: SelectCompGameLog[];
+}
+
+export interface FilteredCounts {
+  numGames: number;
+  numWins: number;
+  numLoss: number;
+  numPlayed: number;
+  numTied: number;
+}
