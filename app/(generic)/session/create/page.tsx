@@ -27,7 +27,8 @@ import {
 } from "@/utils/sessionLog";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, X } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Plus, X } from "lucide-react";
+import { redirect, useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -74,6 +75,7 @@ const Page = () => {
     {}
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   // // ALERT: Debugging states
   // useEffect(() => {
@@ -264,6 +266,9 @@ const Page = () => {
           position: "bottom-right",
           className: "bg-add-button",
         });
+
+        // Redirect to Recent Games
+        router.push("/recent-games");
       } else {
         toast.error("Failed! 🥺", {
           description: "Failed to add session. Check your inputs and try again",
@@ -304,6 +309,12 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <header className="flex flex-row items-center w-full gap-4 p-5 border-b">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <h1 className="text-2xl font-bold">New Game Session</h1>
+      </header>
       <main className="container mx-auto px-4 py-30">
         <Card className="max-w-4xl mx-auto">
           {/* Session Record Header */}

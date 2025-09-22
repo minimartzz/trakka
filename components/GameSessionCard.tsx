@@ -73,7 +73,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
+      <CardContent className="px-6">
         {/* Header */}
         <div className="flex item-start justify-between mb-4">
           <div className="flex-1 min-w-0">

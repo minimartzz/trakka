@@ -1,5 +1,3 @@
-// TODO:
-// 1. Remove the view once form is submitted
 "use client";
 
 import {
