@@ -7,24 +7,31 @@ interface SqUser {
   firstName: string;
   lastName: string;
   username: string;
+  profilePic: string;
 }
 interface SqGroup {
   id: string;
   name: string;
 }
-export interface RecentGroupGames {
+interface joinedCompGameLog extends SelectCompGameLog {
+  firstName: string;
+  lastName: string;
+  username: string;
+  profilePic: string;
+}
+export interface RecentGames {
   comp_game_log: SelectCompGameLog;
   sqUser: SqUser;
   sqGroup: SqGroup;
 }
-export interface CombinedRecentGroupGames {
+export interface CombinedRecentGames {
   sessionId: string;
   gameTitle: string;
   isPlayer: boolean;
   isWinner: boolean;
   isLoser: boolean;
   isTied: boolean;
-  players: SelectCompGameLog[];
+  players: joinedCompGameLog[];
 }
 
 export interface FilteredCounts {

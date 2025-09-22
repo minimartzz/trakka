@@ -1,22 +1,23 @@
 import {
-  CombinedRecentGroupGames,
+  CombinedRecentGames,
   FilteredCounts,
-  RecentGroupGames,
+  RecentGames,
 } from "@/lib/interfaces";
 
 export const filterSessions = (
   userId: number,
-  data: RecentGroupGames[]
-): CombinedRecentGroupGames[] => {
-  const combinedData = data.map((item: RecentGroupGames) => ({
+  data: RecentGames[]
+): CombinedRecentGames[] => {
+  const combinedData = data.map((item: RecentGames) => ({
     ...item.comp_game_log,
     firstName: item.sqUser.firstName,
     lastName: item.sqUser.lastName,
     username: item.sqUser.username,
+    profilePic: item.sqUser.profilePic,
     tribe: item.sqGroup.name,
   }));
 
-  const sessionMap = new Map<string, CombinedRecentGroupGames>();
+  const sessionMap = new Map<string, CombinedRecentGames>();
 
   combinedData.forEach((record) => {
     if (!sessionMap.has(record.sessionId)) {
@@ -39,13 +40,20 @@ export const filterSessions = (
       session!.isPlayer = true;
       if (record.isTie) session!.isTied = true;
       if (record.isWinner) session!.isWinner = true;
-      if (session!.isPlayer && !record.isWinner && !record.isTie) {
+      if (session!.isPlayer && !record.isWinner) {
         session!.isLoser = true;
       }
     }
 
     // Add original players to the list
     session!.players.push(record);
+  });
+
+  // Sort the players by position in ascending order
+  sessionMap.forEach((session) => {
+    session.players.sort((a, b) => {
+      return a.position! - b.position!;
+    });
   });
 
   // Filter out entries that don't match player count
@@ -59,7 +67,7 @@ export const filterSessions = (
 };
 
 export const getFilteredCounts = (
-  data: CombinedRecentGroupGames[]
+  data: CombinedRecentGames[]
 ): FilteredCounts => {
   const counts = data.reduce<FilteredCounts>(
     (acc, item) => {

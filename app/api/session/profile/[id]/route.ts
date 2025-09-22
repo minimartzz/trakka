@@ -2,14 +2,14 @@ import { compGameLogTable } from "@/db/schema/compGameLog";
 import { groupTable } from "@/db/schema/group";
 import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const groupId = (await params).id;
+  const profileId = parseInt((await params).id);
 
   try {
     const sqUser = db
@@ -31,18 +31,25 @@ export async function GET(
       .from(groupTable)
       .as("sqGroup");
 
+    const selSessions = db
+      .select({
+        sessionId: compGameLogTable.sessionId,
+      })
+      .from(compGameLogTable)
+      .where(eq(compGameLogTable.profileId, profileId));
+
     const rawSessions = await db
       .select()
       .from(compGameLogTable)
       .leftJoin(sqUser, eq(compGameLogTable.profileId, sqUser.id))
       .leftJoin(sqGroup, eq(compGameLogTable.groupId, sqGroup.id))
-      .where(eq(compGameLogTable.groupId, groupId))
+      .where(inArray(compGameLogTable.sessionId, selSessions))
       .orderBy(desc(compGameLogTable.datePlayed))
       .limit(50);
 
     return NextResponse.json({ rawSessions });
   } catch (error) {
-    console.error("Failed to retrieve Session by Group ID", error);
+    console.error("Failed to retrieve Session by Profile ID", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

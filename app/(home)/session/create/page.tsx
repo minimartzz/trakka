@@ -215,10 +215,14 @@ const Page = () => {
         return parseInt(b.score, 10) - parseInt(a.score, 10);
       });
 
-      const promises = sorted_players.map(async (item, index) => {
+      let position = 1;
+      const promises = sorted_players.map(async (item, index, array) => {
         const victoryPoints = parseInt(item.score);
+        if (index > 0 && item.score !== array[index - 1].score) {
+          position = index + 1;
+        }
         const score = getScore(
-          index + 1,
+          position,
           numPlayers,
           bgg.gameLength,
           parseFloat(bgg.gameWeight)
@@ -233,7 +237,7 @@ const Page = () => {
           isVp,
           victoryPoints: victoryPoints,
           isWinner: item.isWinner,
-          position: index + 1,
+          position: position,
           winContrib: getWinContrib(numPlayers, item.isWinner),
           score: score,
           highScore: false, // TODO: Need to think of a new way to handle this
