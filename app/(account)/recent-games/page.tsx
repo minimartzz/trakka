@@ -319,6 +319,11 @@ const Page = () => {
                 <PaginationPrevious
                   onClick={() => handlePageChange(currentPage - 1)}
                   aria-disabled={currentPage === 1}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
 
@@ -328,6 +333,7 @@ const Page = () => {
                   <PaginationLink
                     onClick={() => handlePageChange(index + 1)}
                     isActive={currentPage === index + 1}
+                    className="cursor-pointer"
                   >
                     {index + 1}
                   </PaginationLink>
@@ -338,6 +344,11 @@ const Page = () => {
                 <PaginationNext
                   onClick={() => handlePageChange(currentPage + 1)}
                   aria-disabled={currentPage === totalPages}
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
