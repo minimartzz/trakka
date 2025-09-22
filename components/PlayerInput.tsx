@@ -102,7 +102,7 @@ const PlayerInput: React.FC<PlayerInputProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showDropdown || suggestions.length === 0) {
       if (e.key === "Tab" && onNext) {
-        e.preventDefault();
+        // e.preventDefault();
         onNext();
       }
       return;

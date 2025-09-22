@@ -130,7 +130,12 @@ const Page = () => {
   const focusNextPlayer = (currentIndex: number) => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < players.length) {
-      const nextPlayerId = players[nextIndex].id;
+      const nextPlayerInput = document.querySelector(
+        `[tabindex='${nextIndex * 4 + 1}']`
+      ) as HTMLInputElement;
+      if (nextPlayerInput) {
+        nextPlayerInput.focus();
+      }
     } else {
       const addPlayerButton = document.querySelector(
         '[data-testid="add-player-button"]'
