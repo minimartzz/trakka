@@ -6,7 +6,11 @@ import {
   RecentGames,
 } from "@/lib/interfaces";
 import Link from "next/link";
-import { filterSessions, getFilteredCounts } from "@/utils/recordsProcessing";
+import {
+  filterSessions,
+  getAvailableGames,
+  getFilteredCounts,
+} from "@/utils/recordsProcessing";
 import { Filter, Play, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import GameSessionCard from "@/components/GameSessionCard";
+
+interface GameFilter {
+  result: "all" | "won" | "lost" | "tie" | "not_involved";
+  game: string;
+}
 
 const fetchRecentGamesByProfile = async () => {
   // TODO: Grab user profile information
@@ -51,11 +60,15 @@ const fetchRecentGamesByGroup = async () => {
 
 const Page = () => {
   const [loading, setLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedFilter, setSelectedFilter] = useState<GameFilter>({
+    result: "all",
+    game: "all",
+  });
   const [gameSessions, setGameSessions] = useState<CombinedRecentGames[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<
     CombinedRecentGames[]
   >([]);
+  const [availableGames, setAvailableGames] = useState<string[]>([]);
   const [filterCounts, setFilterCounts] = useState<FilteredCounts>({
     numGames: 0,
     numWins: 0,
@@ -71,16 +84,59 @@ const Page = () => {
       const sessions: RecentGames[] = fetchedData.rawSessions;
       const processedSessions = filterSessions(1, sessions); // TODO: Change this to the Users ID from auth
       const filteredCounts = getFilteredCounts(processedSessions);
+      const uniqueGames = getAvailableGames(processedSessions);
 
       setGameSessions(processedSessions);
       setFilteredSessions(processedSessions);
       setFilterCounts(filteredCounts);
+      setAvailableGames(uniqueGames);
+
       setLoading(false);
-      console.log(sessions);
     };
 
     getData();
   }, []);
+
+  // Handle selecting filter change
+  const handleSelectFilter = (type: "result" | "game", value: string) => {
+    setSelectedFilter((prev) => ({ ...prev, [type]: value }));
+  };
+
+  // Implementing filters
+  useEffect(() => {
+    let filtered = [...gameSessions];
+
+    // Filtering on button selection
+    switch (selectedFilter.result) {
+      case "won":
+        filtered = filtered.filter((session) => session.isWinner);
+        setAvailableGames(getAvailableGames(filtered));
+        break;
+      case "tie":
+        filtered = filtered.filter((session) => session.isTied);
+        setAvailableGames(getAvailableGames(filtered));
+        break;
+      case "lost":
+        filtered = filtered.filter((session) => session.isLoser);
+        setAvailableGames(getAvailableGames(filtered));
+        break;
+      case "not_involved":
+        filtered = filtered.filter((session) => !session.isPlayer);
+        setAvailableGames(getAvailableGames(filtered));
+        break;
+      default:
+        setAvailableGames(getAvailableGames(filtered));
+    }
+
+    // Filtering on game selection
+    if (selectedFilter.game !== "all") {
+      filtered = filtered.filter(
+        (session) => session.gameTitle === selectedFilter.game
+      );
+    }
+
+    setFilteredSessions(filtered);
+  }, [gameSessions, selectedFilter]);
 
   // Loading the page if data is still being fetched
   if (loading) {
@@ -147,9 +203,9 @@ const Page = () => {
           ].map(({ key, label, count }) => (
             <Button
               key={key}
-              variant={selectedFilter === key ? "default" : "outline"}
+              variant={selectedFilter.result === key ? "default" : "outline"}
               size="sm"
-              // TODO: OnClick to update filters
+              onClick={() => handleSelectFilter("result", key)}
               className="h-8"
             >
               {label} ({count})
@@ -157,13 +213,20 @@ const Page = () => {
           ))}
 
           {/* Filter Games */}
-          <Select>
+          <Select
+            value={selectedFilter.game}
+            onValueChange={(value) => handleSelectFilter("game", value)}
+          >
             <SelectTrigger className="w-[200px] h-8">
               <SelectValue placeholder="All games" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All games</SelectItem>
-              {/* {TODO: Put all filtered games here} */}
+              {availableGames.map((game) => (
+                <SelectItem key={game} value={game}>
+                  {game}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -211,9 +274,6 @@ const Page = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {/* {filteredSessions.map((session) => (
-            <h1>{session.players[0].datePlayed}</h1>
-          ))} */}
           {filteredSessions.map((session) => (
             <GameSessionCard
               key={session.sessionId}

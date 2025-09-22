@@ -24,6 +24,7 @@ export const filterSessions = (
       sessionMap.set(record.sessionId, {
         sessionId: record.sessionId,
         gameTitle: record.gameTitle,
+        createdAt: record.createdAt,
         isPlayer: false,
         isWinner: false,
         isLoser: false,
@@ -63,6 +64,14 @@ export const filterSessions = (
     return group.players.length === expectedPlayers;
   });
 
+  // Sort results in descending order based on createdAt to get latest at top
+  results.sort((a, b) => {
+    const dateA = new Date(a.createdAt!);
+    const dateB = new Date(b.createdAt!);
+
+    return dateB.getTime() - dateA.getTime();
+  });
+
   return results;
 };
 
@@ -88,4 +97,8 @@ export const getFilteredCounts = (
   );
 
   return counts;
+};
+
+export const getAvailableGames = (data: CombinedRecentGames[]): string[] => {
+  return [...new Set(data.map((items) => items.gameTitle))].sort();
 };

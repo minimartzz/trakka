@@ -27,6 +27,7 @@ export interface RecentGames {
 export interface CombinedRecentGames {
   sessionId: string;
   gameTitle: string;
+  createdAt: Date | null;
   isPlayer: boolean;
   isWinner: boolean;
   isLoser: boolean;
