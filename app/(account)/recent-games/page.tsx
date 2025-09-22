@@ -22,6 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import GameSessionCard from "@/components/GameSessionCard";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface GameFilter {
   result: "all" | "won" | "lost" | "tie" | "not_involved";
@@ -76,6 +84,24 @@ const Page = () => {
     numPlayed: 0,
     numTied: 0,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Pagination details
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSessions = filteredSessions.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   // Initial Mount - Load
   useEffect(() => {
@@ -274,13 +300,48 @@ const Page = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredSessions.map((session) => (
+          {currentSessions.map((session) => (
             <GameSessionCard
               key={session.sessionId}
               session={session}
               userId={1} // TODO: Change this to the Users ID from auth
             />
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-8">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  aria-disabled={currentPage === 1}
+                />
+              </PaginationItem>
+
+              {/* Dynamic Page Links */}
+              {[...Array(totalPages)].map((_, index) => (
+                <PaginationItem key={index}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(index + 1)}
+                    isActive={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  aria-disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>
