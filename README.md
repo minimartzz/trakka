@@ -48,6 +48,8 @@ Creating a unique board game experience by tracking your gaming statistics. Chal
 
 Fonts: Asimovian, Lora
 
+Icons: https://www.reshot.com/free-svg-icons/item/email-XJQS73NP4V/
+
 ## :handshake: Contact
 
 Author: John Lee, Martin Ho

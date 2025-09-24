@@ -165,10 +165,17 @@ const SidebarUser = ({
             {/* Sign Out */}
             {/* TODO: Add Sign out functionality */}
             <DropdownMenuGroup key="sign-out">
-              <DropdownMenuItem key="sign-out">
-                <LogOut className="h-4 w-4 text-destructive" />
-                <p className="text-destructive">Sign Out</p>
-              </DropdownMenuItem>
+              <form action="/auth/signout" method="post">
+                <DropdownMenuItem key="sign-out" asChild>
+                  <button
+                    type="submit"
+                    className="w-full hover:bg-destructive/10"
+                  >
+                    <LogOut className="h-4 w-4 text-destructive" />
+                    <p className="text-destructive">Sign Out</p>
+                  </button>
+                </DropdownMenuItem>
+              </form>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

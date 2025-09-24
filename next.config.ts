@@ -3,7 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    remotePatterns: [new URL("https://cf.geekdo-images.com/**")],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cf.geekdo-images.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "gfhcmvtbxarjafdrxvcv.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
   },
 };
 
