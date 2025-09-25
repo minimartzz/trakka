@@ -44,8 +44,7 @@ export async function GET(
       .leftJoin(sqUser, eq(compGameLogTable.profileId, sqUser.id))
       .leftJoin(sqGroup, eq(compGameLogTable.groupId, sqGroup.id))
       .where(inArray(compGameLogTable.sessionId, selSessions))
-      .orderBy(desc(compGameLogTable.datePlayed))
-      .limit(50);
+      .orderBy(desc(compGameLogTable.datePlayed));
 
     return NextResponse.json({ rawSessions });
   } catch (error) {

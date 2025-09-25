@@ -25,6 +25,7 @@ export const filterSessions = (
         sessionId: record.sessionId,
         gameTitle: record.gameTitle,
         createdAt: record.createdAt,
+        datePlayed: record.datePlayed,
         isPlayer: false,
         isWinner: false,
         isLoser: false,
@@ -64,12 +65,28 @@ export const filterSessions = (
     return group.players.length === expectedPlayers;
   });
 
-  // Sort results in descending order based on createdAt to get latest at top
+  // Sort results
   results.sort((a, b) => {
-    const dateA = new Date(a.createdAt!);
-    const dateB = new Date(b.createdAt!);
+    // 1. Sort on when the game was played in descending
+    const datePlayedA = new Date(a.datePlayed);
+    const datePlayedB = new Date(b.datePlayed);
+    const datePlayedComparison = datePlayedB.getTime() - datePlayedA.getTime();
 
-    return dateB.getTime() - dateA.getTime();
+    if (datePlayedComparison !== 0) {
+      return datePlayedComparison;
+    }
+
+    // 2. Sort on when the entry was added in descending order
+    const dateCreatedA = new Date(a.createdAt!);
+    const dateCreatedB = new Date(b.createdAt!);
+    const createdAtComparison = dateCreatedB.getTime() - dateCreatedA.getTime();
+
+    if (createdAtComparison !== 0) {
+      return createdAtComparison;
+    }
+
+    // 3. Sort on game title in ascending order
+    return a.gameTitle.localeCompare(b.gameTitle);
   });
 
   return results;
