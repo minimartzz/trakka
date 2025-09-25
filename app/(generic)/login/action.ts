@@ -1,5 +1,6 @@
 "use server";
 
+import { SignUpActionState, signUpFormSchema } from "@/utils/signUpSchema";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -7,7 +8,6 @@ import { redirect } from "next/navigation";
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
-  // TODO: Input validation
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -23,14 +23,24 @@ export async function login(formData: FormData) {
   redirect("/dashboard");
 }
 
-export async function signup(formData: FormData) {
+export async function signup(
+  _prev: SignUpActionState,
+  formData: FormData
+): Promise<SignUpActionState> {
   const supabase = await createClient();
 
-  // TODO: Input validation
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   };
+  const validationResult = signUpFormSchema.safeParse(data);
+
+  if (!validationResult.success) {
+    return {
+      form: data,
+      errors: validationResult.error.flatten().fieldErrors,
+    };
+  }
 
   const { error } = await supabase.auth.signUp(data);
 

@@ -11,21 +11,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ValidatedInput from "@/components/ValidatedInput";
+import { signUpFormSchema } from "@/utils/signUpSchema";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useActionState, useEffect, useState } from "react";
 
 const Page = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialTab = searchParams.get("tab") || "login";
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [submitted, setSubmitted] = useState(false);
+  const [state, action, isPending] = useActionState(signup, {});
 
+  // Set the initial tab to look at based on route
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  const handleSignUpSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    setSubmitted(true);
+    const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData);
+    const validationResult = signUpFormSchema.safeParse(data);
+    if (!validationResult.success) {
+      event.preventDefault();
+    }
+  };
 
   return (
     <div>
@@ -151,32 +166,31 @@ const Page = () => {
 
             {/* Sign-Up Page */}
             <TabsContent value="sign-up">
-              <form>
+              <form onSubmit={handleSignUpSubmit} action={action} noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
+                  <ValidatedInput
                     type="email"
+                    name="email"
                     placeholder="Enter your email"
-                    className="rounded-sm"
-                    required
+                    submitted={submitted}
+                    fieldSchema={signUpFormSchema.shape["email"]}
+                    defaultValue={state.form?.email}
+                    errors={state.errors?.email}
                   />
                   <Label htmlFor="password" className="pt-2">
                     Password
                   </Label>
-                  <Input
-                    id="password"
-                    name="password"
+                  <ValidatedInput
                     type="password"
-                    placeholder="Enter your password"
-                    className="rounded-sm"
-                    required
+                    name="password"
+                    placeholder="Enter a password"
+                    fieldSchema={signUpFormSchema.shape["password"]}
+                    submitted={submitted}
+                    defaultValue={state.form?.password}
+                    errors={state.errors?.password}
                   />
-                  <Button
-                    className="my-5 w-full cursor-pointer"
-                    formAction={signup}
-                  >
+                  <Button className="my-5 w-full cursor-pointer" type="submit">
                     Register
                   </Button>
                 </div>
