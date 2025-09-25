@@ -1,10 +1,10 @@
 <div align="center">
 
   <img src="assets/header.png" alt="logo" width="400" height="auto" />
-  <h1>BG PRO</h1>
+  <h1>Trakka</h1>
   
   <p>
-    A board game app designed for statistic hungry nerds
+    A board game stats tracking app designed for statistic nerds!
   </p>
 
 </div>
@@ -20,10 +20,11 @@
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=white)
 ![Drizzle](https://img.shields.io/badge/drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)
+![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
 
-## Coverage
+<!-- ## Coverage
 
-Reference: https://github.com/dwyl/repo-badges
+Reference: https://github.com/dwyl/repo-badges -->
 
 ---
 
@@ -42,13 +43,13 @@ Reference: https://github.com/dwyl/repo-badges
 
 ## :star2: About the Project
 
-Creating a unique board game experience by tracking your gaming statistics. Challenge your friends for a high score!
+Trakka is a game session recording app with tribe grouping features (WIP). It creates a unique board game experience by allowing you to record your scores, create gaming groups, view your performance and download reports. The unique ranking feature allows you to compare your performance with others in your group and against the world!
+
+Remember to record it in your Trakka!
 
 ## :floppy_disk: Details
 
-Fonts: Asimovian, Lora
-
-Icons: https://www.reshot.com/free-svg-icons/item/email-XJQS73NP4V/
+- Fonts: Asimovian, Lora
 
 ## :handshake: Contact
 
@@ -60,4 +61,4 @@ Project Link: [Github](https://github.com/minimartzz/bgpro)
 
 ## :gem: Acknowledgements
 
-- [header image](https://boardgamedesignlab.com/pro/)
+- [Icons](https://www.reshot.com/free-svg-icons/item/email-XJQS73NP4V/)
