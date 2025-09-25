@@ -54,7 +54,7 @@ const ValidatedInput = ({
         {...props}
       />
       {shouldRenderErrors && (
-        <ul>
+        <ul className="text-left">
           {fieldErrors.map((err, idx) => (
             <li key={idx} className="text-sm text-destructive">
               {err}

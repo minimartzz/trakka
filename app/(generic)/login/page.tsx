@@ -149,7 +149,7 @@ const Page = () => {
 
               {/* Forgot Password + New User */}
               <div className="flex justify-center items-center pt-8">
-                <Link href="/">
+                <Link href="/reset-password">
                   <p className="text-muted-foreground text-sm">
                     Forgot Password?
                   </p>
