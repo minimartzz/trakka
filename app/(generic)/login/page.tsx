@@ -13,11 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ValidatedInput from "@/components/ValidatedInput";
 import { signUpFormSchema } from "@/utils/signUpSchema";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -40,6 +41,26 @@ const Page = () => {
     if (!validationResult.success) {
       event.preventDefault();
     }
+  };
+
+  const SubmitButton = () => {
+    const { pending } = useFormStatus();
+    return (
+      <Button
+        className="my-5 w-full cursor-pointer"
+        formAction={login}
+        disabled={pending}
+      >
+        {pending ? (
+          <div className="flex items-center">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <span>Signing in...</span>
+          </div>
+        ) : (
+          "Sign In"
+        )}
+      </Button>
+    );
   };
 
   return (
@@ -116,12 +137,7 @@ const Page = () => {
                     className="rounded-sm"
                     required
                   />
-                  <Button
-                    className="my-5 w-full cursor-pointer"
-                    formAction={login}
-                  >
-                    Sign In
-                  </Button>
+                  <SubmitButton />
                 </div>
               </form>
 
@@ -190,8 +206,19 @@ const Page = () => {
                     defaultValue={state.form?.password}
                     errors={state.errors?.password}
                   />
-                  <Button className="my-5 w-full cursor-pointer" type="submit">
-                    Register
+                  <Button
+                    className="my-5 w-full cursor-pointer"
+                    type="submit"
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <div>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Registering ...</span>
+                      </div>
+                    ) : (
+                      "Register"
+                    )}
                   </Button>
                 </div>
               </form>

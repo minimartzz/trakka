@@ -10,7 +10,7 @@ import {
 import { Label } from "@/components/ui/label";
 import ValidatedInput from "@/components/ValidatedInput";
 import { emailSchema } from "@/utils/signUpSchema";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useActionState, useState } from "react";
@@ -72,8 +72,19 @@ const Page = () => {
                   defaultValue={state.form?.email}
                   errors={state.errors?.email}
                 />
-                <Button className="my-5 w-full cursor-pointer" type="submit">
-                  Reset Password
+                <Button
+                  className="my-5 w-full cursor-pointer"
+                  type="submit"
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <div>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>Loading ...</span>
+                    </div>
+                  ) : (
+                    "Reset Password"
+                  )}
                 </Button>
               </div>
             </form>
