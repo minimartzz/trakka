@@ -33,7 +33,6 @@ const Page = () => {
 
       if (user) {
         setUser(user);
-        console.log(user);
       }
       setLoading(false);
     };

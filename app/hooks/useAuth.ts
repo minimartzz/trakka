@@ -7,12 +7,12 @@ import { toast } from "sonner";
 
 interface UseAuthReturn {
   user: User | null;
-  loading: boolean;
+  authLoading: boolean;
 }
 
-const useAuth = (path: string): UseAuthReturn => {
+const useAuth = (): UseAuthReturn => {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -41,17 +41,17 @@ const useAuth = (path: string): UseAuthReturn => {
       }
 
       const authAndProfile = {
-        ...profile,
         ...authUser,
+        ...profile,
       };
       setUser(authAndProfile);
-      setLoading(false);
+      setAuthLoading(false);
     };
 
     fetchUser();
   }, [router]);
 
-  return { user, loading };
+  return { user, authLoading };
 };
 
 export default useAuth;

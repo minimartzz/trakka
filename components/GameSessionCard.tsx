@@ -105,7 +105,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 </div>
 
                 {/* Player icon column - fixed width */}
-                <div className="w-6 flex justify-center">
+                <div className="flex justify-center w-[20px] h-[20px] overflow-hidden">
                   {player.profilePic ? (
                     <Image
                       src={player.profilePic}
@@ -163,7 +163,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 </div>
 
                 {/* Score aligned right */}
-                <div className="text-sm font-medium text-right flex-shrink-0 w-16">
+                <div className="text-sm font-medium text-right flex-shrink-0 w-16 mr-4">
                   {player.victoryPoints !== null ? player.victoryPoints : "—"}
                 </div>
               </li>

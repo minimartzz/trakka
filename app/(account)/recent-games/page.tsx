@@ -11,7 +11,7 @@ import {
   getAvailableGames,
   getFilteredCounts,
 } from "@/utils/recordsProcessing";
-import { Filter, Play, Search, Trophy } from "lucide-react";
+import { Filter, Loader2, Play, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -30,16 +30,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import fetchClientUser from "@/utils/fetchClientUser";
+import useAuth from "@/app/hooks/useAuth";
 
 interface GameFilter {
   result: "all" | "won" | "lost" | "tie" | "not_involved";
   game: string;
 }
 
-const fetchRecentGamesByProfile = async () => {
-  // TODO: Grab user profile information
-  const profileId = "1";
+const fetchRecentGamesByProfile = async (id: number | string) => {
+  const profileId = String(id);
   try {
     const response = await fetch(`/api/session/profile/${profileId}`);
     if (!response.ok) {
@@ -88,6 +87,9 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Get User Details
+  const { user, authLoading } = useAuth();
+
   // Pagination details
   const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -106,12 +108,17 @@ const Page = () => {
 
   // Initial Mount - Load
   useEffect(() => {
+    if (authLoading || !user) {
+      return;
+    }
+
     const getData = async () => {
-      const fetchedData = await fetchRecentGamesByProfile();
+      const fetchedData = await fetchRecentGamesByProfile(user.id);
       const sessions: RecentGames[] = fetchedData.rawSessions;
-      const processedSessions = filterSessions(1, sessions); // TODO: Change this to the Users ID from auth
+      const processedSessions = filterSessions(user.id as number, sessions);
       const filteredCounts = getFilteredCounts(processedSessions);
       const uniqueGames = getAvailableGames(processedSessions);
+      console.log(processedSessions);
 
       setGameSessions(processedSessions);
       setFilteredSessions(processedSessions);
@@ -122,7 +129,7 @@ const Page = () => {
     };
 
     getData();
-  }, []);
+  }, [user, authLoading]);
 
   // Handle selecting filter change
   const handleSelectFilter = (type: "result" | "game", value: string) => {
@@ -305,7 +312,7 @@ const Page = () => {
             <GameSessionCard
               key={session.sessionId}
               session={session}
-              userId={1} // TODO: Change this to the Users ID from auth
+              userId={user!.id as number}
             />
           ))}
         </div>

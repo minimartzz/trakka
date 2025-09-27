@@ -25,10 +25,20 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
+
+interface AppSidebarProps {
+  user: {
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    avatar: string;
+  };
+}
 
 // Menu items
 const items = {
@@ -67,7 +77,7 @@ const items = {
   ],
 };
 
-export function AppSidebar() {
+export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
@@ -185,7 +195,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarUser user={items.user} />
+        <SidebarUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
