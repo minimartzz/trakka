@@ -11,7 +11,7 @@ import {
   getAvailableGames,
   getFilteredCounts,
 } from "@/utils/recordsProcessing";
-import { Filter, Loader2, Play, Search, Trophy } from "lucide-react";
+import { Filter, Play, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -51,20 +51,20 @@ const fetchRecentGamesByProfile = async (id: number | string) => {
   }
 };
 
-const fetchRecentGamesByGroup = async () => {
-  // TODO: Get the user group?
-  const groupId = "a16cb5c8-8272-4fef-bf8d-5c0a532ce22d";
-  try {
-    const response = await fetch(`/api/session/group/${groupId}`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error(error);
-  }
-};
+// const fetchRecentGamesByGroup = async () => {
+//   // TODO: Get the user group?
+//   const groupId = "a16cb5c8-8272-4fef-bf8d-5c0a532ce22d";
+//   try {
+//     const response = await fetch(`/api/session/group/${groupId}`);
+//     if (!response.ok) {
+//       throw new Error("Network response was not ok");
+//     }
+//     const data = await response.json();
+//     return data;
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
 
 const Page = () => {
   const [loading, setLoading] = useState(true);

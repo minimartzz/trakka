@@ -9,13 +9,11 @@ import smallLogo from "@/public/trakka_logo.png";
 import smallDarkLogo from "@/public/trakka_logo_dark.png";
 import Link from "next/link";
 import createClient from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 import { User } from "@/lib/interfaces";
 
 const Navbar = () => {
   const [scrolling, setScrolling] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = (): void => {

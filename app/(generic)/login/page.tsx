@@ -1,6 +1,6 @@
 "use client";
 import { login, signup } from "@/app/(generic)/login/action";
-import GoogleLogo from "@/components/icons/GoogleLogo";
+// import GoogleLogo from "@/components/icons/GoogleLogo";
 import { Button } from "@/components/ui/button";
 import {
   Card,

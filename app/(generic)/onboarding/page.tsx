@@ -110,7 +110,7 @@ const Page = () => {
           />
           <div className="mt-3 text-center">
             <p className="text-xs text-gray-400 italic">
-              Please make sure your image file does not contain a "."
+              Please make sure your image file does not contain a &quot;.&quot;
             </p>
           </div>
           <div className="w-full border-t border-gray-200 my-4" />

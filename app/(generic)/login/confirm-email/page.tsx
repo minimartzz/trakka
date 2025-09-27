@@ -11,8 +11,8 @@ const Page = () => {
         Please check your email!
       </h1>
       <p className="text-muted-foreground">
-        We've sent a confirmation to your email. Follow that link to complete
-        your sign-up
+        We&apos;ve sent a confirmation to your email. Follow that link to
+        complete your sign-up
       </p>
       <Button className="m-8">
         <Link href="/">Return to Homepage</Link>

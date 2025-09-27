@@ -28,7 +28,7 @@ import {
 import { PopoverContent } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon, Plus, X } from "lucide-react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 
