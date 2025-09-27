@@ -282,7 +282,7 @@ const Page = () => {
               Start recording your game sessions to see them here
             </p>
             <Button
-              className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
+              className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2"
               asChild
             >
               <Link href="/session/create">
