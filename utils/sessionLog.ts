@@ -54,6 +54,8 @@ export const getFirstPlay = async (gameId: string, profileId: number) => {
 
 // TODO: This function needs reworking
 // CONSIDER: How to update the latest highscore if there is another highscore that exists
+// Maybe change it to true, sort by date played and take the first instance
+// Also global and group high score?
 export const getHighScore = async (
   gameId: string,
   score: number

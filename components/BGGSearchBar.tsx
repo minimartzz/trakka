@@ -1,8 +1,3 @@
-// TODO:
-// 1. Change the view on selection
-// 1. Handle missing images -> Find and use question mark image from local
-// 2. Update loading sequence when finding entries
-// 3. Handle what if no games are returned
 "use client";
 
 import {
@@ -81,6 +76,7 @@ const BGGSearchBar = ({
       );
       if (response != null) {
         setSelectedItem(response[0]);
+        setQuery(response[0].title);
         onSelect(response[0]);
       }
     } catch (e: any) {
@@ -95,14 +91,16 @@ const BGGSearchBar = ({
       <Input
         type="text"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => setIsDropdownOpen(query.length >= 3)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setSelectedItem(null);
+        }}
+        onFocus={() => setIsDropdownOpen(query.length >= 2)}
         onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
         placeholder="Enter game title"
-        // className="border p-2 rounded w-full max-w-md"
       />
 
-      {isDropdownOpen && searchResults.length > 0 && (
+      {isDropdownOpen && searchResults.length > 0 && !selectedItem && (
         <ul className="z-10 top-20 w-full max-w-md bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
           {searchResults.map((result) => (
             <li
@@ -132,7 +130,7 @@ const BGGSearchBar = ({
         </ul>
       )}
 
-      {loading && <p className="text-center mt-4">Loading details...</p>}
+      {loading && <p className="text-center mt-4">Loading games...</p>}
       {error && <p className="text-red-500 text-center mt-4">{error}</p>}
 
       <div className="mt-8 text-center">
