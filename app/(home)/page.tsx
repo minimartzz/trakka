@@ -1,4 +1,5 @@
 import SplitText from "@/components/gsap/SplitText";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,19 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, TrendingUp, Users } from "lucide-react";
+import fetchUser from "@/utils/fetchServerUser";
+import { ArrowRight, Calendar, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
 
-const Index = () => {
-  // const { user, loading } = useAuth();
-
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-background">
-  //       <Loader2 className="h-8 w-8 animate-spin" />
-  //     </div>
-  //   );
-  // }
+const Index = async () => {
+  const user = await fetchUser();
 
   return (
     <div
@@ -53,26 +47,26 @@ const Index = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {/* {user ? (
+            {user ? (
               <Button asChild size="lg" className="text-base px-8 py-6">
                 <Link href="/dashboard">
-                  Go href Dashboard
+                  Go to Dashboard
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             ) : (
               <>
                 <Button asChild size="lg" className="text-base px-8 py-6">
-                  <Link href="/auth">
+                  <Link href="/login?tab=sign-up">
                     Get Started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-base px-8 py-6">
+                {/* <Button asChild variant="outline" size="lg" className="text-base px-8 py-6">
                   <Link href="/guest">Try Demo</Link>
-                </Button>
+                </Button> */}
               </>
-            )} */}
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -165,14 +159,14 @@ const Index = () => {
               Join thousands of players who are already tracking their games and
               improving their strategies.
             </p>
-            {/* {!user && (
+            {!user && (
               <Button asChild size="lg" className="text-base px-8 py-6">
-                <Link href="/auth">
+                <Link href="/login?tab=sign-up">
                   Start tracking today
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-            )} */}
+            )}
           </div>
         </div>
       </section>

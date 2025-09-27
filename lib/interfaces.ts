@@ -1,5 +1,11 @@
 // Custom Interfaces
 import { SelectCompGameLog } from "@/db/schema/compGameLog";
+import { Database } from "@/database.types";
+
+// For User Auth
+type AuthUser = Database["auth"]["Tables"]["users"]["Row"];
+type UserProfile = Database["public"]["Tables"]["profile"]["Row"];
+export type User = AuthUser | UserProfile;
 
 // For Recent Games section
 interface SqUser {

@@ -30,6 +30,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import fetchClientUser from "@/utils/fetchClientUser";
 
 interface GameFilter {
   result: "all" | "won" | "lost" | "tie" | "not_involved";
