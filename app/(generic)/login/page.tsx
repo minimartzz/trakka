@@ -142,26 +142,26 @@ const Page = () => {
               </form>
 
               {/* Split for SSO */}
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="flex absolute inset-0 items-center">
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="flex relative justify-center">
-                  <span className="px-4 pb-1 text-sm text-gray-500 bg-gradient-to-b from-white to-gray-50">
+                  <span className="px-4 pb-1 text-sm text-gray-500 dark:bg-card dark:text-white">
                     or
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               {/* SSO Buttons */}
-              <div className="space-y-3 pt-4">
+              {/* <div className="space-y-3 pt-4">
                 <div className="flex justify-center items-center">
-                  <Button className="w-full font-medium text-accent-foreground bg-background rounded-lg border border-gray-200 transition-all hover:bg-gray-50 cursor-pointer">
+                  <Button className="w-full font-medium text-accent-foreground bg-background rounded-lg border border-gray-200 transition-all hover:bg-gray-50 cursor-pointer dark:hover:text-black">
                     <GoogleLogo />
                     Continue with Google
                   </Button>
                 </div>
-              </div>
+              </div> */}
 
               {/* Forgot Password + New User */}
               <div className="flex justify-center items-center pt-8">
@@ -224,26 +224,26 @@ const Page = () => {
               </form>
 
               {/* Split for SSO */}
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="flex absolute inset-0 items-center">
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="flex relative justify-center">
-                  <span className="px-4 pb-1 text-sm text-gray-500 bg-gradient-to-b from-white to-gray-50">
+                  <span className="px-4 pb-1 text-sm text-gray-500 dark:bg-card dark:text-white">
                     or
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               {/* SSO Buttons */}
-              <div className="space-y-3 pt-4">
+              {/* <div className="space-y-3 pt-4">
                 <div className="flex justify-center items-center">
-                  <Button className="w-full font-medium text-accent-foreground bg-background rounded-lg border border-gray-200 transition-all hover:bg-gray-50 cursor-pointer">
+                  <Button className="w-full font-medium text-accent-foreground bg-background rounded-lg border border-gray-200 transition-all hover:bg-gray-50 cursor-pointer dark:hover:text-black">
                     <GoogleLogo />
                     Sign Up with Google
                   </Button>
                 </div>
-              </div>
+              </div> */}
             </TabsContent>
           </Tabs>
         </Card>
