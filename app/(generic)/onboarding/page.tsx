@@ -44,7 +44,9 @@ const Page = () => {
   };
 
   const handleSubmit = async (formData: FormData) => {
-    const finalImageUrl = profilePictureUrl || "some_img.jpg";
+    const finalImageUrl =
+      profilePictureUrl ||
+      "https://gfhcmvtbxarjafdrxvcv.supabase.co/storage/v1/object/public/images/avatars/generic_profile.png";
     formData.append("email", user!.email!);
     formData.append("profilePicture", finalImageUrl);
     formData.append("uuid", user!.id);

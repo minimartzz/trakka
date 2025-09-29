@@ -272,6 +272,13 @@ const Page = () => {
         <span>Total Recent Games • {filterCounts.numGames} sessions</span>
       </div>
 
+      {/* Mobile: Show Legend */}
+      <div className="sm:hidden flex text-sm justify-between">
+        <p>Legends:</p>
+        <p>🏆 = Winner</p>
+        <p>🪢 = Tied</p>
+      </div>
+
       {/* Game Sessions */}
       {gameSessions.length === 0 ? (
         <Card>

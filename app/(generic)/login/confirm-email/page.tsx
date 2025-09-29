@@ -7,10 +7,10 @@ const Page = () => {
   return (
     <div className="flex flex-col min-h-screen justify-center items-center bg-background">
       <EmailIcon height={200} className="p-8" />
-      <h1 className="text-4xl font-bold text-foreground p-4">
+      <h1 className="text-4xl font-bold text-foreground p-4 text-center">
         Please check your email!
       </h1>
-      <p className="text-muted-foreground">
+      <p className="text-muted-foreground text-center">
         We&apos;ve sent a confirmation to your email. Follow that link to
         complete your sign-up
       </p>
