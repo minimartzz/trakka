@@ -144,7 +144,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
           <Collapsible open={isTribesOpen} onOpenChange={setIsTribesOpen}>
             <SidebarGroupLabel className="hover:text-slate-300 cursor-pointer flex items-center justify-between py-2">
               <span className="text-xs font-medium uppercase tracking-wide">
-                {isCollapsed ? "T" : "TRIBES"}
+                TRIBES
               </span>
               <div className="flex items-center gap-1">
                 <Button

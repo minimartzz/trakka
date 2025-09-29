@@ -348,14 +348,14 @@ const Page = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="bg-white rounded-2xl border w-auto p-2 mt-2 z-10"
+                    className="bg-background rounded-2xl border w-auto p-2 mt-2 z-10"
                     align="start"
                   >
                     <EnhancedCalendar
                       selected={date}
                       onSelect={(date) => date && setDate(date)}
                       disabled={(date) => date > new Date()}
-                      className="pointer-events-auto"
+                      className="pointer-events-auto bg-background"
                     />
                   </PopoverContent>
                 </Popover>
@@ -388,6 +388,10 @@ const Page = () => {
                       <Plus className="h-4 w-4" />
                       Add Player
                     </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Select players using @ at the start and select. If user does
+                    not exist, please ask them to create an account
                   </div>
 
                   {/* Desktop Layout */}

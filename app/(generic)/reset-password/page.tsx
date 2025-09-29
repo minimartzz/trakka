@@ -78,7 +78,7 @@ const Page = () => {
                   disabled={isPending}
                 >
                   {isPending ? (
-                    <div>
+                    <div className="flex items-center">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       <span>Loading ...</span>
                     </div>

@@ -136,7 +136,7 @@ export function EnhancedCalendar({
               variant={year === currentYear ? "default" : "ghost"}
               size="sm"
               onClick={() => handleYearSelect(year)}
-              className="h-10"
+              className="h-10 text-black"
             >
               {year}
             </Button>

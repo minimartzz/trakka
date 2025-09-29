@@ -105,7 +105,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 </div>
 
                 {/* Player icon column - fixed width */}
-                <div className="flex justify-center w-[20px] h-[20px] overflow-hidden">
+                <div className="hidden sm:flex justify-center w-[20px] h-[20px] overflow-hidden">
                   {player.profilePic ? (
                     <Image
                       src={player.profilePic}
@@ -127,7 +127,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 </div>
 
                 {/* Player names */}
-                <div className="flex-1 min-w-0 text-left ml-2">
+                <div className="flex-1 min-w-0 text-left ml-2 items-center">
                   <span
                     className={cn(
                       "text-sm font-medium text-foreground truncate block",
@@ -136,30 +136,37 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                     )}
                   >
                     {player.firstName}
-                    <span className="ml-2 text-gray-400">{`(${player.username})`}</span>
+                    <span className="hidden sm:inline ml-2 text-gray-400">{`(${player.username})`}</span>
                   </span>
                 </div>
 
                 {/* Status for high score */}
 
                 {/* Status for winners and ties */}
-                <div className="flex items-center justify-center min-w-0 w-20 gap-2">
+                <div className="hidden sm:flex items-center justify-center min-w-0 w-20 gap-2">
                   {player.isWinner && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs px-2 py-0.5 border-green-200 text-green-700 bg-green-50"
-                    >
-                      Winner
-                    </Badge>
+                    <div>
+                      <Badge
+                        variant="outline"
+                        className="text-xs font-semibold px-2 py-0.5 border-green-200 text-green-700 bg-green-50"
+                      >
+                        Winner
+                      </Badge>
+                    </div>
                   )}
                   {player.isTie && (
                     <Badge
                       variant="outline"
-                      className="text-xs px-2 py-0.5 border-orange-200 text-orange-700 bg-orange-50"
+                      className="text-xs font-semibold px-2 py-0.5 border-orange-200 text-orange-700 bg-orange-50"
                     >
                       Tied
                     </Badge>
                   )}
+                </div>
+                {/* Mobile: Display */}
+                <div className="sm:hidden flex items-center justify-center min-w-0">
+                  {player.isWinner && <p>🏆</p>}
+                  {player.isTie && <p>🪢</p>}
                 </div>
 
                 {/* Score aligned right */}
