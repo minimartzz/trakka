@@ -15,6 +15,7 @@ export const groupTable = pgTable("group", {
   name: varchar("name").notNull(),
   description: text("description").notNull(),
   gamesPlayed: integer("games_played").notNull().default(0),
+  image: text("image"),
   dateCreated: date("date_created").notNull(),
   lastUpdated: date("last_updated").notNull(),
   createdAt: timestamp("created_at").defaultNow(),

@@ -5,11 +5,19 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SelectGroup } from "@/db/schema/group";
+import { SelectProfileGroup } from "@/db/schema/profileGroup";
 import fetchUser from "@/utils/fetchServerUser";
 import { Play } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+interface ProfileGroups {
+  profile_group: SelectProfileGroup;
+  group: SelectGroup;
+}
+const baseUrl = process.env.BASE_URL;
 
 export default async function AccountLayout({
   children,
@@ -19,10 +27,26 @@ export default async function AccountLayout({
   // For persisted state in sidebar
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+
+  // Get user details
   const user = await fetchUser();
   if (!user) {
     redirect("/login");
   }
+
+  // Get users groups
+  const response = await fetch(`${baseUrl}/api/group?profileId=${user.id}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch groups: ${response.statusText}`);
+  }
+  const out = await response.json();
+  const groups = out.map((item: ProfileGroups) => {
+    return {
+      ...item.profile_group,
+      ...item.group,
+    };
+  });
+  console.log(groups);
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
@@ -34,6 +58,7 @@ export default async function AccountLayout({
           email: user.email,
           avatar: user.image,
         }}
+        tribes={groups}
       />
       <SidebarInset>
         <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
