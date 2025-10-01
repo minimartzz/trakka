@@ -7,7 +7,7 @@ import { profileGroupTable } from "@/db/schema/profileGroup";
 export async function GET(request: NextRequest) {
   try {
     const profileId = request.nextUrl.searchParams.get("profileId");
-    let query = db
+    const query = db
       .select()
       .from(profileGroupTable)
       .leftJoin(groupTable, eq(profileGroupTable.groupId, groupTable.id));
