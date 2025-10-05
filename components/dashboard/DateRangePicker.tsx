@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 
 interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
   date?: DateRange;
-  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
+  setDate: (range: DateRange | undefined) => void;
 }
 
 const DateRangePicker = ({

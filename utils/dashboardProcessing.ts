@@ -1,15 +1,15 @@
 import { RecentGames } from "@/lib/interfaces";
 import { SqUser } from "@/lib/interfaces";
 
-export interface Top5OpponentsCount {
+export interface TopOpponentsCount {
   count: number;
   player: SqUser;
 }
-export function top5Opponents(
+export function topOpponents(
   userId: number,
   sessions: RecentGames[]
-): Top5OpponentsCount[] {
-  const counts = new Map<number, { count: number; player: SqUser }>();
+): TopOpponentsCount[] {
+  const counts = new Map<number, TopOpponentsCount>();
 
   for (const session of sessions) {
     const playerId = parseInt(session.sqUser.id);
@@ -29,7 +29,7 @@ export function top5Opponents(
   }
 
   // Convert map values into array
-  const topSessions: Top5OpponentsCount[] = Array.from(counts.values()).map(
+  const topSessions: TopOpponentsCount[] = Array.from(counts.values()).map(
     (entry) => ({
       count: entry.count,
       player: entry.player,
@@ -38,7 +38,73 @@ export function top5Opponents(
 
   topSessions.sort((a, b) => b.count - a.count);
 
-  const topFive = topSessions.slice(0, 5);
+  return topSessions;
+}
 
-  return topFive;
+export interface TopGamesCount {
+  count: number;
+  wins: number;
+  winRate: number;
+  game: { gameId: string; gameTitle: string };
+}
+
+export function topGames(userId: number, sessions: RecentGames[]) {
+  const counts = new Map<
+    string,
+    {
+      count: number;
+      wins: number;
+      game: { gameId: string; gameTitle: string };
+    }
+  >();
+
+  for (const session of sessions) {
+    const playerId = parseInt(session.sqUser.id);
+    const bggGameId = session.comp_game_log.gameId;
+
+    if (playerId !== userId) {
+      continue; // Skip if it matches a user
+    }
+
+    if (counts.has(bggGameId)) {
+      counts.get(bggGameId)!.count += 1;
+      if (session.comp_game_log.isWinner) {
+        counts.get(bggGameId)!.wins += 1;
+      }
+    } else {
+      if (session.comp_game_log.isWinner) {
+        counts.set(bggGameId, {
+          count: 1,
+          wins: 1,
+          game: {
+            gameId: session.comp_game_log.gameId,
+            gameTitle: session.comp_game_log.gameTitle,
+          },
+        });
+      } else {
+        counts.set(bggGameId, {
+          count: 1,
+          wins: 0,
+          game: {
+            gameId: session.comp_game_log.gameId,
+            gameTitle: session.comp_game_log.gameTitle,
+          },
+        });
+      }
+    }
+  }
+
+  const topGames: TopGamesCount[] = Array.from(counts.values()).map(
+    (entry) => ({
+      count: entry.count,
+      wins: entry.wins,
+      winRate: Math.ceil((entry.wins / entry.count) * 100),
+      game: {
+        gameId: entry.game.gameId,
+        gameTitle: entry.game.gameTitle,
+      },
+    })
+  );
+
+  return topGames;
 }

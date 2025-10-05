@@ -46,7 +46,6 @@ export default async function AccountLayout({
       ...item.group,
     };
   });
-  console.log(groups);
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>

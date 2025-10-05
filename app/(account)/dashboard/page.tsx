@@ -1,6 +1,6 @@
 import TimeFilteredPerformance from "@/components/dashboard/TimeFilteredPerformance";
 import { RecentGames } from "@/lib/interfaces";
-import { top5Opponents } from "@/utils/dashboardProcessing";
+import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import fetchUser from "@/utils/fetchServerUser";
 import { filterSessions } from "@/utils/recordsProcessing";
 import { redirect } from "next/navigation";
@@ -33,12 +33,6 @@ const Page = async () => {
   const fetchedData = await fetchRecentGamesByProfile(user.id);
   const sessions: RecentGames[] = fetchedData.rawSessions;
   const processedSessions = filterSessions(user.id as number, sessions);
-  // const filteredCounts = getFilteredCounts(processedSessions);
-  // const uniqueGames = getAvailableGames(processedSessions);
-
-  // For top 5 opponents
-  const top5Players = top5Opponents(user.id, sessions);
-  console.log(processedSessions);
 
   return (
     <div className="p-8 space-y-6">
@@ -49,9 +43,9 @@ const Page = async () => {
 
       {/* Global Metrics */}
       <TimeFilteredPerformance
-        gamesPlayed={processedSessions.length}
-        top5Players={top5Players}
+        userId={user.id}
         recentActivity={processedSessions}
+        sessions={sessions}
       />
     </div>
   );

@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
 import {
@@ -16,10 +16,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
+} from "@/components/ui/card";
 import MeepleIcon from "../icons/MeepleIcon";
 import { Trophy, Users } from "lucide-react";
-import { Top5OpponentsCount } from "@/utils/dashboardProcessing";
+import {
+  topGames,
+  TopGamesCount,
+  topOpponents,
+  TopOpponentsCount,
+} from "@/utils/dashboardProcessing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -28,13 +33,28 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { CombinedRecentGames } from "@/lib/interfaces";
-import { format } from "date-fns";
+import { CombinedRecentGames, RecentGames } from "@/lib/interfaces";
+import {
+  format,
+  isWithinInterval,
+  setDate,
+  startOfDay,
+  subMonths,
+  subYears,
+} from "date-fns";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TimeFilteredPerformanceProps {
-  gamesPlayed: number;
-  top5Players: Top5OpponentsCount[];
+  userId: number;
   recentActivity: CombinedRecentGames[];
+  sessions: RecentGames[];
 }
 
 interface MetricCardProps {
@@ -78,7 +98,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         <h4 className="text-md font-semibold">{title}</h4>
         <div className="flex -space-x-1 mt-2">
           {players.map((player) => (
-            <Tooltip>
+            <Tooltip key={player.username}>
               <TooltipTrigger asChild>
                 <Avatar
                   className={cn(
@@ -123,28 +143,143 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   );
 };
 
+// Helper functions
+const calculateStartDate = (timeframe: string): Date => {
+  const today = startOfDay(new Date());
+
+  switch (timeframe) {
+    case "1month":
+      return subMonths(today, 1);
+    case "3months":
+      return subMonths(today, 3);
+    case "6months":
+      return subMonths(today, 6);
+    case "1year":
+      return subYears(today, 1);
+    case "3years":
+      return subYears(today, 3);
+    default:
+      return subYears(today, 1); // Default to 1 year
+  }
+};
+
 const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
-  gamesPlayed,
-  top5Players,
+  userId,
   recentActivity,
+  sessions,
 }) => {
   const [timeframe, setTimeframe] = useState<string>("1year");
-  const [date, setDate] = useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
+
+  // Prevents the timeframe from being active when date range is selected
+  useEffect(() => {
+    if (dateRange?.from && dateRange.to) {
+      setTimeframe("custom");
+    }
+  }, [dateRange]);
+
+  const filteredActivities = useMemo(() => {
+    const activitiesWithDates = recentActivity.map((activity) => ({
+      ...activity,
+      parsedDate: new Date(activity.datePlayed),
+    }));
+
+    let finalFromDate: Date | undefined;
+    let finalToDate: Date | undefined;
+
+    // Date Range priority 1
+    if (dateRange?.from && dateRange.to) {
+      finalFromDate = dateRange.from;
+      finalToDate = dateRange.to;
+    }
+
+    // Timeframe priority 2
+    else if (timeframe !== "custom" && timeframe !== "all") {
+      finalFromDate = calculateStartDate(timeframe);
+      finalToDate = startOfDay(new Date());
+    } else {
+      return activitiesWithDates;
+    }
+
+    if (finalFromDate && finalToDate) {
+      return activitiesWithDates.filter((activity) =>
+        isWithinInterval(activity.parsedDate, {
+          start: finalFromDate!,
+          end: finalToDate!,
+        })
+      );
+    }
+
+    const activitiesWithDatesTop = activitiesWithDates.slice(0, 5);
+
+    return activitiesWithDatesTop;
+  }, [recentActivity, timeframe, dateRange]);
+
+  const { top5Players, topGamesStats } = useMemo(() => {
+    const sessionsWithDates = sessions.map((session) => ({
+      ...session,
+      parsedDate: new Date(session.comp_game_log.datePlayed),
+    }));
+
+    let finalFromDate: Date | undefined;
+    let finalToDate: Date | undefined;
+
+    // Date Range priority 1
+    if (dateRange?.from && dateRange.to) {
+      finalFromDate = dateRange.from;
+      finalToDate = dateRange.to;
+    }
+
+    // Timeframe priority 2
+    else if (timeframe !== "custom" && timeframe !== "all") {
+      finalFromDate = calculateStartDate(timeframe);
+      finalToDate = startOfDay(new Date());
+    } else {
+      const topPlayers = topOpponents(userId, sessionsWithDates);
+      const topGamesStats = topGames(userId, sessionsWithDates);
+      const top5Players = topPlayers.slice(0, 5);
+      return { top5Players, topGamesStats };
+    }
+
+    const filteredSessions = sessionsWithDates.filter((session) =>
+      isWithinInterval(session.parsedDate, {
+        start: finalFromDate!,
+        end: finalToDate!,
+      })
+    );
+
+    const topPlayers = topOpponents(userId, filteredSessions);
+    const topGamesStats = topGames(userId, filteredSessions);
+    const top5Players = topPlayers.slice(0, 5);
+
+    return { top5Players, topGamesStats };
+  }, [sessions, timeframe, dateRange]);
+
+  const handleTimeframeChange = (value: string) => {
+    setTimeframe(value);
+
+    if (value !== "custom") {
+      setDateRange({ from: undefined, to: undefined });
+    }
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+
+    if (range?.from && range?.to) {
+      setTimeframe("custom");
+    }
+  };
 
   return (
     <div>
       {/* Timeframe selection */}
       <div className="flex items-center justify-start gap-x-3 text-muted-foreground">
         <p>Timeframe:</p>
-        <Select
-          value={timeframe}
-          onValueChange={(value) => {
-            setTimeframe(value);
-          }}
-        >
+        <Select value={timeframe} onValueChange={handleTimeframeChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -159,7 +294,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
           </SelectContent>
         </Select>
         <span>or</span>
-        <DateRangePicker date={date} setDate={setDate} />
+        <DateRangePicker date={dateRange} setDate={handleDateRangeChange} />
       </div>
 
       {/* General Metrics */}
@@ -167,7 +302,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
         <MetricCard
           title="Games Played"
           Icon={MeepleIcon}
-          value={String(gamesPlayed)}
+          value={String(filteredActivities.length)}
         />
         <MetricCard title="Win Rate" Icon={Trophy} value="-" />
         <Card className="w-full">
@@ -202,11 +337,11 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       <div className="flex justify-between items-stretch my-8 gap-x-5">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="text-2xl">Recent Activity</CardTitle>
             <CardDescription>Your last 5 gaming sessions</CardDescription>
           </CardHeader>
           <CardContent>
-            {recentActivity.map((session) => (
+            {filteredActivities.map((session) => (
               <RecentActivityCard
                 key={session.sessionId}
                 title={session.gameTitle}
@@ -220,12 +355,52 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
         </Card>
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Game Performance</CardTitle>
+            <CardTitle className="text-2xl">Game Performance</CardTitle>
             <CardDescription>
               Performance of your most played games
             </CardDescription>
           </CardHeader>
-          <CardContent></CardContent>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Game</TableHead>
+                  <TableHead>No. of Plays</TableHead>
+                  <TableHead className="text-right">Win %</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topGamesStats.map((game) => (
+                  <TableRow key={game.game.gameId}>
+                    <TableCell className="font-medium">
+                      {game.game.gameTitle}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex h-2 w-full overflow-hidden rounded-full bg-red-500 shadow-inner">
+                        <div
+                          className="bg-green-600 transition-all duration-500 ease-out"
+                          style={{ width: `${game.winRate}%` }}
+                          title={`Wins: ${game.wins}`}
+                        ></div>
+                      </div>
+                      <div className="hidden sm:flex justify-between text-xs pt-1 text-muted-foreground">
+                        <span className="text-[10px]">Wins: {game.wins}</span>
+                        <span className="text-[10px]">
+                          Losses: {game.count - game.wins}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      className={cn(
+                        "text-right font-semibold",
+                        game.winRate <= 50 ? "text-red-500" : "text-green-600"
+                      )}
+                    >{`${game.winRate}%`}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
         </Card>
       </div>
     </div>
