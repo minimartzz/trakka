@@ -118,7 +118,6 @@ const Page = () => {
       const processedSessions = filterSessions(user.id as number, sessions);
       const filteredCounts = getFilteredCounts(processedSessions);
       const uniqueGames = getAvailableGames(processedSessions);
-      console.log(processedSessions);
 
       setGameSessions(processedSessions);
       setFilteredSessions(processedSessions);

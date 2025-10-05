@@ -38,6 +38,11 @@ interface AppSidebarProps {
     email: string;
     avatar: string;
   };
+  tribes: {
+    id: string;
+    name: string;
+    image: string;
+  }[];
 }
 
 // Menu items
@@ -77,7 +82,7 @@ const items = {
   ],
 };
 
-export function AppSidebar({ user }: AppSidebarProps) {
+export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const pathname = usePathname();
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
@@ -169,7 +174,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                 "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
               )}
             >
-              {items.tribe.map((item) => (
+              {tribes.map((item) => (
                 <SidebarMenuItem className="pt-1" key={item.id}>
                   <SidebarMenuButton
                     className={
@@ -179,7 +184,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   >
                     <a href={`/tribe/${item.id}`}>
                       <Image
-                        src={item.icon}
+                        src={item.image}
                         alt="Group Icon"
                         width={20}
                         height={20}

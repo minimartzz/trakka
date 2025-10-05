@@ -22,7 +22,7 @@ const GroupSearchBar = ({ onSelect }: GroupSearchBarProps) => {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const response = await fetch("/api/group");
+        const response = await fetch("/api/suggestions/group");
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }

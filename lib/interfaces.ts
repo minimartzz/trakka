@@ -8,7 +8,7 @@ type UserProfile = Database["public"]["Tables"]["profile"]["Row"];
 export type User = AuthUser | UserProfile;
 
 // For Recent Games section
-interface SqUser {
+export interface SqUser {
   id: string;
   firstName: string;
   lastName: string;
