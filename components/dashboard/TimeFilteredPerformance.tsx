@@ -277,28 +277,32 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
   return (
     <div>
       {/* Timeframe selection */}
-      <div className="flex items-center justify-start gap-x-3 text-muted-foreground">
-        <p>Timeframe:</p>
-        <Select value={timeframe} onValueChange={handleTimeframeChange}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="1month">1 month</SelectItem>
-              <SelectItem value="3months">3 months</SelectItem>
-              <SelectItem value="6months">6 months</SelectItem>
-              <SelectItem value="1year">1 year</SelectItem>
-              <SelectItem value="3years">3 years</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <span>or</span>
-        <DateRangePicker date={dateRange} setDate={handleDateRangeChange} />
+      <div className="flex flex-col sm:flex-row gap-y-3 sm:gap-x-3 items-start sm:items-center justify-start text-muted-foreground">
+        <div className="flex items-center gap-x-3">
+          <p>Timeframe:</p>
+          <Select value={timeframe} onValueChange={handleTimeframeChange}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="1month">1 month</SelectItem>
+                <SelectItem value="3months">3 months</SelectItem>
+                <SelectItem value="6months">6 months</SelectItem>
+                <SelectItem value="1year">1 year</SelectItem>
+                <SelectItem value="3years">3 years</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-x-3 mt-3 sm:pl-0 sm:mt-0">
+          <span>or</span>
+          <DateRangePicker date={dateRange} setDate={handleDateRangeChange} />
+        </div>
       </div>
 
       {/* General Metrics */}
-      <div className="flex justify-between items-stretch gap-x-5 my-8">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:gap-x-4 gap-y-5 my-8">
         <MetricCard
           title="Games Played"
           Icon={MeepleIcon}
@@ -334,8 +338,8 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       </div>
 
       {/* Recent Activity & Game Performance */}
-      <div className="flex justify-between items-stretch my-8 gap-x-5">
-        <Card className="w-full">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch my-8 sm:gap-x-4 gap-y-5">
+        <Card className="w-full mb-3">
           <CardHeader>
             <CardTitle className="text-2xl">Recent Activity</CardTitle>
             <CardDescription>Your last 5 gaming sessions</CardDescription>
