@@ -26,19 +26,9 @@ const Index = async () => {
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tight text-foreground">
               Game intelligence for
             </h1>
-            <SplitText
-              text="board game enthusiasts"
-              className="text-5xl lg:text-7xl font-bold tracking-tight leading-tightpb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent pb-2 mb-5"
-              delay={100}
-              duration={0.6}
-              ease="power3.out"
-              splitType="chars"
-              from={{ opacity: 0, y: 40 }}
-              to={{ opacity: 1, y: 0 }}
-              threshold={0.1}
-              rootMargin="0px"
-              textAlign="center"
-            />
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tightpb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent pb-5">
+              board game enthusiasts
+            </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Professional board game tracking software that helps you make
               strategic decisions, backed by comprehensive analytics and powered
