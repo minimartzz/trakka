@@ -12,8 +12,7 @@ interface ProfilePictureUploaderProps {
   userId: string;
 }
 
-const GENERIC_IMAGE_URL =
-  "https://gfhcmvtbxarjafdrxvcv.supabase.co/storage/v1/object/public/images/avatars/generic_profile.png";
+const GENERIC_IMAGE_URL = `https://${process.env.SUPABASE_HEADER}.supabase.co/storage/v1/object/public/images/avatars/generic_profile.png`;
 
 // const appendToFilename = (filename: string, addition: string) => {
 //   const dotIndex = filename.lastIndexOf(".");

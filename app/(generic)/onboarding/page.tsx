@@ -46,7 +46,7 @@ const Page = () => {
   const handleSubmit = async (formData: FormData) => {
     const finalImageUrl =
       profilePictureUrl ||
-      "https://gfhcmvtbxarjafdrxvcv.supabase.co/storage/v1/object/public/images/avatars/generic_profile.png";
+      `https://${process.env.SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
     formData.append("email", user!.email!);
     formData.append("profilePicture", finalImageUrl);
     formData.append("uuid", user!.id);
@@ -82,19 +82,9 @@ const Page = () => {
 
   return (
     <div className="flex flex-col min-h-screen justify-center items-center bg-background p-4">
-      <SplitText
-        text="Welcome to Trakka"
-        className="text-5xl font-bold tracking-tight leading-tight pb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent"
-        delay={100}
-        duration={0.4}
-        ease="power3.out"
-        splitType="chars"
-        from={{ opacity: 0, y: 40 }}
-        to={{ opacity: 1, y: 0 }}
-        threshold={0.1}
-        rootMargin="-100px"
-        textAlign="center"
-      />
+      <h1 className="text-5xl font-bold tracking-tight leading-tight pb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent">
+        Welcome to Trakka
+      </h1>
       <h3 className="text-xl font-semibold">We just need a bit more info...</h3>
       <Card className="w-full max-w-lg p-5 m-8">
         <CardHeader>

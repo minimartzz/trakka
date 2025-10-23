@@ -124,7 +124,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         <p className="mt-2 text-sm text-muted-foreground">{formattedDate}</p>
       </div>
       {isWinner ? (
-        <Badge variant="default" className="bg-green-600 font-bold">
+        <Badge variant="default" className="bg-green-600 font-bold text-white">
           Won
         </Badge>
       ) : isTied ? (
