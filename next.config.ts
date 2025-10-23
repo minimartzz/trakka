@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "gfhcmvtbxarjafdrxvcv.supabase.co",
+        hostname: process.env.SUPABASE_HEADER!,
         port: "",
         pathname: "/storage/v1/object/public/**",
       },
