@@ -101,12 +101,12 @@ const BGGSearchBar = ({
       />
 
       {isDropdownOpen && searchResults.length > 0 && !selectedItem && (
-        <ul className="z-10 top-20 w-full max-w-md bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+        <ul className="z-10 top-20 w-full max-w-md border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
           {searchResults.map((result) => (
             <li
               key={result.id}
               onClick={() => handleSelect(result)}
-              className="p-2 cursor-pointer hover:bg-gray-100 text-black"
+              className="p-2 cursor-pointer hover:bg-accent text-accent-foreground"
             >
               <div className="flex align-middle">
                 <Image
@@ -114,7 +114,7 @@ const BGGSearchBar = ({
                     !result.thumbnail ? "/missing_icon.png" : result.thumbnail
                   }
                   alt={`thumbnail for ${result.title}`}
-                  width={48} // You must define width and height for local images
+                  width={48}
                   height={48}
                   className="rounded-md"
                 />

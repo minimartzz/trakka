@@ -161,10 +161,11 @@ const PlayerInput: React.FC<PlayerInputProps> = ({
   // Selecting a suggestion
   const selectSuggestion = (profile: Profile) => {
     const displayName = profile.displayName || profile.username;
-    onChange(`@${displayName}`, profile.id);
-    setShowDropdown(false);
+    onChange(`${displayName} (${profile.username})`, profile.id);
+    console.log(showDropdown);
     setSelectedIndex(-1);
     setSuggestions([]);
+    setShowDropdown(false);
 
     if (onNext) {
       setTimeout(onNext, 50);
