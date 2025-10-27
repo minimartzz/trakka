@@ -19,12 +19,7 @@ import {
 } from "@/components/ui/card";
 import MeepleIcon from "../icons/MeepleIcon";
 import { Trophy, Users } from "lucide-react";
-import {
-  topGames,
-  TopGamesCount,
-  topOpponents,
-  TopOpponentsCount,
-} from "@/utils/dashboardProcessing";
+import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -37,8 +32,6 @@ import { CombinedRecentGames, RecentGames } from "@/lib/interfaces";
 import {
   format,
   isWithinInterval,
-  setDate,
-  startOfDay,
   endOfDay,
   subMonths,
   subYears,
@@ -254,6 +247,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
     const topPlayers = topOpponents(userId, filteredSessions);
     const topGamesStats = topGames(userId, filteredSessions);
+    console.log(topGamesStats);
     const top5Players = topPlayers.slice(0, 5);
 
     return { top5Players, topGamesStats };
@@ -362,7 +356,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
           <CardHeader>
             <CardTitle className="text-2xl">Game Performance</CardTitle>
             <CardDescription>
-              Performance of your most played games
+              Performance of your top 10 most played games
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -375,7 +369,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topGamesStats.map((game) => (
+                {topGamesStats.slice(0, 10).map((game) => (
                   <TableRow key={game.game.gameId}>
                     <TableCell className="font-medium">
                       {game.game.gameTitle}
