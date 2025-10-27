@@ -39,6 +39,7 @@ import {
   isWithinInterval,
   setDate,
   startOfDay,
+  endOfDay,
   subMonths,
   subYears,
 } from "date-fns";
@@ -145,7 +146,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
 
 // Helper functions
 const calculateStartDate = (timeframe: string): Date => {
-  const today = startOfDay(new Date());
+  const today = endOfDay(new Date());
 
   switch (timeframe) {
     case "1month":
@@ -193,13 +194,13 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     // Date Range priority 1
     if (dateRange?.from && dateRange.to) {
       finalFromDate = dateRange.from;
-      finalToDate = dateRange.to;
+      finalToDate = endOfDay(dateRange.to);
     }
 
     // Timeframe priority 2
     else if (timeframe !== "custom" && timeframe !== "all") {
       finalFromDate = calculateStartDate(timeframe);
-      finalToDate = startOfDay(new Date());
+      finalToDate = endOfDay(new Date());
     } else {
       return activitiesWithDates;
     }
@@ -230,13 +231,13 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     // Date Range priority 1
     if (dateRange?.from && dateRange.to) {
       finalFromDate = dateRange.from;
-      finalToDate = dateRange.to;
+      finalToDate = endOfDay(dateRange.to);
     }
 
     // Timeframe priority 2
     else if (timeframe !== "custom" && timeframe !== "all") {
       finalFromDate = calculateStartDate(timeframe);
-      finalToDate = startOfDay(new Date());
+      finalToDate = endOfDay(new Date());
     } else {
       const topPlayers = topOpponents(userId, sessionsWithDates);
       const topGamesStats = topGames(userId, sessionsWithDates);
@@ -345,7 +346,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
             <CardDescription>Your last 5 gaming sessions</CardDescription>
           </CardHeader>
           <CardContent>
-            {filteredActivities.map((session) => (
+            {filteredActivities.slice(0, 5).map((session) => (
               <RecentActivityCard
                 key={session.sessionId}
                 title={session.gameTitle}
