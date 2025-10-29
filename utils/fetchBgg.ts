@@ -24,9 +24,10 @@ export const fetchBGGIds = async (
   try {
     const url = `https://boardgamegeek.com/xmlapi2/search?query=${query}&type=boardgame`;
     const response = await fetch(url, {
-      // headers: {
-      //   Authorization: `Bearer ${process.env.BGG_TOKEN}`,
-      // },
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_BGG_TOKEN}`,
+      },
       signal: signal,
       next: { revalidate: 36000 },
     });
@@ -75,9 +76,10 @@ export const fetchBGGDetails = async (
     const url = `https://boardgamegeek.com/xmlapi2/thing?id=${ids}&type=boardgame&stats=1`;
 
     const response = await fetch(url, {
-      // headers: {
-      //   Authorization: `Bearer ${process.env.BGG_TOKEN}`,
-      // },
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_BGG_TOKEN}`,
+      },
       signal: signal,
       next: { revalidate: 36000 },
     });
