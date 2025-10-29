@@ -1,6 +1,5 @@
 "use client";
 import { saveProfile } from "@/app/(generic)/onboarding/action";
-import SplitText from "@/components/gsap/SplitText";
 import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import ProfilePictureUploader from "@/components/ProfilePictureUploader";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ const Page = () => {
   const handleSubmit = async (formData: FormData) => {
     const finalImageUrl =
       profilePictureUrl ||
-      `https://${process.env.SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
+      `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
     formData.append("email", user!.email!);
     formData.append("profilePicture", finalImageUrl);
     formData.append("uuid", user!.id);
@@ -145,7 +144,7 @@ const Page = () => {
                 className="w-full p-2 border rounded-md"
               >
                 {["Male", "Female", "Others"].map((g) => (
-                  <option key={g} value={g}>
+                  <option key={g} value={g} className="">
                     {g}
                   </option>
                 ))}

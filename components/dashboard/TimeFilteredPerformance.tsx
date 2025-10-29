@@ -247,7 +247,6 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
     const topPlayers = topOpponents(userId, filteredSessions);
     const topGamesStats = topGames(userId, filteredSessions);
-    console.log(topGamesStats);
     const top5Players = topPlayers.slice(0, 5);
 
     return { top5Players, topGamesStats };
