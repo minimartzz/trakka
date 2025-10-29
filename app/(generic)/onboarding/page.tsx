@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import createClient from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -138,17 +146,20 @@ const Page = () => {
               <Label htmlFor="gender" className="mb-2">
                 Gender
               </Label>
-              <select
-                id="gender"
-                name="gender"
-                className="w-full p-2 border rounded-md"
-              >
-                {["Male", "Female", "Others"].map((g) => (
-                  <option key={g} value={g} className="">
-                    {g}
-                  </option>
-                ))}
-              </select>
+              <Select name="gender">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {["Male", "Female", "Others"].map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
