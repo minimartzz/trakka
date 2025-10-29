@@ -1,12 +1,19 @@
 "use client";
 import { saveProfile } from "@/app/(generic)/onboarding/action";
-import SplitText from "@/components/gsap/SplitText";
 import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import ProfilePictureUploader from "@/components/ProfilePictureUploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import createClient from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -46,7 +53,7 @@ const Page = () => {
   const handleSubmit = async (formData: FormData) => {
     const finalImageUrl =
       profilePictureUrl ||
-      `https://${process.env.SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
+      `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
     formData.append("email", user!.email!);
     formData.append("profilePicture", finalImageUrl);
     formData.append("uuid", user!.id);
@@ -139,17 +146,20 @@ const Page = () => {
               <Label htmlFor="gender" className="mb-2">
                 Gender
               </Label>
-              <select
-                id="gender"
-                name="gender"
-                className="w-full p-2 border rounded-md"
-              >
-                {["Male", "Female", "Others"].map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
+              <Select name="gender">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {["Male", "Female", "Others"].map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             {error && <p className="text-red-500 text-sm">{error}</p>}

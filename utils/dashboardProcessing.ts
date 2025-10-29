@@ -106,5 +106,7 @@ export function topGames(userId: number, sessions: RecentGames[]) {
     })
   );
 
-  return topGames;
+  const topGamesSorted = topGames.sort((a, b) => b.count - a.count);
+
+  return topGamesSorted;
 }

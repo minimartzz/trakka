@@ -19,12 +19,7 @@ import {
 } from "@/components/ui/card";
 import MeepleIcon from "../icons/MeepleIcon";
 import { Trophy, Users } from "lucide-react";
-import {
-  topGames,
-  TopGamesCount,
-  topOpponents,
-  TopOpponentsCount,
-} from "@/utils/dashboardProcessing";
+import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -37,8 +32,7 @@ import { CombinedRecentGames, RecentGames } from "@/lib/interfaces";
 import {
   format,
   isWithinInterval,
-  setDate,
-  startOfDay,
+  endOfDay,
   subMonths,
   subYears,
 } from "date-fns";
@@ -145,7 +139,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
 
 // Helper functions
 const calculateStartDate = (timeframe: string): Date => {
-  const today = startOfDay(new Date());
+  const today = endOfDay(new Date());
 
   switch (timeframe) {
     case "1month":
@@ -193,13 +187,13 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     // Date Range priority 1
     if (dateRange?.from && dateRange.to) {
       finalFromDate = dateRange.from;
-      finalToDate = dateRange.to;
+      finalToDate = endOfDay(dateRange.to);
     }
 
     // Timeframe priority 2
     else if (timeframe !== "custom" && timeframe !== "all") {
       finalFromDate = calculateStartDate(timeframe);
-      finalToDate = startOfDay(new Date());
+      finalToDate = endOfDay(new Date());
     } else {
       return activitiesWithDates;
     }
@@ -230,13 +224,13 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     // Date Range priority 1
     if (dateRange?.from && dateRange.to) {
       finalFromDate = dateRange.from;
-      finalToDate = dateRange.to;
+      finalToDate = endOfDay(dateRange.to);
     }
 
     // Timeframe priority 2
     else if (timeframe !== "custom" && timeframe !== "all") {
       finalFromDate = calculateStartDate(timeframe);
-      finalToDate = startOfDay(new Date());
+      finalToDate = endOfDay(new Date());
     } else {
       const topPlayers = topOpponents(userId, sessionsWithDates);
       const topGamesStats = topGames(userId, sessionsWithDates);
@@ -345,7 +339,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
             <CardDescription>Your last 5 gaming sessions</CardDescription>
           </CardHeader>
           <CardContent>
-            {filteredActivities.map((session) => (
+            {filteredActivities.slice(0, 5).map((session) => (
               <RecentActivityCard
                 key={session.sessionId}
                 title={session.gameTitle}
@@ -361,7 +355,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
           <CardHeader>
             <CardTitle className="text-2xl">Game Performance</CardTitle>
             <CardDescription>
-              Performance of your most played games
+              Performance of your top 10 most played games
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -374,7 +368,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topGamesStats.map((game) => (
+                {topGamesStats.slice(0, 10).map((game) => (
                   <TableRow key={game.game.gameId}>
                     <TableCell className="font-medium">
                       {game.game.gameTitle}
