@@ -171,7 +171,6 @@ const SidebarUser = ({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             {/* Sign Out */}
-            {/* TODO: Add Sign out functionality */}
             <DropdownMenuGroup key="sign-out">
               <form action="/auth/signout" method="post">
                 <DropdownMenuItem key="sign-out" asChild>

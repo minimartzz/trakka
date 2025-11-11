@@ -49,3 +49,10 @@ export interface FilteredCounts {
   numPlayed: number;
   numTied: number;
 }
+
+// For Groups
+export const Roles = {
+  Admin: 1,
+  Editor: 2,
+  Member: 3,
+};

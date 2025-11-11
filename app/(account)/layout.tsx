@@ -51,6 +51,7 @@ export default async function AccountLayout({
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar
         user={{
+          id: user.id,
           firstName: user.first_name,
           lastName: user.last_name,
           username: user.username,
