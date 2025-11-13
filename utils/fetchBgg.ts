@@ -19,10 +19,14 @@ export interface BGGDetailsInterface extends BGGIdsInterface {
 
 export const fetchBGGIds = async (
   query: string,
+  exact: boolean,
   signal: AbortSignal
 ): Promise<BGGIdsInterface[] | []> => {
   try {
-    const url = `https://boardgamegeek.com/xmlapi2/search?query=${query}&type=boardgame`;
+    const url = exact
+      ? `https://boardgamegeek.com/xmlapi2/search?query=${query}&type=boardgame&exact=1`
+      : `https://boardgamegeek.com/xmlapi2/search?query=${query}&type=boardgame`;
+
     const response = await fetch(url, {
       method: "GET",
       headers: {
