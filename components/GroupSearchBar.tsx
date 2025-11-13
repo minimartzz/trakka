@@ -8,10 +8,11 @@ export interface SessionGroup {
 }
 
 interface GroupSearchBarProps {
+  profileId: string | number;
   onSelect: (item: SessionGroup) => void;
 }
 
-const GroupSearchBar = ({ onSelect }: GroupSearchBarProps) => {
+const GroupSearchBar = ({ profileId, onSelect }: GroupSearchBarProps) => {
   const [allGroups, setAllGroups] = useState<SessionGroup[]>([]);
   const [showGroupDropdown, setShowGroupDropdown] = useState<boolean>(false);
   const [selectedGroup, setSelectedGroup] = useState<SessionGroup | null>(null);
@@ -22,7 +23,9 @@ const GroupSearchBar = ({ onSelect }: GroupSearchBarProps) => {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const response = await fetch("/api/suggestions/group");
+        const response = await fetch(
+          `/api/suggestions/group?profileId=${profileId}`
+        );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }

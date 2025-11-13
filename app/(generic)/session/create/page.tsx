@@ -1,4 +1,5 @@
 "use client";
+import useAuth from "@/app/hooks/useAuth";
 import BGGSearchBar from "@/components/BGGSearchBar";
 import GroupSearchBar, { SessionGroup } from "@/components/GroupSearchBar";
 import PlayerInput from "@/components/PlayerInput";
@@ -76,6 +77,11 @@ const Page = () => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  const { user, authLoading } = useAuth();
+  if (authLoading || !user) {
+    return;
+  }
 
   // // ALERT: Debugging states
   // useEffect(() => {
@@ -369,7 +375,7 @@ const Page = () => {
                 {/* Tribe Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="tribe">Tribe</Label>
-                  <GroupSearchBar onSelect={setGroup} />
+                  <GroupSearchBar profileId={user.id} onSelect={setGroup} />
                 </div>
 
                 {/* Player Selection */}
