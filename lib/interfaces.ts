@@ -40,6 +40,7 @@ export interface CombinedRecentGames {
   isLoser: boolean;
   isTied: boolean;
   players: joinedCompGameLog[];
+  tribe: string;
 }
 
 export interface FilteredCounts {
