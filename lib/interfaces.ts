@@ -5,7 +5,7 @@ import { Database } from "@/database.types";
 // For User Auth
 type AuthUser = Database["auth"]["Tables"]["users"]["Row"];
 type UserProfile = Database["public"]["Tables"]["profile"]["Row"];
-export type User = AuthUser | UserProfile;
+export type User = AuthUser & UserProfile;
 
 // For Recent Games section
 export interface SqUser {

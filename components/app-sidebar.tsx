@@ -82,7 +82,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </SidebarMenuButton>
         ) : (
           <SidebarMenuButton asChild>
-            <a href={"/dashboard"}>
+            <a href={"/dashboard"} className="hover:bg-transparent">
               <Image src={Logo} alt="logo" height={35} />
               <span className="font-asimovian text-2xl">TRAKKA</span>
             </a>
