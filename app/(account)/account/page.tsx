@@ -36,7 +36,7 @@ const Page = async () => {
             Last Seen: {formatDate(user.updated_at)}
           </p>
           <p className="text-sm text-gray-600">
-            Member Seen: {formatDate(user.confirmed_at)}
+            Member Since: {formatDate(user.confirmed_at)}
           </p>
         </div>
         <Button
@@ -44,7 +44,7 @@ const Page = async () => {
           asChild
         >
           <span>
-            <SquarePen className="" />
+            <SquarePen />
             <Link href="/account/edit">Edit Profile</Link>
           </span>
         </Button>

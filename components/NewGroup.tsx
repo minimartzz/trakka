@@ -122,7 +122,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
           position: "bottom-right",
           className: "bg-destructive",
         });
-        throw new Error("At least one user must have the Admin role");
+        return;
       }
 
       // Group information
@@ -142,6 +142,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
         description: description,
         gamesPlayed: 0,
         image: groupPictureUrl || GENERIC_GROUP_URL,
+        createdBy: user.id,
         dateCreated: formattedDateLocal,
         lastUpdated: formattedDateLocal,
       };
