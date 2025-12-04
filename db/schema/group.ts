@@ -9,6 +9,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { profileGroupTable } from "./profileGroup";
+import { profileTable } from "@/db/schema/profile";
 
 export const groupTable = pgTable("group", {
   id: uuid("id").primaryKey(),
@@ -16,13 +17,18 @@ export const groupTable = pgTable("group", {
   description: text("description").notNull(),
   gamesPlayed: integer("games_played").notNull().default(0),
   image: text("image"),
+  createdBy: integer("created_by").notNull(),
   dateCreated: date("date_created").notNull(),
   lastUpdated: date("last_updated").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const groupTableRelations = relations(groupTable, ({ many }) => ({
+export const groupTableRelations = relations(groupTable, ({ one, many }) => ({
   profileGroup: many(profileGroupTable),
+  createdBy: one(profileTable, {
+    fields: [groupTable.createdBy],
+    references: [profileTable.id],
+  }),
 }));
 
 export type SelectGroup = typeof groupTable.$inferSelect;

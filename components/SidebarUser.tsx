@@ -29,6 +29,7 @@ import {
   User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
 
 const SidebarUser = ({
   user,
@@ -44,6 +45,7 @@ const SidebarUser = ({
   const { isMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -54,7 +56,7 @@ const SidebarUser = ({
   }
 
   const menuItems = [
-    { icon: User, label: "Account", action: () => console.log("Account") },
+    { icon: User, label: "Account", action: () => router.push("/account") },
     { icon: HelpCircle, label: "Help", action: () => console.log("Help") },
     {
       icon: RefreshCcw,
@@ -171,7 +173,6 @@ const SidebarUser = ({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             {/* Sign Out */}
-            {/* TODO: Add Sign out functionality */}
             <DropdownMenuGroup key="sign-out">
               <form action="/auth/signout" method="post">
                 <DropdownMenuItem key="sign-out" asChild>

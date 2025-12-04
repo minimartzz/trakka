@@ -29,9 +29,11 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
+import NewGroup from "@/components/NewGroup";
 
 interface AppSidebarProps {
   user: {
+    id: number;
     firstName: string;
     lastName: string;
     username: string;
@@ -47,15 +49,6 @@ interface AppSidebarProps {
 
 // Menu items
 const items = {
-  // TODO: User info & Tribes
-  user: {
-    firstName: "John",
-    lastName: "Lee",
-    username: "jlee",
-    email: "johnlee@gmail.com",
-    avatar:
-      "https://cf.geekdo-images.com/-A_ABjMw4PdoAZrH-FjiiA__itemrep/img/jAfHCmAqiY2pdq-SvbhgJDxoqIc=/fit-in/246x300/filters:strip_icc()/pic5726930.png",
-  },
   personal: [
     {
       name: "Dashboard",
@@ -66,18 +59,6 @@ const items = {
       name: "Recent Games",
       url: "/recent-games",
       icon: Crown,
-    },
-  ],
-  tribe: [
-    {
-      id: "a16cb5c8-8272-4fef-bf8d-5c0a532ce22d",
-      name: "hillview",
-      icon: "https://cf.geekdo-images.com/wW5xjgBJcFyLaEWZwrYuKA__itemrep/img/3QLqMVpqfJ9IeVBnJVCE06T3Zhk=/fit-in/246x300/filters:strip_icc()/pic4583626.jpg",
-    },
-    {
-      id: "d22e291e-9040-4f77-8fc0-fe86793fad40",
-      name: "aalto",
-      icon: "https://cf.geekdo-images.com/wW5xjgBJcFyLaEWZwrYuKA__itemrep/img/3QLqMVpqfJ9IeVBnJVCE06T3Zhk=/fit-in/246x300/filters:strip_icc()/pic4583626.jpg",
     },
   ],
 };
@@ -101,7 +82,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </SidebarMenuButton>
         ) : (
           <SidebarMenuButton asChild>
-            <a href={"/dashboard"}>
+            <a href={"/dashboard"} className="hover:bg-transparent">
               <Image src={Logo} alt="logo" height={35} />
               <span className="font-asimovian text-2xl">TRAKKA</span>
             </a>
@@ -152,14 +133,8 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 TRIBES
               </span>
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0 hover:bg-slate-700"
-                  // TODO: Function for onClick to create new tribes
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
+                <NewGroup user={user} />
+                {/* </Button> */}
                 <CollapsibleTrigger asChild>
                   <ChevronDown
                     className={`h-3 w-3 transition-transform ${

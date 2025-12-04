@@ -31,6 +31,7 @@ export const filterSessions = (
         isLoser: false,
         isTied: false,
         players: [],
+        tribe: record.tribe,
       });
     }
 

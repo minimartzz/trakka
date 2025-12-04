@@ -162,7 +162,6 @@ const PlayerInput: React.FC<PlayerInputProps> = ({
   const selectSuggestion = (profile: Profile) => {
     const displayName = profile.displayName || profile.username;
     onChange(`${displayName} (${profile.username})`, profile.id);
-    console.log(showDropdown);
     setSelectedIndex(-1);
     setSuggestions([]);
     setShowDropdown(false);

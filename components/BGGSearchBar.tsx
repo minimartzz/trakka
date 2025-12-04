@@ -8,6 +8,7 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const BGGSearchBar = ({
   onSelect,
@@ -15,6 +16,7 @@ const BGGSearchBar = ({
   onSelect: (item: BGGDetailsInterface) => void;
 }) => {
   const [query, setQuery] = useState("");
+  const [exactMatch, setExactMatch] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<BGGDetailsInterface[]>([]);
   const [selectedItem, setSelectedItem] = useState<BGGDetailsInterface | null>(
     null
@@ -37,7 +39,7 @@ const BGGSearchBar = ({
       setLoading(true);
       setError(null);
       try {
-        const bggdata = await fetchBGGIds(query, signal);
+        const bggdata = await fetchBGGIds(query, exactMatch, signal);
         if (bggdata.length == 0) {
           setLoading(false);
           return;
@@ -99,6 +101,21 @@ const BGGSearchBar = ({
         onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
         placeholder="Enter game title"
       />
+
+      <div className="flex mt-3 items-center gap-x-2">
+        <p className="text-muted-foreground text-sm">Exact Match</p>
+        <Checkbox
+          id="exact-match"
+          checked={exactMatch}
+          onCheckedChange={(checkedState) => {
+            if (checkedState === "indeterminate") {
+              setExactMatch(false);
+            } else {
+              setExactMatch(checkedState);
+            }
+          }}
+        />
+      </div>
 
       {isDropdownOpen && searchResults.length > 0 && !selectedItem && (
         <ul className="z-10 top-20 w-full max-w-md border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CombinedRecentGames } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Trophy, User } from "lucide-react";
+import { Group, Trophy, User, Users } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
@@ -22,6 +22,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     isLoser,
     isTied,
     players,
+    tribe,
   },
 }) => {
   const getResultsBadge = () => {
@@ -78,6 +79,10 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
         <div className="flex item-start justify-between mb-4">
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-bold truncate mb-1">{gameTitle}</h3>
+            <div className="flex items-center gap-x-2 mb-1 text-muted-foreground">
+              <Users className="w-4" />
+              <p className="text-sm">{tribe}</p>
+            </div>
             <div className="text-sm text-muted-foreground">
               {formatGameDate(players[0].datePlayed)}
             </div>

@@ -22,6 +22,8 @@ import React, { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
+const GENERIC_IMAGE_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
+
 const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,9 +53,7 @@ const Page = () => {
   };
 
   const handleSubmit = async (formData: FormData) => {
-    const finalImageUrl =
-      profilePictureUrl ||
-      `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
+    const finalImageUrl = profilePictureUrl || GENERIC_IMAGE_URL;
     formData.append("email", user!.email!);
     formData.append("profilePicture", finalImageUrl);
     formData.append("uuid", user!.id);
@@ -106,6 +106,8 @@ const Page = () => {
             userId={user!.id}
             onImageUrlChange={handleImageUrlChange}
             initialImageUrl={profilePictureUrl}
+            defaultImageUrl={GENERIC_IMAGE_URL}
+            path="avatars"
           />
           <div className="mt-3 text-center">
             <p className="text-xs text-gray-400 italic">

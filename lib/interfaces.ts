@@ -5,7 +5,7 @@ import { Database } from "@/database.types";
 // For User Auth
 type AuthUser = Database["auth"]["Tables"]["users"]["Row"];
 type UserProfile = Database["public"]["Tables"]["profile"]["Row"];
-export type User = AuthUser | UserProfile;
+export type User = AuthUser & UserProfile;
 
 // For Recent Games section
 export interface SqUser {
@@ -40,6 +40,7 @@ export interface CombinedRecentGames {
   isLoser: boolean;
   isTied: boolean;
   players: joinedCompGameLog[];
+  tribe: string;
 }
 
 export interface FilteredCounts {
@@ -49,3 +50,10 @@ export interface FilteredCounts {
   numPlayed: number;
   numTied: number;
 }
+
+// For Groups
+export const Roles = {
+  Admin: 1,
+  Editor: 2,
+  Member: 3,
+};

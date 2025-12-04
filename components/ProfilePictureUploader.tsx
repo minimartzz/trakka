@@ -8,33 +8,24 @@ import { toast } from "sonner";
 
 interface ProfilePictureUploaderProps {
   initialImageUrl?: string | null;
+  defaultImageUrl: string;
   onImageUrlChange: (url: string | null) => void;
   userId: string;
+  path: string;
 }
-
-const GENERIC_IMAGE_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
-console.log(process.env.NEXT_PUBLIC_SUPABASE_HEADER);
-
-// const appendToFilename = (filename: string, addition: string) => {
-//   const dotIndex = filename.lastIndexOf(".");
-//   if (dotIndex === -1) return filename + addition;
-//   else
-//     return (
-//       filename.substring(0, dotIndex) + addition + filename.substring(dotIndex)
-//     );
-// };
 
 const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
   initialImageUrl,
+  defaultImageUrl,
   onImageUrlChange,
   userId,
+  path,
 }) => {
   const supabase = createClient();
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialImageUrl || null
   );
   const [isUploading, setIsUploading] = useState(false);
-  // const dateStamp = String(Date.now())
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -47,7 +38,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
     // Unique filename for pictures
     const fileExt = file.name.split(".").pop();
     const fileName = `${userId}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const filePath = `${path}/${fileName}`;
 
     // Upload image to supabase bucket
     const { data, error } = await supabase.storage
@@ -76,10 +67,10 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
 
   const handleImageRemove = async () => {
     // Remove the image from supabase bucket
-    if (!imageUrl || imageUrl === GENERIC_IMAGE_URL) return;
+    if (!imageUrl || imageUrl === defaultImageUrl) return;
 
     const fileName = imageUrl.split("/").pop();
-    const filePath = `avatars/${fileName}`;
+    const filePath = `${path}/${fileName}`;
 
     const { error } = await supabase.storage.from("images").remove([filePath]);
 
@@ -96,7 +87,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
     <div className="flex flex-col items-center space-y-4">
       <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
         <Image
-          src={imageUrl || GENERIC_IMAGE_URL}
+          src={imageUrl || defaultImageUrl}
           alt="Profile picture"
           layout="fill"
           objectFit="cover"
