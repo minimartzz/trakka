@@ -26,6 +26,7 @@ import {
 import { Roles } from "@/lib/interfaces";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Player {
   id: string;
@@ -192,7 +193,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
       <DialogTrigger className="hover:bg-slate-700">
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="overflow-y-scroll max-h-screen">
         <DialogHeader>
           <DialogTitle>Create Group</DialogTitle>
           <DialogDescription>
