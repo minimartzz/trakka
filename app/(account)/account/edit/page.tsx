@@ -73,7 +73,7 @@ const Page = () => {
   };
 
   return (
-    <div className="p-12">
+    <div className="p-0 lg:p-12">
       {/* Profile Picture */}
       <ProfilePictureUploader
         userId={String(user.id)}
