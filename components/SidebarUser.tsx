@@ -228,7 +228,7 @@ const SidebarUser = ({
                   handleShare({
                     title: "Welcome to Trakka",
                     text: "Sign up for a free Traaka account",
-                    url: "login?tab=sign-up",
+                    url: "https://trakka.co/login?tab=sign-up",
                   })
                 }
               >

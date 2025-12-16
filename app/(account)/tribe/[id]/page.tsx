@@ -1,4 +1,3 @@
-import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { groupTable } from "@/db/schema/group";
@@ -162,7 +161,6 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
       <p className="pl-4 mt-8 italic">{`"${tribeDetails.group.description}"`}</p>
       <hr className="mt-4" />
-      <ShareButton title="hi" text="hi" url="hi" />
     </div>
   );
 };
