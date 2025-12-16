@@ -26,7 +26,6 @@ import {
 import { Roles } from "@/lib/interfaces";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Player {
   id: string;
@@ -42,12 +41,13 @@ interface NewGroupProps {
     firstName: string;
     username: string;
   };
+  className?: string;
 }
 
 const groupId = uuidv4();
 const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/groups/generic_group.png`;
 
-const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
+const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [groupPictureUrl, setGroupPictureUrl] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([
@@ -190,7 +190,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {/* TODO: Form action component */}
-      <DialogTrigger className="hover:bg-slate-700">
+      <DialogTrigger className={`${className}`}>
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
       </DialogTrigger>
       <DialogContent className="overflow-y-scroll max-h-screen">

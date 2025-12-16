@@ -133,7 +133,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 TRIBES
               </span>
               <div className="flex items-center gap-1">
-                <NewGroup user={user} />
+                <NewGroup user={user} className="hover:bg-slate-700" />
                 {/* </Button> */}
                 <CollapsibleTrigger asChild>
                   <ChevronDown
@@ -172,6 +172,18 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
               ))}
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Add tribes button when sidebar closed */}
+          {isCollapsed && (
+            <Button
+              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center"
+              variant="outline"
+              onClick={() => console.log("Create Tribe Clicked")}
+              asChild
+            >
+              <NewGroup user={user} />
+            </Button>
+          )}
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
