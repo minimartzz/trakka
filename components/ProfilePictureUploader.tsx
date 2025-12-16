@@ -1,4 +1,5 @@
 "use client";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import createClient from "@/utils/supabase/client";
 import { Upload, X } from "lucide-react";
@@ -14,6 +15,44 @@ interface ProfilePictureUploaderProps {
   path: string;
 }
 
+const DEFAULT_AVATARS = [
+  {
+    id: 1,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_1.png`,
+    alt: "Generic Profile 1",
+  },
+  {
+    id: 2,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_2.png`,
+    alt: "Generic Profile 2",
+  },
+  {
+    id: 3,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_3.png`,
+    alt: "Generic Profile 3",
+  },
+  {
+    id: 4,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_4.png`,
+    alt: "Generic Profile 4",
+  },
+  {
+    id: 5,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_5.png`,
+    alt: "Generic Profile 5",
+  },
+  {
+    id: 6,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_6.jpg`,
+    alt: "Generic Profile 6",
+  },
+  {
+    id: 7,
+    url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/avatars/default_7.png`,
+    alt: "Generic Profile 7",
+  },
+];
+
 const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
   initialImageUrl,
   defaultImageUrl,
@@ -27,6 +66,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
   );
   const [isUploading, setIsUploading] = useState(false);
 
+  // Handle image upload
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -65,6 +105,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
     setIsUploading(false);
   };
 
+  // Handle image removal
   const handleImageRemove = async () => {
     // Remove the image from supabase bucket
     if (!imageUrl || imageUrl === defaultImageUrl) return;
@@ -83,6 +124,13 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
     }
   };
 
+  // Handle default profile pictures
+  const handleDefaultImage = (imageUrl: string) => {
+    setImageUrl(imageUrl);
+    onImageUrlChange(imageUrl);
+    toast.success("Profile picture updated successfully!");
+  };
+
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
@@ -92,6 +140,20 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
           layout="fill"
           objectFit="cover"
         />
+      </div>
+      <div className="flex max-w-4/5 md:max-w-96 p-2 justify-between items-center gap-x-4 overflow-x-auto scrollbar-hide">
+        {DEFAULT_AVATARS.map((avatar) => (
+          <Button
+            key={avatar.id}
+            onClick={() => handleDefaultImage(avatar.url)}
+            variant="ghost"
+            className="rounded-lg p-0 h-auto w-auto hover:ring-2 hover:ring-primary transition-all duration-150"
+          >
+            <Avatar className="rounded-lg h-10 w-10">
+              <AvatarImage src={avatar.url} alt={avatar.alt} />
+            </Avatar>
+          </Button>
+        ))}
       </div>
 
       <div className="flex gap-2">
