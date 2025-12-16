@@ -8,9 +8,10 @@ interface ShareButtonProps {
   title: string;
   text: string;
   url: string;
+  className: string;
 }
 
-const ShareButton = ({ title, text, url }: ShareButtonProps) => {
+const ShareButton = ({ title, text, url, className }: ShareButtonProps) => {
   const handleShare = async () => {
     // Checks if browser is Web Share API compatible
     if (!navigator.share) {
@@ -51,7 +52,11 @@ const ShareButton = ({ title, text, url }: ShareButtonProps) => {
   };
 
   return (
-    <Button onClick={handleShare} className="gap-x-2">
+    <Button
+      onClick={handleShare}
+      className={`${className} gap-x-2`}
+      variant="outline"
+    >
       <Share2 className="h-4 w-4" />
     </Button>
   );

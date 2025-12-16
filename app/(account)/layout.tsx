@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import {
   SidebarInset,
@@ -68,17 +69,25 @@ export default async function AccountLayout({
           <h2 className="text-2xl sm:text-3xl font-lora font-semibold">
             {`Welcome back, ${user.first_name}`}
           </h2>
-          <Button
-            className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
-            asChild
-          >
-            <Link href="/session/create">
-              <Play className="text-white" />
-              <span className="hidden sm:block font-semibold text-[16px] text-white">
-                New Session
-              </span>
-            </Link>
-          </Button>
+          <div className="flex gap-x-4 items-center justify-center">
+            <ShareButton
+              title="Welcome to Trakka"
+              text="Sign up for a free Traaka account"
+              url="login?tab=sign-up"
+              className="hidden sm:block"
+            />
+            <Button
+              className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
+              asChild
+            >
+              <Link href="/session/create">
+                <Play className="text-white" />
+                <span className="hidden sm:block font-semibold text-[16px] text-white">
+                  New Session
+                </span>
+              </Link>
+            </Button>
+          </div>
         </header>
         {children}
       </SidebarInset>
