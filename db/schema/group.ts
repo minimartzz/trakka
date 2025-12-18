@@ -10,6 +10,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { profileGroupTable } from "./profileGroup";
 import { profileTable } from "@/db/schema/profile";
+import { groupInvitesTable } from "@/db/schema/groupInvites";
+import { groupJoinRequestTable } from "@/db/schema/groupJoinRequests";
 
 export const groupTable = pgTable("group", {
   id: uuid("id").primaryKey(),
@@ -29,6 +31,8 @@ export const groupTableRelations = relations(groupTable, ({ one, many }) => ({
     fields: [groupTable.createdBy],
     references: [profileTable.id],
   }),
+  groupInvites: many(groupInvitesTable),
+  groupJoinRequests: many(groupJoinRequestTable),
 }));
 
 export type SelectGroup = typeof groupTable.$inferSelect;

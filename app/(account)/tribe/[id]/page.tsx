@@ -8,6 +8,7 @@ import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { Calendar, Crown, Gavel, Settings, Users2 } from "lucide-react";
+import TribeInvite from "@/components/tribes/TribeInvite";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -116,23 +117,31 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         {/* Group Management */}
         <div className="w-full md:w-3xs md:ml-auto md:self-start mt-5 md:mt-0">
           <div className="flex flex-col gap-y-3 items-end">
-            {/* Admin Button */}
-            {roleId === 1 && (
-              <Button
-                className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
-                asChild
-              >
-                <Link
-                  className="dark:text-black text-white"
-                  href={`/tribe/${tribeId}/edit`}
+            <div className="flex gap-x-4">
+              {/* Invite user button */}
+              <TribeInvite
+                userId={user.id}
+                tribeId={tribeDetails.group.id}
+                tribeName={tribeDetails.group.name}
+              />
+              {/* Admin Button */}
+              {roleId === 1 && (
+                <Button
+                  className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
+                  asChild
                 >
-                  <span className="flex items-center gap-x-2">
-                    <Settings className="dark:text-black text-white" />
-                    Settings
-                  </span>
-                </Link>
-              </Button>
-            )}
+                  <Link
+                    className="dark:text-black text-white"
+                    href={`/tribe/${tribeId}/edit`}
+                  >
+                    <span className="flex items-center gap-x-2">
+                      <Settings className="dark:text-black text-white" />
+                      Settings
+                    </span>
+                  </Link>
+                </Button>
+              )}
+            </div>
 
             {/* Admins */}
             <Card className="rounded-sm shadow-lg pt-0 max-w-md w-full">

@@ -72,7 +72,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader />
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden">
         {/* Header Logo */}
         {isCollapsed ? (
           <SidebarMenuButton size="lg" className="ml-2" asChild>
