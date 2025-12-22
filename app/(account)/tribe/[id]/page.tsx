@@ -89,6 +89,13 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
               </Link>
             </Button>
           )}
+          {/* Invite user button */}
+          <TribeInvite
+            userId={user.id}
+            tribeId={tribeDetails.group.id}
+            tribeName={tribeDetails.group.name}
+            className="sm:hidden absolute top-[50px] right-[-80px] bg-indigo-600 hover:bg-indigo-700 text-white"
+          />
         </div>
         <div className="flex flex-col gap-y-1 mt-5 md:mt-0">
           <h1 className="text-4xl font-bold mb-3">{tribeDetails.group.name}</h1>
@@ -123,6 +130,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
                 userId={user.id}
                 tribeId={tribeDetails.group.id}
                 tribeName={tribeDetails.group.name}
+                className="hidden sm:flex sm:items-center gap-x-2 bg-indigo-600 hover:bg-indigo-700 text-white"
               />
               {/* Admin Button */}
               {roleId === 1 && (

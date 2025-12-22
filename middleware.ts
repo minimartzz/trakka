@@ -3,7 +3,25 @@ import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   // update user's auth session
-  return await updateSession(request);
+  let response = await updateSession(request);
+
+  // Add invite link to cookies on /join
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/join")) {
+    const segments = pathname.split("/");
+    const inviteCode = segments[2];
+
+    if (inviteCode) {
+      response.cookies.set("pending_invite_code", inviteCode, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24,
+      });
+    }
+  }
+
+  return response;
 }
 
 export const config = {

@@ -12,7 +12,7 @@ import {
 
 export const notificationsTable = pgTable("notifications", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: integer("user_id").notNull(),
+  profileId: integer("profile_id").notNull(),
   type: text("type").notNull(),
   data: jsonb("data"),
   isRead: boolean("is_read").default(false),
@@ -23,7 +23,7 @@ export const notificationsTableRelations = relations(
   notificationsTable,
   ({ one }) => ({
     profile: one(profileTable, {
-      fields: [notificationsTable.userId],
+      fields: [notificationsTable.profileId],
       references: [profileTable.id],
     }),
   })

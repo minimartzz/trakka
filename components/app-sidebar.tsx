@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
+import RequestInbox from "@/components/tribes/RequestInbox";
 
 interface AppSidebarProps {
   user: {
@@ -82,10 +83,15 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </SidebarMenuButton>
         ) : (
           <SidebarMenuButton asChild>
-            <a href={"/dashboard"} className="hover:bg-transparent">
-              <Image src={Logo} alt="logo" height={35} />
-              <span className="font-asimovian text-2xl">TRAKKA</span>
-            </a>
+            <div className="flex items-center justify-between hover:bg-transparent">
+              <a href={"/dashboard"} className="flex items-center gap-x-2">
+                <Image src={Logo} alt="logo" height={35} />
+                <span className="font-asimovian text-2xl">TRAKKA</span>
+              </a>
+              <div>
+                <RequestInbox profileId={user.id} />
+              </div>
+            </div>
           </SidebarMenuButton>
         )}
         <SidebarSeparator className="bg-sidebar-accent mx-0" />
