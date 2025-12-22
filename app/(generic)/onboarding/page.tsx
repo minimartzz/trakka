@@ -93,7 +93,7 @@ const Page = () => {
         Welcome to Trakka
       </h1>
       <h3 className="text-xl font-semibold">We just need a bit more info...</h3>
-      <Card className="w-full max-w-lg p-5 m-8">
+      <Card className="w-full max-w-lg p-1 py-5 m-8">
         <CardHeader>
           <CardTitle className="text-xl">Profile Details</CardTitle>
           <p className="text-muted-foreground">

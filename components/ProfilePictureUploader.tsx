@@ -132,8 +132,8 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
+    <div className="flex flex-col items-center space-y-4 w-full max-w-full">
+      <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300 shrink-0">
         <Image
           src={imageUrl || defaultImageUrl}
           alt="Profile picture"
@@ -141,19 +141,22 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
           objectFit="cover"
         />
       </div>
-      <div className="flex max-w-4/5 md:max-w-96 p-2 justify-between items-center gap-x-4 overflow-x-auto scrollbar-hide">
-        {DEFAULT_AVATARS.map((avatar) => (
-          <Button
-            key={avatar.id}
-            onClick={() => handleDefaultImage(avatar.url)}
-            variant="ghost"
-            className="rounded-lg p-0 h-auto w-auto hover:ring-2 hover:ring-primary transition-all duration-150"
-          >
-            <Avatar className="rounded-lg h-10 w-10">
-              <AvatarImage src={avatar.url} alt={avatar.alt} />
-            </Avatar>
-          </Button>
-        ))}
+      {/* <div className="flex max-w-4/5 md:max-w-96 p-2 justify-between items-center gap-x-4 overflow-x-auto scrollbar-hide"> */}
+      <div className="w-full">
+        <div className="flex flex-nowrap items-center justify-center gap-3 py-2 overflow-x-auto">
+          {DEFAULT_AVATARS.map((avatar) => (
+            <Button
+              key={avatar.id}
+              onClick={() => handleDefaultImage(avatar.url)}
+              variant="ghost"
+              className="rounded-lg p-0 h-auto w-auto hover:ring-2 hover:ring-primary transition-all duration-150"
+            >
+              <Avatar className="rounded-lg h-10 w-10">
+                <AvatarImage src={avatar.url} alt={avatar.alt} />
+              </Avatar>
+            </Button>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2">
