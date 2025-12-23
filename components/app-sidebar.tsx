@@ -15,7 +15,7 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { BarChart3, ChevronDown, Crown, Plus, Search } from "lucide-react";
+import { BarChart3, ChevronDown, Crown, Search } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/public/trakka_logo.png";

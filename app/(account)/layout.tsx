@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import Feedback from "@/components/Feedback";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -90,6 +91,13 @@ export default async function AccountLayout({
           </div>
         </header>
         {children}
+        <footer>
+          <div className="flex justify-end-safe">
+            <div className="fixed bottom-5 right-4 z-10">
+              <Feedback profileId={user.id} />
+            </div>
+          </div>
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );

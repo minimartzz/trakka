@@ -189,7 +189,6 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {/* TODO: Form action component */}
       <DialogTrigger className={`${className}`}>
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
       </DialogTrigger>
