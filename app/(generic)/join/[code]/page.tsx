@@ -7,7 +7,6 @@ import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
 import fetchUser from "@/utils/fetchServerUser";
 import { eq } from "drizzle-orm";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import React from "react";
 
@@ -40,9 +39,11 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
   const { code } = await params;
   const user = await fetchUser();
   const inviteeInfo = await getInvitee(code);
+  const profile = inviteeInfo?.profile;
+  const group = inviteeInfo?.group;
 
   // If provided an invalid invite link
-  if (!inviteeInfo) {
+  if (!inviteeInfo || !profile || !group) {
     return (
       <div className="flex min-h-screen justify-center items-center bg-background">
         <div className="flex flex-col items-center justify-center">
@@ -88,21 +89,19 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
 
   // View 1: If user has already logged in and clicks on link
   const AuthenticatedView = async () => {
-    const joinGroupAction = inviteeInfo
-      ? createRequestLoggedIn.bind(null, inviteeInfo.group?.id!, user.id)
-      : null;
+    const joinGroupAction = createRequestLoggedIn.bind(null, group.id, user.id);
 
     return (
       <div className="flex min-h-screen justify-center items-center bg-background">
         <div className="flex flex-col gap-y-5">
           <HeaderContent
             userFirstName={user.first_name}
-            inviteeFirstName={inviteeInfo.profile?.firstName!}
-            inviteeGroupName={inviteeInfo.group?.name!}
+            inviteeFirstName={profile.firstName}
+            inviteeGroupName={group.name}
           />
           <h2>{`Click on the button below to request to join`}</h2>
 
-          <form action={joinGroupAction!}>
+          <form action={joinGroupAction}>
             <Button type="submit" size="lg">
               Request to Join
             </Button>
@@ -118,8 +117,8 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
     <div className="flex min-h-screen justify-center items-center bg-background">
       <div className="flex flex-col gap-y-10">
         <HeaderContent
-          inviteeFirstName={inviteeInfo.profile?.firstName!}
-          inviteeGroupName={inviteeInfo.group?.name!}
+          inviteeFirstName={profile.firstName}
+          inviteeGroupName={group.name}
         />
         <InviteLoginClient />
       </div>
