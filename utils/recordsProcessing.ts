@@ -32,6 +32,7 @@ export const filterSessions = (
         isTied: false,
         players: [],
         tribe: record.tribe,
+        rating: record.rating || 0,
       });
     }
 

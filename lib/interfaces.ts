@@ -41,6 +41,7 @@ export interface CombinedRecentGames {
   isTied: boolean;
   players: joinedCompGameLog[];
   tribe: string;
+  rating: number;
 }
 
 export interface FilteredCounts {
