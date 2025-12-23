@@ -4,7 +4,7 @@ import { profileGroupTable } from "@/db/schema/profileGroup";
 import { groupTable } from "@/db/schema/group";
 import { format } from "date-fns";
 import { db } from "@/utils/db";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, notInArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 type updatedProfileGroup = typeof profileGroupTable.$inferInsert;
@@ -50,7 +50,7 @@ export async function syncTribes(formData: FormData) {
           .where(
             and(
               eq(profileGroupTable.groupId, groupId),
-              inArray(profileGroupTable.profileId, incomingProfileIds)
+              notInArray(profileGroupTable.profileId, incomingProfileIds)
             )
           );
       } else {

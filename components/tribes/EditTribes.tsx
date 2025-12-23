@@ -156,7 +156,7 @@ const EditTribes = ({
   };
 
   return (
-    <div className="w-full">
+    <div className="p-0 lg:p-12 lg:w-full">
       {/* Group Profile Picture */}
       <div>
         <ProfilePictureUploader
@@ -222,14 +222,17 @@ const EditTribes = ({
             Select players using @ at the start and select. If user does not
             exist, please ask them to create an account
           </div>
-          <div className="flex items-center gap-4 px-4 py-2 text-sm text-muted-foreground font-medium border rounded-lg bg-muted/30 mb-2">
-            <div className="flex-[2] min-w-0">Player</div>
-            <div className="w-50 text-center">Role</div>
+          <div className="hidden sm:grid sm:grid-cols-9 items-center gap-4 px-3 py-2 text-sm text-muted-foreground font-medium border rounded-lg bg-muted/30 mb-2">
+            <div className="col-span-5 min-w-0">Player</div>
+            <div className="w-75 text-center">Role</div>
           </div>
           {players.map((player, idx) => (
-            <div key={player.id} className="flex items-center gap-4 mb-3">
-              <div className="flex items-center gap-4 p-3 border rounded-lg w-full">
-                <div className="flex-1 min-w-0">
+            <div key={player.id} className="gap-4 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-9 items-start sm:items-center gap-3 sm:gap-4 p-3 border rounded-lg bg-card">
+                <div className="col-span-1 sm:col-span-6 min-w-0">
+                  <Label className="block sm:hidden text-xs font-semibold text-muted-foreground tracking-wide">
+                    Player
+                  </Label>
                   <PlayerInput
                     value={`${player.name}`}
                     onChange={(name, userId) =>
@@ -240,31 +243,42 @@ const EditTribes = ({
                     className="w-full"
                   />
                 </div>
-                <Select
-                  onValueChange={(value) => updatePlayerRole(player.id, value)}
-                  defaultValue={reversedRoles[player.role.toString()]}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(Roles).map((role) => (
-                      <SelectItem value={role} key={role}>
-                        {role}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removePlayer(player.id)}
-                  className="p-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] shrink-0"
-                  disabled={players.length <= 1}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+
+                <div className="col-start-1 sm:col-start-auto sm:col-span-2 col-span-1 min-w-0">
+                  <Label className="block sm:hidden mb-1.5 text-xs font-semibold text-muted-foreground tracking-wide">
+                    Role
+                  </Label>
+                  <Select
+                    onValueChange={(value) =>
+                      updatePlayerRole(player.id, value)
+                    }
+                    defaultValue={reversedRoles[player.role.toString()]}
+                  >
+                    <SelectTrigger className="sm:w-full">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(Roles).map((role) => (
+                        <SelectItem value={role} key={role}>
+                          {role}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="col-start-2 row-start-1 row-span-2 sm:row-span-1 sm:col-start-auto flex items-center justify-center h-full sm:h-auto pt-6 sm:pt-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removePlayer(player.id)}
+                    className="p-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] shrink-0"
+                    disabled={players.length <= 1}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

@@ -15,7 +15,7 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { BarChart3, ChevronDown, Crown, Plus, Search } from "lucide-react";
+import { BarChart3, ChevronDown, Crown, Search } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/public/trakka_logo.png";
@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
+import RequestInbox from "@/components/tribes/RequestInbox";
 
 interface AppSidebarProps {
   user: {
@@ -72,7 +73,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader />
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden">
         {/* Header Logo */}
         {isCollapsed ? (
           <SidebarMenuButton size="lg" className="ml-2" asChild>
@@ -82,10 +83,15 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </SidebarMenuButton>
         ) : (
           <SidebarMenuButton asChild>
-            <a href={"/dashboard"} className="hover:bg-transparent">
-              <Image src={Logo} alt="logo" height={35} />
-              <span className="font-asimovian text-2xl">TRAKKA</span>
-            </a>
+            <div className="flex items-center justify-between hover:bg-transparent">
+              <a href={"/dashboard"} className="flex items-center gap-x-2">
+                <Image src={Logo} alt="logo" height={35} />
+                <span className="font-asimovian text-2xl">TRAKKA</span>
+              </a>
+              <div>
+                <RequestInbox profileId={user.id} />
+              </div>
+            </div>
           </SidebarMenuButton>
         )}
         <SidebarSeparator className="bg-sidebar-accent mx-0" />
@@ -133,7 +139,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 TRIBES
               </span>
               <div className="flex items-center gap-1">
-                <NewGroup user={user} />
+                <NewGroup user={user} className="hover:bg-slate-700" />
                 {/* </Button> */}
                 <CollapsibleTrigger asChild>
                   <ChevronDown
@@ -172,6 +178,18 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
               ))}
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Add tribes button when sidebar closed */}
+          {isCollapsed && (
+            <Button
+              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center"
+              variant="outline"
+              onClick={() => console.log("Create Tribe Clicked")}
+              asChild
+            >
+              <NewGroup user={user} />
+            </Button>
+          )}
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>

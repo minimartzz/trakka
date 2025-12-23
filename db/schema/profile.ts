@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
 import {
-  date,
   integer,
   pgTable,
   text,
@@ -10,6 +9,9 @@ import {
 } from "drizzle-orm/pg-core";
 import { profileGroupTable } from "./profileGroup";
 import { usersTable } from "@/db/schema/authUser";
+import { groupInvitesTable } from "@/db/schema/groupInvites";
+import { groupJoinRequestTable } from "@/db/schema/groupJoinRequests";
+import { notificationsTable } from "@/db/schema/notifications";
 
 export const profileTable = pgTable("profile", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -26,6 +28,9 @@ export const profileTable = pgTable("profile", {
 export const profileRelations = relations(profileTable, ({ many, one }) => ({
   profileGroup: many(profileGroupTable),
   usersTable: one(usersTable),
+  groupInvites: many(groupInvitesTable),
+  groupJoinRequests: many(groupJoinRequestTable),
+  notifications: many(notificationsTable),
 }));
 
 export type SelectProfile = typeof profileTable.$inferSelect;

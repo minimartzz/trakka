@@ -1,9 +1,10 @@
+import StarRating from "@/components/StarRating";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CombinedRecentGames } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Group, Trophy, User, Users } from "lucide-react";
+import { Trophy, User, Users } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
@@ -72,6 +73,9 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     return format(new Date(dateString), "dd MMM yyyy");
   };
 
+  // Get rating for current game
+  const rating = players.find((player) => player.profileId === userId)?.rating;
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="px-6">
@@ -87,7 +91,17 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
               {formatGameDate(players[0].datePlayed)}
             </div>
           </div>
-          <div className="ml-4 flex-shrink-0">{getResultsBadge()}</div>
+          <div className="flex flex-col items-end gap-5">
+            <div className="ml-4 flex-shrink-0">{getResultsBadge()}</div>
+
+            {/* Session Rating */}
+            <StarRating
+              profileId={userId}
+              sessionId={sessionId}
+              initialRating={rating || 0}
+              starSize={20}
+            />
+          </div>
         </div>
 
         {/* Standings Table */}

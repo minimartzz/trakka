@@ -41,6 +41,7 @@ export interface CombinedRecentGames {
   isTied: boolean;
   players: joinedCompGameLog[];
   tribe: string;
+  rating: number;
 }
 
 export interface FilteredCounts {
@@ -53,7 +54,7 @@ export interface FilteredCounts {
 
 // For Groups
 export const Roles = {
-  Admin: 1,
-  Editor: 2,
+  SuperAdmin: 1,
+  Admin: 2,
   Member: 3,
 };

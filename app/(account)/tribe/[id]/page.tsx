@@ -8,6 +8,7 @@ import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { Calendar, Crown, Gavel, Settings, Users2 } from "lucide-react";
+import TribeInvite from "@/components/tribes/TribeInvite";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -70,11 +71,33 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <div className="p-12">
-      <div className="flex gap-x-7">
-        <div className="relative w-42 h-42 rounded-2xl overflow-hidden">
-          <Image src={tribeDetails.group.image!} alt="Tribe picture" fill />
+      <div className="flex flex-col md:flex-row gap-x-7 items-center justify-center">
+        <div className="relative">
+          <div className="relative w-42 h-42 rounded-2xl overflow-hidden">
+            <Image src={tribeDetails.group.image!} alt="Tribe picture" fill />
+          </div>
+          {roleId === 1 && (
+            <Button
+              className="sm:hidden absolute top-0 right-[-80px] dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
+              asChild
+            >
+              <Link
+                className="dark:text-black text-white"
+                href={`/tribe/${tribeId}/edit`}
+              >
+                <Settings className="dark:text-black text-white" />
+              </Link>
+            </Button>
+          )}
+          {/* Invite user button */}
+          <TribeInvite
+            userId={user.id}
+            tribeId={tribeDetails.group.id}
+            tribeName={tribeDetails.group.name}
+            className="sm:hidden absolute top-[50px] right-[-80px] bg-indigo-600 hover:bg-indigo-700 text-white"
+          />
         </div>
-        <div className="flex flex-col gap-y-1">
+        <div className="flex flex-col gap-y-1 mt-5 md:mt-0">
           <h1 className="text-4xl font-bold mb-3">{tribeDetails.group.name}</h1>
           <div className="flex items-center gap-x-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -99,25 +122,34 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Group Management */}
-        <div className="ml-auto self-start">
+        <div className="w-full md:w-3xs md:ml-auto md:self-start mt-5 md:mt-0">
           <div className="flex flex-col gap-y-3 items-end">
-            {/* Admin Button */}
-            {roleId === 1 && (
-              <Button
-                className="dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
-                asChild
-              >
-                <span>
-                  <Settings className="dark:text-black text-white" />
+            <div className="flex gap-x-4">
+              {/* Invite user button */}
+              <TribeInvite
+                userId={user.id}
+                tribeId={tribeDetails.group.id}
+                tribeName={tribeDetails.group.name}
+                className="hidden sm:flex sm:items-center gap-x-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              />
+              {/* Admin Button */}
+              {roleId === 1 && (
+                <Button
+                  className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
+                  asChild
+                >
                   <Link
                     className="dark:text-black text-white"
                     href={`/tribe/${tribeId}/edit`}
                   >
-                    Settings
+                    <span className="flex items-center gap-x-2">
+                      <Settings className="dark:text-black text-white" />
+                      Settings
+                    </span>
                   </Link>
-                </span>
-              </Button>
-            )}
+                </Button>
+              )}
+            </div>
 
             {/* Admins */}
             <Card className="rounded-sm shadow-lg pt-0 max-w-md w-full">

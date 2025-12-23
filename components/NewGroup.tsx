@@ -41,12 +41,13 @@ interface NewGroupProps {
     firstName: string;
     username: string;
   };
+  className?: string;
 }
 
 const groupId = uuidv4();
 const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/groups/generic_group.png`;
 
-const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
+const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [groupPictureUrl, setGroupPictureUrl] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([
@@ -188,11 +189,10 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {/* TODO: Form action component */}
-      <DialogTrigger className="hover:bg-slate-700">
+      <DialogTrigger className={`${className}`}>
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="p-4 sm:p-6 w-[95%] sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Group</DialogTitle>
           <DialogDescription>
@@ -200,11 +200,8 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="flex flex-col justify-center items-center gap-y-5">
-            <p className="self-start text-xs text-gray-600">
-              Group ID: {groupId}
-            </p>
-            <div>
+          <div className="flex flex-col justify-center items-center gap-y-5 w-full min-w-0">
+            <div className="w-full max-w-full">
               <ProfilePictureUploader
                 userId={groupId}
                 onImageUrlChange={handleImageUrlChange}
@@ -258,14 +255,17 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
               Select players using @ at the start and select. If user does not
               exist, please ask them to create an account
             </div>
-            <div className="flex items-center gap-4 px-4 py-2 text-sm text-muted-foreground font-medium border rounded-lg bg-muted/30 mb-2">
+            <div className="hidden sm:flex items-center gap-4 px-4 py-2 text-sm text-muted-foreground font-medium border rounded-lg bg-muted/30 mb-2">
               <div className="flex-[2] min-w-0">Player</div>
-              <div className="w-50 text-center">Role</div>
+              <div className="w-75 text-center">Role</div>
             </div>
             {players.map((player, idx) => (
-              <div key={player.id} className="flex items-center gap-4 mb-3">
-                <div className="flex items-center gap-4 p-3 border rounded-lg w-full">
-                  <div className="flex-1 min-w-0">
+              <div key={player.id} className="gap-4 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-5 items-start sm:items-center gap-3 sm:gap-4 p-3 border rounded-lg bg-card">
+                  <div className="col-span-1 sm:col-span-3 min-w-0">
+                    <Label className="block sm:hidden text-xs font-semibold text-muted-foreground tracking-wide">
+                      Player
+                    </Label>
                     <PlayerInput
                       value={`${player.name}`}
                       onChange={(name, userId) =>
@@ -276,43 +276,54 @@ const NewGroup: React.FC<NewGroupProps> = ({ user }) => {
                       className="w-full"
                     />
                   </div>
-                  <Select
-                    onValueChange={(value) =>
-                      updatePlayerRole(player.id, value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(Roles).map((role) => (
-                        <SelectItem value={role} key={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removePlayer(player.id)}
-                    className="p-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] shrink-0"
-                    disabled={players.length <= 1}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+
+                  <div className="col-start-1 sm:col-start-auto col-span-1 min-w-0">
+                    <Label className="block sm:hidden mb-1.5 text-xs font-semibold text-muted-foreground tracking-wide">
+                      Role
+                    </Label>
+                    <Select
+                      onValueChange={(value) =>
+                        updatePlayerRole(player.id, value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.keys(Roles).map((role) => (
+                          <SelectItem value={role} key={role}>
+                            {role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="col-start-2 row-start-1 row-span-2 sm:row-span-1 sm:col-start-auto flex items-center justify-center h-full sm:h-auto pt-6 sm:pt-0">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removePlayer(player.id)}
+                      className="p-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] shrink-0"
+                      disabled={players.length <= 1}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-          <Button
-            type="submit"
-            className="w-full hover:cursor-pointer"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create Group"}
-          </Button>
+          <div className="pt-3">
+            <Button
+              type="submit"
+              className="w-full hover:cursor-pointer"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating..." : "Create Group"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

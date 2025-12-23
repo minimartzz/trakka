@@ -18,16 +18,26 @@ const Page = async () => {
   return (
     <div className="p-12 space-y-6">
       {/* Header */}
-      <div className="flex items-center">
-        <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
-          <Image
-            src={user.image}
-            alt="Profile picture"
-            layout="fill"
-            objectFit="cover"
-          />
+      <div className="flex flex-col md:flex-row items-center justify-center">
+        <div className="relative">
+          <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
+            <Image
+              src={user.image}
+              alt="Profile picture"
+              layout="fill"
+              objectFit="cover"
+            />
+          </div>
+          <Button
+            className="sm:hidden absolute top-0 right-[-80px] dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
+            asChild
+          >
+            <Link href="/account/edit">
+              <SquarePen className="w-2 h-2" />
+            </Link>
+          </Button>
         </div>
-        <div className="ml-10 space-y-1">
+        <div className="text-center md:text-left mt-5 md:mt-0 md:ml-10 space-y-2">
           <h1 className="text-3xl font-bold">
             {user.first_name} {user.last_name}
           </h1>
@@ -40,13 +50,15 @@ const Page = async () => {
           </p>
         </div>
         <Button
-          className="dark:text-background text-foreground ml-auto self-start font-semibold bg-add-button hover:bg-green-600"
+          className="hidden md:block dark:text-background text-foreground ml-auto self-start font-semibold bg-gray-500 hover:bg-gray-600"
           asChild
         >
-          <span>
-            <SquarePen />
-            <Link href="/account/edit">Edit Profile</Link>
-          </span>
+          <Link href="/account/edit">
+            <span className="flex items-center gap-x-2">
+              <SquarePen className="h-4 w-4" />
+              <p className="hidden lg:block">Edit Profile</p>
+            </span>
+          </Link>
         </Button>
       </div>
       <p className="pl-4 mt-8 italic">{`"${user.description}"`}</p>
