@@ -68,6 +68,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const pathname = usePathname();
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
+  const showCollapsedView = isCollapsed && !sidebar.isMobile;
   const [isTribesOpen, setIsTribesOpen] = useState<boolean>(true);
 
   return (
@@ -75,10 +76,14 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
       <SidebarHeader />
       <SidebarContent className="overflow-x-hidden">
         {/* Header Logo */}
-        {isCollapsed ? (
+        {showCollapsedView ? (
           <SidebarMenuButton size="lg" className="ml-2" asChild>
             <a href={"/dashboard"}>
               <Image src={Logo} alt="logo" width={30} />
+              <span className="font-asimovian text-2xl">TRAKKA</span>
+              <div>
+                <RequestInbox profileId={user.id} />
+              </div>
             </a>
           </SidebarMenuButton>
         ) : (
@@ -97,7 +102,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
         <SidebarSeparator className="bg-sidebar-accent mx-0" />
 
         {/* Search Bar */}
-        {!isCollapsed && (
+        {!showCollapsedView && (
           <div className="p-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -180,11 +185,10 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </Collapsible>
 
           {/* Add tribes button when sidebar closed */}
-          {isCollapsed && (
+          {showCollapsedView && (
             <Button
               className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center"
               variant="outline"
-              onClick={() => console.log("Create Tribe Clicked")}
               asChild
             >
               <NewGroup user={user} />
