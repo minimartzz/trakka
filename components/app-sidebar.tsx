@@ -102,7 +102,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
         <SidebarSeparator className="bg-sidebar-accent mx-0" />
 
         {/* Search Bar */}
-        {!isCollapsed && (
+        {!showCollapsedView && (
           <div className="p-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -185,11 +185,10 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </Collapsible>
 
           {/* Add tribes button when sidebar closed */}
-          {isCollapsed && (
+          {showCollapsedView && (
             <Button
               className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center"
               variant="outline"
-              onClick={() => console.log("Create Tribe Clicked")}
               asChild
             >
               <NewGroup user={user} />
