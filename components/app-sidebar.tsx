@@ -68,6 +68,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const pathname = usePathname();
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
+  const showCollapsedView = isCollapsed && !sidebar.isMobile;
   const [isTribesOpen, setIsTribesOpen] = useState<boolean>(true);
 
   return (
@@ -75,10 +76,14 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
       <SidebarHeader />
       <SidebarContent className="overflow-x-hidden">
         {/* Header Logo */}
-        {isCollapsed ? (
+        {showCollapsedView ? (
           <SidebarMenuButton size="lg" className="ml-2" asChild>
             <a href={"/dashboard"}>
               <Image src={Logo} alt="logo" width={30} />
+              <span className="font-asimovian text-2xl">TRAKKA</span>
+              <div>
+                <RequestInbox profileId={user.id} />
+              </div>
             </a>
           </SidebarMenuButton>
         ) : (
