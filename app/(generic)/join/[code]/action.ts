@@ -11,13 +11,22 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function createRequestLoggedIn(
+  inviteCode: string,
   groupId: string,
   profileId: number
 ) {
+  // Insert new group invite to join request
   await db.insert(groupJoinRequestTable).values({
     groupId,
     profileId,
   });
+
+  // Remove existing invite code
+  await db
+    .delete(groupInvitesTable)
+    .where(eq(groupInvitesTable.code, inviteCode));
+
+  revalidatePath("/dashboard");
 
   redirect("/dashboard");
 }
@@ -94,6 +103,11 @@ export async function inviteLogin(formData: FormData) {
           groupId: invite[0].groupId,
           profileId: profile[0].id,
         });
+
+        // Remove existing invite code
+        await db
+          .delete(groupInvitesTable)
+          .where(eq(groupInvitesTable.code, inviteCode));
       }
 
       // Delete the invite code
