@@ -60,6 +60,11 @@ export async function saveProfile(formData: FormData) {
           groupId: invite[0].groupId,
           profileId: insertProfileResult[0].id,
         });
+
+        // Remove existing invite code
+        await db
+          .delete(groupInvitesTable)
+          .where(eq(groupInvitesTable.code, inviteCode));
       }
 
       // Delete the invite code

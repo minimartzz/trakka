@@ -103,7 +103,6 @@ const RequestInbox = ({ profileId }: { profileId: number }) => {
   }, [profileId, supabase]);
 
   return (
-    // TODO: Update the UI
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -119,7 +118,11 @@ const RequestInbox = ({ profileId }: { profileId: number }) => {
         <div className="p-2 pl-3 font-semibold border-b text-sm">
           Tribe Requests
         </div>
-        <div className="max-h-80 overflow-y-auto">
+        <div
+          className="max-h-80 overflow-y-auto overscroll-contain"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           {requests.length === 0 ? (
             <p className="p-8 text-center text-sm text-muted-foreground">
               No pending requests

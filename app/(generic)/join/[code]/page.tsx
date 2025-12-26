@@ -89,7 +89,12 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
 
   // View 1: If user has already logged in and clicks on link
   const AuthenticatedView = async () => {
-    const joinGroupAction = createRequestLoggedIn.bind(null, group.id, user.id);
+    const joinGroupAction = createRequestLoggedIn.bind(
+      null,
+      code,
+      group.id,
+      user.id
+    );
 
     return (
       <div className="flex min-h-screen justify-center items-center bg-background">
