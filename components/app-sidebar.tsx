@@ -188,7 +188,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           {/* Add tribes button when sidebar closed */}
           {showCollapsedView && (
             <Button
-              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center"
+              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center bg-sidebar-accent border-sidebar"
               variant="outline"
               asChild
             >
