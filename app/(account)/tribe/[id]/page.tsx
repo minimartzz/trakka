@@ -74,7 +74,12 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="flex flex-col md:flex-row gap-x-7 items-center justify-center">
         <div className="relative">
           <div className="relative w-42 h-42 rounded-2xl overflow-hidden">
-            <Image src={tribeDetails.group.image!} alt="Tribe picture" fill />
+            <Image
+              src={tribeDetails.group.image!}
+              alt="Tribe picture"
+              className="object-cover"
+              fill
+            />
           </div>
           {roleId === 1 && (
             <Button
