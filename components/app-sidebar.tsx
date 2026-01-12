@@ -169,13 +169,14 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                     asChild
                   >
                     <a href={`/tribe/${item.id}`}>
-                      <Image
-                        src={item.image}
-                        alt="Group Icon"
-                        width={20}
-                        height={20}
-                        className="rounded-full"
-                      />
+                      <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
+                        <Image
+                          src={item.image}
+                          alt="Group Icon"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                       <span>{item.name}</span>
                     </a>
                   </SidebarMenuButton>
