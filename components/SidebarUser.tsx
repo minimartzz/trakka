@@ -63,46 +63,6 @@ const SidebarUser = ({
     return null;
   }
 
-  // Share Button
-  const handleShare = async ({ title, text, url }: ShareInterface) => {
-    // Checks if browser is Web Share API compatible
-    if (!navigator.share) {
-      console.warn(
-        "Web Share API not supported in this browser. Copying URL instead."
-      );
-
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.info("Share Unavailable", {
-          description: "URL copied to clipboard",
-        });
-      } catch (error) {
-        toast.error("Share Unavailable", {
-          description: "Failed to copy URL to clipboard",
-        });
-      }
-      return;
-    }
-
-    const shareData: ShareData = {
-      title,
-      text,
-      url,
-    };
-
-    try {
-      await navigator.share(shareData);
-      console.log("Content successfully shared");
-    } catch (error) {
-      if ((error as Error).name != "AbortError") {
-        console.error("Error sharing content", error);
-        toast.error("Sharing Failed", {
-          description: "An unexpected error occurred while trying to share",
-        });
-      }
-    }
-  };
-
   const menuItems = [
     { icon: User, label: "Account", action: () => router.push("/account") },
     { icon: HelpCircle, label: "Help", action: () => console.log("Help") },
@@ -217,23 +177,6 @@ const SidebarUser = ({
                   <Moon className="h-4 w-4" />
                 )}
                 {theme === "dark" ? "Toggle Light Mode" : "Toggle Dark Mode"}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            {/* Refer a friend */}
-            <DropdownMenuGroup key="refer">
-              <DropdownMenuItem
-                className="mt-0.5"
-                key="refer"
-                onClick={() =>
-                  handleShare({
-                    title: "Welcome to Trakka",
-                    text: "Sign up for a free Traaka account",
-                    url: "https://trakka.co/login?tab=sign-up",
-                  })
-                }
-              >
-                <Share2 className="h-4 w-4" />
-                Refer a Friend
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

@@ -71,12 +71,7 @@ export default async function AccountLayout({
             {`Welcome back, ${user.first_name}`}
           </h2>
           <div className="flex gap-x-4 items-center justify-center">
-            <ShareButton
-              title="Welcome to Trakka"
-              text="Sign up for a free Traaka account"
-              url="https://trakka.co/login?tab=sign-up"
-              className="hidden sm:block"
-            />
+            <ShareButton userId={user.id} tribes={groups} />
             <Button
               className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
               asChild
