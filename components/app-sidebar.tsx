@@ -30,7 +30,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
-import RequestInbox from "@/components/tribes/RequestInbox";
+import ActivityLog from "@/components/ActivityLog";
 
 interface AppSidebarProps {
   user: {
@@ -82,7 +82,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
               <Image src={Logo} alt="logo" width={30} />
               <span className="font-asimovian text-2xl">TRAKKA</span>
               <div>
-                <RequestInbox profileId={user.id} />
+                <ActivityLog profileId={user.id} />
               </div>
             </a>
           </SidebarMenuButton>
@@ -94,7 +94,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 <span className="font-asimovian text-2xl">TRAKKA</span>
               </a>
               <div>
-                <RequestInbox profileId={user.id} />
+                <ActivityLog profileId={user.id} />
               </div>
             </div>
           </SidebarMenuButton>

@@ -1,3 +1,4 @@
+import RequestInbox from "@/components/tribes/RequestInbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { groupTable } from "@/db/schema/group";
@@ -120,25 +121,28 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Group Management */}
-        <div className="w-full md:w-40 md:ml-auto md:self-start mt-5 md:mt-0">
+        <div className="w-full lg:w-70 md:w-40 md:ml-auto md:self-start mt-5 md:mt-0">
           <div className="flex flex-col gap-y-3 items-end">
-            <div className="flex gap-x-4">
+            <div className="flex flex-between">
               {/* Admin Button */}
               {roleId === 1 && (
-                <Button
-                  className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
-                  asChild
-                >
-                  <Link
-                    className="dark:text-black text-white"
-                    href={`/tribe/${tribeId}/edit`}
+                <div className="flex flex-between">
+                  <RequestInbox profileId={user.id} tribeId={tribeId} />
+                  <Button
+                    className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
+                    asChild
                   >
-                    <span className="flex items-center gap-x-2">
-                      <Settings className="dark:text-black text-white" />
-                      Settings
-                    </span>
-                  </Link>
-                </Button>
+                    <Link
+                      className="dark:text-black text-white"
+                      href={`/tribe/${tribeId}/edit`}
+                    >
+                      <span className="flex items-center gap-x-2">
+                        <Settings className="dark:text-black text-white" />
+                        Settings
+                      </span>
+                    </Link>
+                  </Button>
+                </div>
               )}
             </div>
 

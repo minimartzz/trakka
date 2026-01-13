@@ -1,112 +1,87 @@
 "use client";
-import { handleRequestAction } from "@/app/(generic)/join/[code]/action";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from "react";
+import {
+  getTribeRequests,
+  updateTribeRequests,
+} from "../actions/tribeRequests";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import createClient from "@/utils/supabase/client";
-import { Bell, Check, User, X } from "lucide-react";
+import { Button } from "../ui/button";
+import { Check, Inbox, User, X } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-const RequestInbox = ({ profileId }: { profileId: number }) => {
-  const supabase = createClient();
-  const [requests, setRequests] = useState<any[]>([]);
-  const [isPending, startTransition] = useTransition();
+interface TribeRequest {
+  id: string;
+  profileId: number;
+  type: string;
+  data: {
+    group_id: string;
+    requester: {
+      image: string;
+      username: string;
+      last_name: string;
+      first_name: string;
+    };
+    group_name: string;
+    request_id: string;
+    requester_id: number;
+  };
+  isRead: boolean;
+}
 
-  const handleAction = (
-    groupId: string,
-    profileId: number,
-    type: "accept" | "reject"
+const RequestInbox = ({
+  tribeId,
+  profileId,
+}: {
+  tribeId: string;
+  profileId: number;
+}) => {
+  const [requests, setRequests] = useState<TribeRequest[]>([]);
+
+  const handleAction = async (
+    tribeId: string,
+    requesterId: number,
+    status: string
   ) => {
-    startTransition(async () => {
-      const result = await handleRequestAction(groupId, profileId, type);
+    const result = await updateTribeRequests(tribeId, requesterId, status);
 
-      if (result.success) {
-        toast.success(
-          type === "accept" ? "User accepted!" : "Request rejected"
-        );
-      } else {
-        toast.error(result.message || "Something went wrong");
-      }
-    });
+    if (result.success) {
+      setRequests((prevRequests) =>
+        prevRequests.filter((req) => {
+          const isTarget =
+            req.data.group_id === tribeId &&
+            req.data.requester_id === requesterId;
+
+          return !isTarget;
+        })
+      );
+      toast.success(result.message);
+    } else {
+      toast.error(result.message || "Something went wrong");
+    }
   };
 
   useEffect(() => {
     const fetchRequests = async () => {
-      // Get the original set of requests
-      const { data, error } = await supabase
-        .from("notifications")
-        .select(
-          `
-          id,
-          created_at,
-          data
-        `
-        )
-        .eq("profile_id", profileId)
-        .eq("type", "join_request")
-        .eq("is_read", false)
-        .order("created_at");
+      const results = await getTribeRequests(profileId, tribeId);
 
-      if (error) {
-        console.error("Supabase Error:", error.message, error.details);
-        toast.error("Failed to fetch notifications");
-        return;
+      if (results) {
+        setRequests(results as unknown as TribeRequest[]);
       }
-
-      if (data) setRequests(data);
     };
 
     fetchRequests();
-
-    // Subscribe for updating requests
-    const channel = supabase
-      .channel("tribe-requests")
-      .on(
-        "postgres_changes",
-        {
-          schema: "public",
-          table: "notifications",
-          event: "*",
-          filter: `profile_id=eq.${profileId}`,
-        },
-        (payload) => {
-          console.log("Realtime payload received:", payload);
-          if (payload.eventType === "INSERT") {
-            fetchRequests();
-          }
-          if (payload.eventType === "UPDATE") {
-            if (payload.new.is_read === true) {
-              setRequests((prevRequests) =>
-                prevRequests.filter((req) => req.id !== payload.new.id)
-              );
-            } else {
-              fetchRequests();
-            }
-          }
-          if (payload.eventType === "DELETE") {
-            setRequests((prevRequests) =>
-              prevRequests.filter((req) => req.id !== payload.old.id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profileId, supabase]);
+  }, []);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Bell className="h-6 w-5" />
+          <Inbox className="h-10 w-10" />
           {requests.length > 0 && (
             <span className="absolute top-2 right-2 flex h-3 w-3 items-center justify-center rounded-full bg-destructive text-[10px] text-white font-semibold">
               {requests.length}
@@ -114,7 +89,7 @@ const RequestInbox = ({ profileId }: { profileId: number }) => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="start">
+      <PopoverContent className="w-80 p-0" align="end">
         <div className="p-2 pl-3 font-semibold border-b text-sm">
           Tribe Requests
         </div>
