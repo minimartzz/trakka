@@ -81,17 +81,20 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
             />
           </div>
           {roleId === 1 && (
-            <Button
-              className="sm:hidden absolute top-0 right-[-80px] dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
-              asChild
-            >
-              <Link
-                className="dark:text-black text-white"
-                href={`/tribe/${tribeId}/edit`}
+            <div className="sm:hidden absolute top-0 right-[-80px] flex flex-col items-center gap-y-3">
+              <Button
+                className="dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
+                asChild
               >
-                <Settings className="dark:text-black text-white" />
-              </Link>
-            </Button>
+                <Link
+                  className="dark:text-black text-white"
+                  href={`/tribe/${tribeId}/edit`}
+                >
+                  <Settings className="dark:text-black text-white" />
+                </Link>
+              </Button>
+              <RequestInbox profileId={user.id} tribeId={tribeId} />
+            </div>
           )}
         </div>
 
@@ -123,28 +126,26 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         {/* Group Management */}
         <div className="w-full lg:w-70 md:w-40 md:ml-auto md:self-start mt-5 md:mt-0">
           <div className="flex flex-col gap-y-3 items-end">
-            <div className="flex flex-between">
-              {/* Admin Button */}
-              {roleId === 1 && (
-                <div className="flex flex-between">
-                  <RequestInbox profileId={user.id} tribeId={tribeId} />
-                  <Button
-                    className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
-                    asChild
+            {/* Admin Button */}
+            {roleId === 1 && (
+              <div className="flex justify-end items-center w-full gap-x-5">
+                <RequestInbox profileId={user.id} tribeId={tribeId} />
+                <Button
+                  className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
+                  asChild
+                >
+                  <Link
+                    className="dark:text-black text-white"
+                    href={`/tribe/${tribeId}/edit`}
                   >
-                    <Link
-                      className="dark:text-black text-white"
-                      href={`/tribe/${tribeId}/edit`}
-                    >
-                      <span className="flex items-center gap-x-2">
-                        <Settings className="dark:text-black text-white" />
-                        Settings
-                      </span>
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </div>
+                    <span className="flex items-center gap-x-2">
+                      <Settings className="dark:text-black text-white" />
+                      Settings
+                    </span>
+                  </Link>
+                </Button>
+              </div>
+            )}
 
             {/* Admins */}
             <Card className="rounded-sm shadow-lg pt-0 max-w-sm w-full">
