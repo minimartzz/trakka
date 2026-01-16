@@ -128,7 +128,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="flex flex-col gap-y-3 items-end">
             {/* Admin Button */}
             {roleId === 1 && (
-              <div className="flex justify-end items-center w-full gap-x-5">
+              <div className="hidden sm:flex justify-end items-center w-full gap-x-5">
                 <RequestInbox profileId={user.id} tribeId={tribeId} />
                 <Button
                   className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
