@@ -1,4 +1,5 @@
 import { createRequestLoggedIn } from "@/app/(generic)/join/[code]/action";
+import RedirectButton from "@/components/RedirectButton";
 import InviteLoginClient from "@/components/tribes/InviteLoginClient";
 import { Button } from "@/components/ui/button";
 import { groupTable } from "@/db/schema/group";
@@ -54,9 +55,12 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
             We apologise for the inconvenience caused, please request for a new
             invite link
           </p>
-          <Button className="m-8">
-            <Link href="/">Return to Homepage</Link>
-          </Button>
+          <RedirectButton
+            url="/dashboard"
+            label="Return to Dashboard"
+            loadLabel="Redirecting to dashboard ..."
+            className="m-8"
+          />
         </div>
       </div>
     );
@@ -107,9 +111,15 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
           <h2>{`Click on the button below to request to join`}</h2>
 
           <form action={joinGroupAction}>
-            <Button type="submit" size="lg">
+            {/* <Button type="submit" size="lg">
               Request to Join
-            </Button>
+            </Button> */}
+            <RedirectButton
+              label="Request to Join"
+              loadLabel="Joining ..."
+              type="submit"
+              size="lg"
+            />
           </form>
         </div>
       </div>
