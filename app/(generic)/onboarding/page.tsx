@@ -46,6 +46,7 @@ const Page = () => {
       setLoading(false);
     };
     fetchUser();
+    console.log(user);
   }, []);
 
   const handleImageUrlChange = (url: string | null) => {

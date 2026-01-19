@@ -5,7 +5,7 @@ export const signUpFormSchema = z.object({
   email: z.email({ message: "Please enter your email" }).trim(),
   password: z
     .string()
-    .min(8, { message: "Be at least 8 chracters long" })
+    .min(8, { message: "Be at least 8 characters long" })
     .regex(/[a-zA-z]/, { message: "Contain at least one letter" })
     .regex(/[0-9]/, { message: "Contain at least one number" })
     .regex(/[^a-zA-Z0-9]/, {
@@ -42,7 +42,7 @@ export const resetPasswordSchema = z
   .object({
     password: z
       .string()
-      .min(8, { message: "Be at least 8 chracters long" })
+      .min(8, { message: "Be at least 8 characters long" })
       .regex(/[a-zA-z]/, { message: "Contain at least one letter" })
       .regex(/[0-9]/, { message: "Contain at least one number" })
       .regex(/[^a-zA-Z0-9]/, {

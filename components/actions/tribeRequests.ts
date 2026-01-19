@@ -5,7 +5,35 @@ import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
 import { and, eq, sql } from "drizzle-orm";
 
-export async function getTribeRequests(profileId: number, groupId: string) {
+export async function getAllTribeRequests(profileId: number) {
+  try {
+    const result = await db
+      .select({
+        id: notificationsTable.id,
+        profileId: notificationsTable.profileId,
+        type: notificationsTable.type,
+        data: notificationsTable.data,
+        isRead: notificationsTable.isRead,
+      })
+      .from(notificationsTable)
+      .where(
+        and(
+          eq(notificationsTable.profileId, profileId),
+          eq(notificationsTable.type, "join_request"),
+          eq(notificationsTable.isRead, false)
+        )
+      );
+
+    return result;
+  } catch (error) {
+    console.error("Failed to retrieve tribe requests: ", error);
+  }
+}
+
+export async function getTribeRequestsByGroupId(
+  profileId: number,
+  groupId: string
+) {
   try {
     const result = await db
       .select({

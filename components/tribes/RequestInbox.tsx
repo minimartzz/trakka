@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  getTribeRequests,
+  getTribeRequestsByGroupId,
   updateTribeRequests,
 } from "../actions/tribeRequests";
 import {
@@ -13,25 +13,7 @@ import { Button } from "../ui/button";
 import { Check, Inbox, User, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-
-interface TribeRequest {
-  id: string;
-  profileId: number;
-  type: string;
-  data: {
-    group_id: string;
-    requester: {
-      image: string;
-      username: string;
-      last_name: string;
-      first_name: string;
-    };
-    group_name: string;
-    request_id: string;
-    requester_id: number;
-  };
-  isRead: boolean;
-}
+import { TribeRequest } from "@/lib/interfaces";
 
 const RequestInbox = ({
   tribeId,
@@ -67,7 +49,7 @@ const RequestInbox = ({
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const results = await getTribeRequests(profileId, tribeId);
+      const results = await getTribeRequestsByGroupId(profileId, tribeId);
 
       if (results) {
         setRequests(results as unknown as TribeRequest[]);
