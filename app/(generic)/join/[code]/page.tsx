@@ -111,9 +111,6 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
           <h2>{`Click on the button below to request to join`}</h2>
 
           <form action={joinGroupAction}>
-            {/* <Button type="submit" size="lg">
-              Request to Join
-            </Button> */}
             <RedirectButton
               label="Request to Join"
               loadLabel="Joining ..."
