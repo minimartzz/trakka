@@ -24,6 +24,8 @@ interface joinedCompGameLog extends SelectCompGameLog {
   lastName: string;
   username: string;
   profilePic: string;
+  profileId: number;
+  position: number | null;
 }
 export interface RecentGames {
   comp_game_log: SelectCompGameLog;

@@ -121,3 +121,13 @@ export const getFilteredCounts = (
 export const getAvailableGames = (data: CombinedRecentGames[]): string[] => {
   return [...new Set(data.map((items) => items.gameTitle))].sort();
 };
+
+export const positionOrdinalSuffix = (position: number): string => {
+  const suffixes = ["th", "st", "nd", "rd"];
+  const remainder = position % 100;
+
+  const ordinal =
+    suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0];
+
+  return `${position}${ordinal}`;
+};
