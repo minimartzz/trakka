@@ -1,4 +1,5 @@
 "use client";
+import { notifyPlayersOfSession } from "@/app/(generic)/session/create/action";
 import useAuth from "@/app/hooks/useAuth";
 import BGGSearchBar from "@/components/BGGSearchBar";
 import GroupSearchBar, { SessionGroup } from "@/components/GroupSearchBar";
@@ -47,7 +48,7 @@ type NewSession = typeof compGameLogTable.$inferInsert;
 const Page = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [gameDetails, setGameDetails] = useState<BGGDetailsInterface | null>(
-    null
+    null,
   );
   const [group, setGroup] = useState<SessionGroup | null>(null);
   const [players, setPlayers] = useState<Player[]>([
@@ -73,7 +74,7 @@ const Page = () => {
     [key: string]: HTMLButtonElement | null;
   }>({});
   const tieCheckboxRefs = useRef<{ [key: string]: HTMLButtonElement | null }>(
-    {}
+    {},
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -109,8 +110,8 @@ const Page = () => {
   const updatePlayerName = (id: string, name: string, userId: number) => {
     setPlayers(
       players.map((player) =>
-        player.id === id ? { ...player, name, userId } : player
-      )
+        player.id === id ? { ...player, name, userId } : player,
+      ),
     );
   };
 
@@ -137,14 +138,14 @@ const Page = () => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < players.length) {
       const nextPlayerInput = document.querySelector(
-        `[tabindex='${nextIndex * 4 + 1}']`
+        `[tabindex='${nextIndex * 4 + 1}']`,
       ) as HTMLInputElement;
       if (nextPlayerInput) {
         nextPlayerInput.focus();
       }
     } else {
       const addPlayerButton = document.querySelector(
-        '[data-testid="add-player-button"]'
+        '[data-testid="add-player-button"]',
       ) as HTMLButtonElement;
       if (addPlayerButton) {
         addPlayerButton.focus();
@@ -156,7 +157,7 @@ const Page = () => {
   const updatePlayer = (
     id: string,
     field: keyof Player,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setPlayers(
       players.map((player) =>
@@ -165,8 +166,8 @@ const Page = () => {
               ...player,
               [field]: value,
             }
-          : player
-      )
+          : player,
+      ),
     );
   };
 
@@ -196,8 +197,6 @@ const Page = () => {
     setIsSubmitting(true);
 
     try {
-      // TODO: Check if user is signed in first
-
       // Validation
       const playersWithNames = players.filter((player) => player.name.trim());
       if (playersWithNames.length < 2) {
@@ -238,7 +237,7 @@ const Page = () => {
           position,
           numPlayers,
           bgg.gameLength,
-          parseFloat(bgg.gameWeight)
+          parseFloat(bgg.gameWeight),
         );
         return {
           sessionId,
@@ -270,6 +269,20 @@ const Page = () => {
         },
         body: JSON.stringify(entries),
       });
+
+      // After: Inform users that they have a new session added
+      const sessionNotification = entries.map((player) => ({
+        type: "new_session",
+        data: {
+          gameImageUrl: gameDetails.image,
+          gameTitle: gameDetails.title,
+          tribeName: group!.name,
+        },
+        isRead: false,
+        profileId: player.profileId,
+      }));
+      await notifyPlayersOfSession(sessionNotification);
+
       const dbOutcome = await response.json();
       if (response.ok && dbOutcome.success) {
         toast.success("Success! 🎉", {
@@ -277,7 +290,6 @@ const Page = () => {
           position: "bottom-right",
           className: "bg-add-button",
         });
-
         // Redirect to Recent Games
         router.push("/recent-games");
       } else {
@@ -346,7 +358,7 @@ const Page = () => {
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
+                        !date && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -469,7 +481,7 @@ const Page = () => {
                                 updatePlayer(
                                   player.id,
                                   "isWinner",
-                                  checked as boolean
+                                  checked as boolean,
                                 )
                               }
                               tabIndex={idx * 4 + 3}
@@ -491,7 +503,7 @@ const Page = () => {
                                 updatePlayer(
                                   player.id,
                                   "isTie",
-                                  checked as boolean
+                                  checked as boolean,
                                 )
                               }
                               tabIndex={idx * 4 + 4}
@@ -556,7 +568,7 @@ const Page = () => {
                                   updatePlayer(
                                     player.id,
                                     "isWinner",
-                                    checked as boolean
+                                    checked as boolean,
                                   )
                                 }
                               />
@@ -571,7 +583,7 @@ const Page = () => {
                                   updatePlayer(
                                     player.id,
                                     "isTie",
-                                    checked as boolean
+                                    checked as boolean,
                                   )
                                 }
                               />
@@ -638,7 +650,7 @@ const Page = () => {
                                     updatePlayer(
                                       player.id,
                                       "isWinner",
-                                      checked as boolean
+                                      checked as boolean,
                                     )
                                   }
                                 />
@@ -655,7 +667,7 @@ const Page = () => {
                                     updatePlayer(
                                       player.id,
                                       "isTie",
-                                      checked as boolean
+                                      checked as boolean,
                                     )
                                   }
                                 />

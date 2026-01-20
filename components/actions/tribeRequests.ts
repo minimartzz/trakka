@@ -20,8 +20,8 @@ export async function getAllTribeRequests(profileId: number) {
         and(
           eq(notificationsTable.profileId, profileId),
           eq(notificationsTable.type, "join_request"),
-          eq(notificationsTable.isRead, false)
-        )
+          eq(notificationsTable.isRead, false),
+        ),
       );
 
     return result;
@@ -32,7 +32,7 @@ export async function getAllTribeRequests(profileId: number) {
 
 export async function getTribeRequestsByGroupId(
   profileId: number,
-  groupId: string
+  groupId: string,
 ) {
   try {
     const result = await db
@@ -49,8 +49,8 @@ export async function getTribeRequestsByGroupId(
           eq(notificationsTable.profileId, profileId),
           eq(notificationsTable.type, "join_request"),
           eq(notificationsTable.isRead, false),
-          sql`${notificationsTable.data}->>'group_id' = ${groupId}`
-        )
+          sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
+        ),
       );
 
     return result;
@@ -61,8 +61,10 @@ export async function getTribeRequestsByGroupId(
 
 export async function updateTribeRequests(
   groupId: string,
+  tribeName: string,
+  tribeImageUrl: string,
   requesterId: number,
-  status: string
+  status: string,
 ) {
   try {
     const notifUpdate = await db
@@ -73,8 +75,8 @@ export async function updateTribeRequests(
       .where(
         and(
           sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
-          sql`${notificationsTable.data}->>'requester_id' = ${requesterId}`
-        )
+          sql`${notificationsTable.data}->>'requester_id' = ${requesterId}`,
+        ),
       )
       .returning();
 
@@ -92,8 +94,8 @@ export async function updateTribeRequests(
       .where(
         and(
           eq(groupJoinRequestTable.groupId, groupId),
-          eq(groupJoinRequestTable.profileId, requesterId)
-        )
+          eq(groupJoinRequestTable.profileId, requesterId),
+        ),
       )
       .returning();
 
@@ -106,6 +108,7 @@ export async function updateTribeRequests(
     }
 
     if (status === "accept") {
+      // Insert new user role into tribe
       const insertUserToTribe = await db
         .insert(profileGroupTable)
         .values({
@@ -124,11 +127,35 @@ export async function updateTribeRequests(
         };
       }
 
+      // Insert new user to notifications
+      await db.insert(notificationsTable).values({
+        type: "tribe_join",
+        data: {
+          tribeName: tribeName,
+          tribeImageUrl: tribeImageUrl,
+          outcome: status,
+        },
+        isRead: false,
+        profileId: requesterId,
+      });
+
       return {
         success: true,
         message: "Successfully added user to the group!",
       };
     } else {
+      // Insert new user to notifications
+      await db.insert(notificationsTable).values({
+        type: "tribe_join",
+        data: {
+          tribeName: tribeName,
+          tribeImageUrl: tribeImageUrl,
+          outcome: status,
+        },
+        isRead: false,
+        profileId: requesterId,
+      });
+
       return {
         success: true,
         message: "Successfully rejected user request to join the group!",

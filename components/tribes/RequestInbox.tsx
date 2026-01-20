@@ -18,18 +18,28 @@ import { TribeRequest } from "@/lib/interfaces";
 const RequestInbox = ({
   tribeId,
   profileId,
+  tribeImageUrl,
 }: {
   tribeId: string;
   profileId: number;
+  tribeImageUrl: string;
 }) => {
   const [requests, setRequests] = useState<TribeRequest[]>([]);
 
   const handleAction = async (
     tribeId: string,
+    tribeName: string,
+    tribeImageUrl: string,
     requesterId: number,
-    status: string
+    status: string,
   ) => {
-    const result = await updateTribeRequests(tribeId, requesterId, status);
+    const result = await updateTribeRequests(
+      tribeId,
+      tribeName,
+      tribeImageUrl,
+      requesterId,
+      status,
+    );
 
     if (result.success) {
       setRequests((prevRequests) =>
@@ -39,7 +49,7 @@ const RequestInbox = ({
             req.data.requester_id === requesterId;
 
           return !isTarget;
-        })
+        }),
       );
       toast.success(result.message);
     } else {
@@ -127,8 +137,10 @@ const RequestInbox = ({
                     onClick={() =>
                       handleAction(
                         req.data.group_id,
+                        req.data.group_name,
+                        tribeImageUrl,
                         req.data.requester_id,
-                        "accept"
+                        "accept",
                       )
                     }
                   >
@@ -141,8 +153,10 @@ const RequestInbox = ({
                     onClick={() =>
                       handleAction(
                         req.data.group_id,
+                        req.data.group_name,
+                        tribeImageUrl,
                         req.data.requester_id,
-                        "reject"
+                        "reject",
                       )
                     }
                   >

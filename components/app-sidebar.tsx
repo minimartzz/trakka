@@ -108,9 +108,9 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
             <a href={"/dashboard"}>
               <Image src={Logo} alt="logo" width={30} />
               <span className="font-asimovian text-2xl">TRAKKA</span>
-              {/* <div>
+              <div>
                 <ActivityLog profileId={user.id} />
-              </div> */}
+              </div>
             </a>
           </SidebarMenuButton>
         ) : (
@@ -120,9 +120,9 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 <Image src={Logo} alt="logo" height={35} />
                 <span className="font-asimovian text-2xl">TRAKKA</span>
               </a>
-              {/* <div>
+              <div>
                 <ActivityLog profileId={user.id} />
-              </div> */}
+              </div>
             </div>
           </SidebarMenuButton>
         )}

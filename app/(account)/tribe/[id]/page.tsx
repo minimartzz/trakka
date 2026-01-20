@@ -60,12 +60,12 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   // User role
   const roleId = tribeMembers.filter(
-    (tribeMember) => tribeMember.profile_group.profileId === user.id
+    (tribeMember) => tribeMember.profile_group.profileId === user.id,
   )[0].profile_group.roleId;
 
   // Get tribe admins
   const tribeAdmins = tribeMembers.filter(
-    (tribeMember) => tribeMember.profile_group.roleId === 1
+    (tribeMember) => tribeMember.profile_group.roleId === 1,
   );
 
   return (
@@ -93,7 +93,11 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
                   <Settings className="dark:text-black text-white" />
                 </Link>
               </Button>
-              <RequestInbox profileId={user.id} tribeId={tribeId} />
+              <RequestInbox
+                profileId={user.id}
+                tribeId={tribeId}
+                tribeImageUrl={tribeDetails.group.image!}
+              />
             </div>
           )}
         </div>
@@ -105,7 +109,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span>
               <p className="text-muted-foreground">{`Formed on: ${formatDate(
-                tribeDetails.group.dateCreated
+                tribeDetails.group.dateCreated,
               )}`}</p>
             </span>
           </div>
@@ -129,7 +133,11 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
             {/* Admin Button */}
             {roleId === 1 && (
               <div className="hidden sm:flex justify-end items-center w-full gap-x-5">
-                <RequestInbox profileId={user.id} tribeId={tribeId} />
+                <RequestInbox
+                  profileId={user.id}
+                  tribeId={tribeId}
+                  tribeImageUrl={tribeDetails.group.image!}
+                />
                 <Button
                   className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
                   asChild
