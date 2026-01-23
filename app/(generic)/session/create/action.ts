@@ -9,6 +9,7 @@ import { db } from "@/utils/db";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
 type Notification = typeof notificationsTable.$inferInsert;
+type CompGameLog = typeof compGameLogTable.$inferInsert;
 
 export async function notifyPlayersOfSession(notification: Notification[]) {
   try {
@@ -19,13 +20,13 @@ export async function notifyPlayersOfSession(notification: Notification[]) {
 
     if (result.length === 0) {
       console.error(
-        "Failed to insert new session entries into notifications table",
+        "Failed to insert new session entries into notifications table"
       );
     }
   } catch (error) {
     console.error(
       "Issue when trying to insert into notifications table:",
-      error,
+      error
     );
   }
 }
@@ -52,8 +53,8 @@ export async function getTribes(profileId: number) {
       .where(
         and(
           eq(profileGroupTable.profileId, profileId),
-          inArray(profileGroupTable.roleId, [1, 2]),
-        ),
+          inArray(profileGroupTable.roleId, [1, 2])
+        )
       )
       .orderBy(sq.name);
 
@@ -91,8 +92,8 @@ export async function getRecentUsedTribes(profileId: number) {
       .where(
         and(
           eq(compGameLogTable.profileId, profileId),
-          eq(compGameLogTable.createdBy, profileId),
-        ),
+          eq(compGameLogTable.createdBy, profileId)
+        )
       )
       .orderBy(compGameLogTable.groupId, desc(compGameLogTable.createdAt))
       .limit(3);
@@ -120,7 +121,7 @@ export async function getSelectablePlayers(tribeId: string) {
       .from(profileGroupTable)
       .leftJoin(
         playerDetails,
-        eq(profileGroupTable.profileId, playerDetails.id),
+        eq(profileGroupTable.profileId, playerDetails.id)
       )
       .where(eq(profileGroupTable.groupId, tribeId));
 
@@ -132,5 +133,24 @@ export async function getSelectablePlayers(tribeId: string) {
   } catch (error) {
     console.error("Issue when trying to retrieve players:", error);
     return [];
+  }
+}
+
+// Submit Session
+export async function submitNewSession(payload: CompGameLog[]) {
+  try {
+    const result = await db
+      .insert(compGameLogTable)
+      .values(payload)
+      .returning();
+
+    if (result.length === 0) {
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to submit session: ", error);
+    return { success: false };
   }
 }

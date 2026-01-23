@@ -1,5 +1,5 @@
 "use client";
-import { Player } from "@/components/PlayerSessionSelection";
+import { Player } from "@/app/(generic)/session/create/page";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import React, { useState } from "react";
@@ -37,7 +37,7 @@ const ScoreInput = ({ playerId, updateScore }: ScoreInputProps) => {
         value={input}
         onChange={handleChange}
         className={cn(
-          !isValid && "border-destructive focus-visible:ring-destructive",
+          !isValid && "border-destructive focus-visible:ring-destructive"
         )}
         placeholder="-"
       />

@@ -1,14 +1,14 @@
 "use client";
 import { getSelectablePlayers } from "@/app/(generic)/session/create/action";
+import { Player } from "@/app/(generic)/session/create/page";
 import PlayerInput2 from "@/components/PlayerInput2";
 import ScoreInput from "@/components/ScoreInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Minus, Plus, X } from "lucide-react";
-import React, { use, useEffect, useState } from "react";
+import { Loader2, Minus, Plus, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 interface PlayerControllerProps {
   players: Player[];
@@ -17,15 +17,9 @@ interface PlayerControllerProps {
 
 interface PlayerSessionSelectionProps {
   selectablePlayers: Awaited<ReturnType<typeof getSelectablePlayers>>[number][];
-}
-
-export interface Player {
-  id: string;
-  userId: number;
-  name: string;
-  score: number | null;
-  isWinner: boolean;
-  isTie: boolean;
+  players: Player[];
+  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+  submitting: boolean;
 }
 
 const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
@@ -51,6 +45,7 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
     <div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
       <Button
         variant="outline"
+        type="button"
         size="icon"
         className="rounded-none rounded-l-md shadow-none focus-visible:z-10"
         onClick={handleReducePlayer}
@@ -64,6 +59,7 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
       </span>
       <Button
         variant="outline"
+        type="button"
         size="icon"
         className="rounded-none rounded-r-md shadow-none focus-visible:z-10"
         onClick={handleAddPlayer}
@@ -77,26 +73,10 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
 
 const PlayerSessionSelection = ({
   selectablePlayers,
+  players,
+  setPlayers,
+  submitting,
 }: PlayerSessionSelectionProps) => {
-  const [players, setPlayers] = useState<Player[]>([
-    {
-      id: "1",
-      userId: 0,
-      name: "",
-      score: null,
-      isWinner: false,
-      isTie: false,
-    },
-    {
-      id: "2",
-      userId: 0,
-      name: "",
-      score: null,
-      isWinner: false,
-      isTie: false,
-    },
-  ]);
-
   // Functions
   const handleAddPlayer = () => {
     const newPlayer: Player = {
@@ -119,14 +99,10 @@ const PlayerSessionSelection = ({
   const handleUpdates = (id: string, updates: Partial<Player>) => {
     setPlayers((prev) =>
       prev.map((player) =>
-        player.id === id ? { ...player, ...updates } : player,
-      ),
+        player.id === id ? { ...player, ...updates } : player
+      )
     );
   };
-
-  useEffect(() => {
-    console.log(players);
-  }, [players]);
 
   return (
     <div>
@@ -134,12 +110,20 @@ const PlayerSessionSelection = ({
       <div className="flex justify-between items-center">
         <PlayerController players={players} setPlayers={setPlayers} />
         <Button
-          type="button" // TODO: Change this to submit
+          type="submit"
           variant="outline"
           size="sm"
           className="bg-green-600/80 text-white hover:bg-green-600/40 focus-visible:ring-green-600/20 hover:text-green-600 dark:bg-green-400/10 dark:text-green-400 dark:hover:bg-green-400/20 dark:focus-visible:ring-green-400/40 font-semibold"
+          disabled={submitting}
         >
-          Save
+          {submitting ? (
+            <div className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Saving ...</span>
+            </div>
+          ) : (
+            "Save"
+          )}
         </Button>
       </div>
 
@@ -161,6 +145,7 @@ const PlayerSessionSelection = ({
             {/* Remove Player */}
             <Button
               variant="ghost"
+              type="button"
               size="icon"
               className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               onClick={handleReducePlayer}
@@ -241,6 +226,7 @@ const PlayerSessionSelection = ({
       <div className="flex w-full items-center justify-center mt-4">
         <Button
           variant="ghost"
+          type="button"
           size="icon"
           className="rounded-full bg-primary/80 hover:bg-primary dark:hover:bg-primary"
           onClick={handleAddPlayer}

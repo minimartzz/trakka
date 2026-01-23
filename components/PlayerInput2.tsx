@@ -1,7 +1,7 @@
 "use client";
 
 import { getSelectablePlayers } from "@/app/(generic)/session/create/action";
-import { Player } from "@/components/PlayerSessionSelection";
+import { Player } from "@/app/(generic)/session/create/page";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -66,7 +66,7 @@ const PlayerInput2 = ({
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((prev) =>
-        prev < filteredPlayers.length - 1 ? prev + 1 : prev,
+        prev < filteredPlayers.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -76,7 +76,7 @@ const PlayerInput2 = ({
         e.preventDefault();
         const selectedPlayer = filteredPlayers[activeIndex];
         setInput(
-          `${selectedPlayer.firstName} ${selectedPlayer.lastName} (${selectedPlayer.username})`,
+          `${selectedPlayer.firstName} ${selectedPlayer.lastName} (${selectedPlayer.username})`
         );
         playerSelect(playerId, {
           userId: selectedPlayer.profileId,
@@ -123,7 +123,7 @@ const PlayerInput2 = ({
                   onMouseEnter={() => setActiveIndex(idx)}
                   onClick={() => {
                     setInput(
-                      `${player.firstName} ${player.lastName} (${player.username})`,
+                      `${player.firstName} ${player.lastName} (${player.username})`
                     );
                     playerSelect(playerId, {
                       userId: player.profileId,
@@ -135,7 +135,7 @@ const PlayerInput2 = ({
                     "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
                     activeIndex === idx
                       ? "bg-accent text-accent-foreground"
-                      : "transparent",
+                      : "transparent"
                   )}
                 >
                   <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
