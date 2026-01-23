@@ -174,7 +174,7 @@ const Page = () => {
   // Loading the page if data is still being fetched
   if (loading) {
     return (
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold">My Recent Games</h1>

@@ -240,7 +240,7 @@ const EditTribes = ({
                     }
                     placeholder={`Player ${idx + 1}`}
                     tabIndex={idx * 4 + 1}
-                    className="w-full"
+                    className="w-full mt-2"
                   />
                 </div>
 

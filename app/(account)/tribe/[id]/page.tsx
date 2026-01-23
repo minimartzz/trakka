@@ -60,16 +60,16 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   // User role
   const roleId = tribeMembers.filter(
-    (tribeMember) => tribeMember.profile_group.profileId === user.id,
+    (tribeMember) => tribeMember.profile_group.profileId === user.id
   )[0].profile_group.roleId;
 
   // Get tribe admins
   const tribeAdmins = tribeMembers.filter(
-    (tribeMember) => tribeMember.profile_group.roleId === 1,
+    (tribeMember) => tribeMember.profile_group.roleId === 1
   );
 
   return (
-    <div className="p-12">
+    <div className="p-4 sm:p-12">
       <div className="flex flex-col md:flex-row gap-x-7 items-center justify-center">
         <div className="relative">
           <div className="relative w-42 h-42 rounded-2xl overflow-hidden">
@@ -109,7 +109,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span>
               <p className="text-muted-foreground">{`Formed on: ${formatDate(
-                tribeDetails.group.dateCreated,
+                tribeDetails.group.dateCreated
               )}`}</p>
             </span>
           </div>
