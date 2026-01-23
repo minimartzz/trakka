@@ -1,7 +1,6 @@
 "use client";
 import { genInvite } from "@/components/actions/genInvite";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -14,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, Copy, Loader2, Share, Share2 } from "lucide-react";
-import React, { ChangeEvent, useState } from "react";
+import { Loader2, Share, Share2 } from "lucide-react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
 interface ShareButtonProps {
@@ -88,7 +87,7 @@ const ShareButton = ({ userId, tribes }: ShareButtonProps) => {
     <Popover>
       <PopoverTrigger asChild>
         <Button className="gap-x-2" variant="outline">
-          <Share2 className="h-4 w-4" />
+          <Share className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-85">
@@ -127,7 +126,10 @@ const ShareButton = ({ userId, tribes }: ShareButtonProps) => {
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Share className="h-4 w-4" />
+                <div className="flex justify-center items-center gap-x-2">
+                  <Share className="h-4 w-4" />
+                  <span>Share Invite Link</span>
+                </div>
               )}
               <p className="hidden sm:block">Invite a Friend</p>
             </Button>
