@@ -69,9 +69,11 @@ const GroupSearchBar = ({ profileId, onSelect }: GroupSearchBarProps) => {
         <SelectContent className="[&_*[role=option]>span>svg]:text-muted-foreground/80 max-h-100 [&_*[role=option]]:pr-8 [&_*[role=option]]:pl-2 [&_*[role=option]>span]:right-2 [&_*[role=option]>span]:left-auto [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0">
           {tribes.map((tribe) => (
             <SelectItem key={tribe.id} value={tribe.id!}>
-              <img
+              <Image
                 src={tribe.image!}
                 alt={tribe.name!}
+                width={14}
+                height={14}
                 className="h-4 w-4 rounded-xs"
               />{" "}
               <span className="truncate">{tribe.name!}</span>

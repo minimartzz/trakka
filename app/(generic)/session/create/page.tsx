@@ -231,7 +231,7 @@ const Page = () => {
       return;
     }
 
-    fetchPlayerDetails(tribe?.id!);
+    fetchPlayerDetails(tribe!.id);
   }, [tribe]);
 
   const router = useRouter();
