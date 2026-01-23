@@ -1,12 +1,180 @@
-import React from "react";
+"use client";
+import { getSelectablePlayers } from "@/app/(generic)/session/create/action";
+import useAuth from "@/app/hooks/useAuth";
+import BGGSearchBar2 from "@/components/BGGSearchBar2";
+import GroupSearchBar2, { SessionTribe } from "@/components/GroupSearchBar2";
+import PlayerSessionSelection from "@/components/PlayerSessionSelection";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { BGGDetailsInterface } from "@/utils/fetchBgg";
+import { format } from "date-fns";
+import { ArrowLeft, CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+type selectablePlayersType = Awaited<
+  ReturnType<typeof getSelectablePlayers>
+>[number];
 
 const Page = () => {
+  const firstUpdate = useRef(true);
+  // Calendar controls
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Game details
+  const [gameDetails, setGameDetails] = useState<BGGDetailsInterface | null>(
+    null,
+  );
+
+  // Tribe details
+  const [tribe, setTribe] = useState<SessionTribe | null>(null);
+
+  // Player details
+  const [selectablePlayers, setSelectablePlayers] = useState<
+    selectablePlayersType[]
+  >([]);
+
+  // Form control
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Perform validation
+    // Check 1: If no game was selected
+    if (!gameDetails) {
+      toast.error("No game selected. Please select a game");
+    }
+  };
+
+  useEffect(() => {
+    const fetchPlayerDetails = async (tribeId: string) => {
+      try {
+        const response = await getSelectablePlayers(tribeId);
+
+        if (response.length > 0) {
+          setSelectablePlayers(response);
+        }
+      } catch (error) {
+        console.error("Failed to retrieve selectable players:", error);
+      }
+    };
+
+    // Prevents running function on mount
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+
+    fetchPlayerDetails(tribe?.id!);
+  }, [tribe]);
+
+  const router = useRouter();
+
+  // Get current user details
+  const { user, authLoading } = useAuth();
+  if (authLoading || !user) {
+    return;
+  }
+
+  const handleCalendarSelect = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    if (selectedDate) {
+      setIsCalendarOpen(false);
+    }
+  };
+
   return (
-    <>
-      <div className="pt-20">
-        <h1>Placeholder</h1>
+    <div className="min-h-screen bg-background">
+      {/* Header bar */}
+      <header className="flex flex-row items-center w-full gap-4 p-5 border-b">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <h1 className="text-2xl font-bold">New Game Session</h1>
+      </header>
+      <div className="container mx-auto px-4 py-20">
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-2xl">Record Game Session</CardTitle>
+            <CardDescription>Track a new board game session</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* TODO: Change this div to a form */}
+            <div className="space-y-6">
+              {/* Calendar Date Selection */}
+              <div className="space-y-2">
+                <Label className="pb-1">Date Played</Label>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !date && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "PPP") : "Please select a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="bg-background rounded-2xl border w-auto p-2 mt-2 z-10"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={handleCalendarSelect}
+                      className="rounded-md bg-background"
+                      captionLayout="dropdown"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Game Selection */}
+              <div className="space-y-2">
+                <Label>Game Title</Label>
+                <BGGSearchBar2 onSelect={setGameDetails} />
+              </div>
+
+              {/* Tribe Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="tribe">Tribe</Label>
+                <GroupSearchBar2 profileId={user.id} onSelect={setTribe} />
+              </div>
+
+              {/* Player Selection */}
+              <div className="space-y-2">
+                <Label>Players</Label>
+                <div className="text-xs text-muted-foreground">
+                  Select player from the dropdown if they have an account.
+                  Position follows order.
+                </div>
+                <PlayerSessionSelection selectablePlayers={selectablePlayers} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </>
+    </div>
   );
 };
 

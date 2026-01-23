@@ -280,62 +280,6 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
                     deleteFunc={handleDelete}
                   />
                 )}
-                {/* <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-slate-200 overflow-hidden">
-                    {req.data.requester.image ? (
-                      <Image
-                        src={req.data.requester.image}
-                        alt="Profile Picture"
-                        className="h-full w-full object-cover"
-                        width={40}
-                        height={40}
-                      />
-                    ) : (
-                      <User className="h-4 w-4 text-slate-500" />
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium leading-none">
-                      {req.data.requester.first_name}{" "}
-                      {req.data.requester.last_name}{" "}
-                      <span className="text-xs text-gray-600">{`(${req.data.requester.username})`}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      wants to join{" "}
-                      <b className="text-primary">{req.data.group_name}</b>
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="icon"
-                    variant="default"
-                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-green-600 border-1 hover:bg-green-600 hover:text-white cursor-pointer z-10"
-                    onClick={() =>
-                      handleAction(
-                        req.data.group_id,
-                        req.data.requester_id,
-                        "accept"
-                      )
-                    }
-                  >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="default"
-                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-destructive border-1 hover:bg-destructive hover:text-white cursor-pointer z-10"
-                    onClick={() =>
-                      handleAction(
-                        req.data.group_id,
-                        req.data.requester_id,
-                        "reject"
-                      )
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div> */}
               </div>
             ))
           )}

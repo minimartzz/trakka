@@ -11,6 +11,7 @@ export interface BGGDetailsInterface extends BGGIdsInterface {
   thumbnail: string;
   image: string;
   title: string;
+  description: string;
   rating: string;
   weight: string;
   playingtime: string;
@@ -20,7 +21,7 @@ export interface BGGDetailsInterface extends BGGIdsInterface {
 export const fetchBGGIds = async (
   query: string,
   exact: boolean,
-  signal: AbortSignal
+  signal: AbortSignal,
 ): Promise<BGGIdsInterface[] | []> => {
   try {
     const url = exact
@@ -70,7 +71,7 @@ export const fetchBGGIds = async (
 
 export const fetchBGGDetails = async (
   params: BGGIdsInterface[],
-  signal: AbortSignal
+  signal: AbortSignal,
 ): Promise<BGGDetailsInterface[] | []> => {
   try {
     const ids = params
@@ -114,6 +115,7 @@ export const fetchBGGDetails = async (
         title: Array.isArray(item["name"])
           ? item["name"][0]["$"]["value"]
           : item["name"]["$"]["value"],
+        description: item["description"],
         rating: item["statistics"]["ratings"]["average"]["$"]["value"],
         weight: item["statistics"]["ratings"]["averageweight"]["$"]["value"],
         playingtime: item["playingtime"]["$"]["value"],
@@ -129,6 +131,7 @@ export const fetchBGGDetails = async (
           title: Array.isArray(games["name"])
             ? games["name"][0]["$"]["value"]
             : games["name"]["$"]["value"],
+          description: games["description"],
           rating: games["statistics"]["ratings"]["average"]["$"]["value"],
           weight: games["statistics"]["ratings"]["averageweight"]["$"]["value"],
           playingtime: games["playingtime"]["$"]["value"],
