@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import Feedback from "@/components/Feedback";
+import Footer from "@/components/Footer";
 import GlobalSearchBar from "@/components/GlobalSearchBar";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
@@ -85,13 +86,12 @@ export default async function AccountLayout({
           </div>
         </header>
         {children}
-        <footer>
-          <div className="flex justify-end-safe">
-            <div className="fixed bottom-5 right-4 z-10">
-              <Feedback profileId={user.id} />
-            </div>
+        <div className="flex justify-end-safe">
+          <div className="fixed bottom-5 right-4 z-10">
+            <Feedback profileId={user.id} />
           </div>
-        </footer>
+        </div>
+        <Footer />
       </SidebarInset>
     </SidebarProvider>
   );
