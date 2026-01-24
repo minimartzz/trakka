@@ -147,6 +147,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
           {DEFAULT_AVATARS.map((avatar) => (
             <Button
               key={avatar.id}
+              type="button"
               onClick={() => handleDefaultImage(avatar.url)}
               variant="ghost"
               className="rounded-lg p-0 h-auto w-auto hover:ring-2 hover:ring-primary transition-all duration-150"
@@ -160,7 +161,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
       </div>
 
       <div className="flex gap-2">
-        <Button asChild>
+        <Button type="button" asChild>
           <label
             htmlFor="file-upload"
             className="cursor-pointer flex items-center gap-2"
@@ -179,7 +180,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
         </Button>
 
         {imageUrl && (
-          <Button variant="outline" onClick={handleImageRemove}>
+          <Button variant="outline" onClick={handleImageRemove} type="button">
             <X className="w-4 h-4 mr-2" />
             Remove
           </Button>

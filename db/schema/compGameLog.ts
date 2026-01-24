@@ -44,11 +44,14 @@ export const compGameLogTable = pgTable(
     month: smallint("month").notNull(),
     year: smallint("year").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
+    createdBy: integer("created_by")
+      .references(() => profileTable.id)
+      .notNull(),
     isFirstPlay: boolean("is_first_play").notNull(),
     isTie: boolean("is_tie"),
     rating: smallint("rating"),
   },
-  (t) => [check("rating_check", sql`${t.rating} >= 0 AND ${t.rating} <= 5`)]
+  (t) => [check("rating_check", sql`${t.rating} >= 0 AND ${t.rating} <= 5`)],
 );
 
 export const compGameLogTableRelations = relations(
@@ -62,7 +65,7 @@ export const compGameLogTableRelations = relations(
       fields: [compGameLogTable.groupId],
       references: [groupTable.id],
     }),
-  })
+  }),
 );
 
 export type SelectCompGameLog = typeof compGameLogTable.$inferSelect;

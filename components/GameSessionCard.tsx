@@ -3,14 +3,26 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CombinedRecentGames } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
+import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { format } from "date-fns";
-import { Trophy, User, Users } from "lucide-react";
+import { Medal, Trophy, User, Users, Weight } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
 interface GameSessionsCardProps {
   userId: number;
   session: CombinedRecentGames;
+}
+interface VariantAndColourInterface {
+  variant:
+    | "default"
+    | "secondary"
+    | "destructive"
+    | "outline"
+    | null
+    | undefined;
+  className: string;
+  result: string;
 }
 
 const GameSessionCard: React.FC<GameSessionsCardProps> = ({
@@ -26,28 +38,46 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     tribe,
   },
 }) => {
+  const playerDetails = players.find((player) => player.profileId === userId);
+  const position = playerDetails?.position;
+  const positionWithSuffix = positionOrdinalSuffix(position!);
+
   const getResultsBadge = () => {
     // Results badge
-    const getVariantAndColour = () => {
+    const getVariantAndColour = (): VariantAndColourInterface => {
       if (isPlayer && !isTied && isWinner) {
         return {
           variant: "default" as const,
           className:
-            "bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold",
-          result: "Won",
+            "bg-yellow-500 hover:bg-yellow-600 text-white rounded-full font-semibold",
+          result: `${positionWithSuffix} Place`,
+        };
+      } else if (isPlayer && !isTied && position === 2) {
+        return {
+          variant: "default" as const,
+          className:
+            "bg-gray-600 hover:bg-gray-700 text-white rounded-full font-semibold",
+          result: `${positionWithSuffix} Place`,
+        };
+      } else if (isPlayer && !isTied && position === 3) {
+        return {
+          variant: "default" as const,
+          className:
+            "bg-[#9a6748] hover:bg-[#915e44] text-white rounded-full font-semibold",
+          result: `${positionWithSuffix} Place`,
         };
       } else if (isPlayer && isTied && isWinner) {
         return {
           variant: "secondary" as const,
           className:
             "bg-orange-500 hover:bg-orange-600 text-white rounded-full font-semibold",
-          result: "Tied",
+          result: `Tied: ${positionWithSuffix}`,
         };
       } else if (isPlayer && isLoser) {
         return {
           variant: "destructive" as const,
           className: "rounded-full font-semibold",
-          result: "Lost",
+          result: `${positionWithSuffix} Place`,
         };
       } else {
         return {
@@ -62,7 +92,13 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     const { variant, className, result } = getVariantAndColour();
     return (
       <Badge variant={variant} className={className}>
-        <Trophy className="h-3 w-3 mr-1" />
+        {result === "1st Place" ? (
+          <Trophy className="h-3 w-3 mr-1" />
+        ) : result === "2nd Place" || result === "3rd Place" ? (
+          <Medal className="h-3 w-3 mr-1" />
+        ) : (
+          <Weight className="h-3 w-3 mr-1" />
+        )}
         {result}
       </Badge>
     );

@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import MeepleIcon from "../icons/MeepleIcon";
-import { Trophy, Users } from "lucide-react";
+import { Medal, Trophy, Users, Weight } from "lucide-react";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -44,6 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 
 interface TimeFilteredPerformanceProps {
   userId: number;
@@ -71,13 +72,21 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, Icon, value }) => {
 
 interface RecentActivityCardProps {
   title: string;
-  players: { username: string; profilePic: string; isWinner: boolean | null }[];
+  userId: number;
+  players: {
+    username: string;
+    profilePic: string;
+    isWinner: boolean | null;
+    profileId: number;
+    position: number | null;
+  }[];
   date: string;
   isWinner: boolean;
   isTied: boolean;
 }
 const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   title,
+  userId,
   players,
   date,
   isWinner,
@@ -85,6 +94,11 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
 }) => {
   const dateObject = new Date(date);
   const formattedDate = format(dateObject, "dd MMM yyyy");
+
+  // Get players position
+  const playerDetails = players.find((player) => player.profileId === userId);
+  const position = playerDetails?.position;
+  const positionWithSuffix = positionOrdinalSuffix(position!);
 
   return (
     <div className="flex justify-between items-center mb-4">
@@ -117,20 +131,30 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{formattedDate}</p>
       </div>
-      {isWinner ? (
-        <Badge variant="default" className="bg-green-600 font-bold text-white">
-          Won
+      {isWinner && position === 1 ? (
+        <Badge variant="default" className="bg-yellow-500 font-bold text-white">
+          <Trophy className="h-3 w-3 mr-1" />
+          {positionWithSuffix}
+        </Badge>
+      ) : position === 2 ? (
+        <Badge variant="default" className="bg-gray-600 font-bold text-white">
+          <Medal className="h-3 w-3 mr-1" />
+          {positionWithSuffix}
+        </Badge>
+      ) : position === 3 ? (
+        <Badge variant="default" className="bg-[#9a6748] font-bold text-white">
+          <Medal className="h-3 w-3 mr-1" />
+          {positionWithSuffix}
         </Badge>
       ) : isTied ? (
-        <Badge
-          variant="secondary"
-          className="bg-orange-400 font-bold text-white"
-        >
-          Tied
+        <Badge className="bg-orange-400 font-bold text-white">
+          <Weight className="h-3 w-3 mr-1" />
+          {`Tied: ${positionWithSuffix}`}
         </Badge>
       ) : (
         <Badge variant="destructive" className="font-bold">
-          Lost
+          <Weight className="h-3 w-3 mr-1" />
+          {positionWithSuffix}
         </Badge>
       )}
     </div>
@@ -341,6 +365,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
           <CardContent>
             {filteredActivities.slice(0, 5).map((session) => (
               <RecentActivityCard
+                userId={userId}
                 key={session.sessionId}
                 title={session.gameTitle}
                 players={session.players}

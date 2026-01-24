@@ -1,3 +1,4 @@
+import RequestInbox from "@/components/tribes/RequestInbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { groupTable } from "@/db/schema/group";
@@ -8,7 +9,6 @@ import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { Calendar, Crown, Gavel, Settings, Users2 } from "lucide-react";
-import TribeInvite from "@/components/tribes/TribeInvite";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -67,36 +67,42 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeAdmins = tribeMembers.filter(
     (tribeMember) => tribeMember.profile_group.roleId === 1
   );
-  // console.log(roleId);
 
   return (
-    <div className="p-12">
+    <div className="p-4 sm:p-12">
       <div className="flex flex-col md:flex-row gap-x-7 items-center justify-center">
         <div className="relative">
           <div className="relative w-42 h-42 rounded-2xl overflow-hidden">
-            <Image src={tribeDetails.group.image!} alt="Tribe picture" fill />
+            <Image
+              src={tribeDetails.group.image!}
+              alt="Tribe picture"
+              className="object-cover"
+              fill
+            />
           </div>
           {roleId === 1 && (
-            <Button
-              className="sm:hidden absolute top-0 right-[-80px] dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
-              asChild
-            >
-              <Link
-                className="dark:text-black text-white"
-                href={`/tribe/${tribeId}/edit`}
+            <div className="sm:hidden absolute top-0 right-[-80px] flex flex-col items-center gap-y-3">
+              <Button
+                className="dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
+                asChild
               >
-                <Settings className="dark:text-black text-white" />
-              </Link>
-            </Button>
+                <Link
+                  className="dark:text-black text-white"
+                  href={`/tribe/${tribeId}/edit`}
+                >
+                  <Settings className="dark:text-black text-white" />
+                </Link>
+              </Button>
+              <RequestInbox
+                profileId={user.id}
+                tribeId={tribeId}
+                tribeImageUrl={tribeDetails.group.image!}
+              />
+            </div>
           )}
-          {/* Invite user button */}
-          <TribeInvite
-            userId={user.id}
-            tribeId={tribeDetails.group.id}
-            tribeName={tribeDetails.group.name}
-            className="sm:hidden absolute top-[50px] right-[-80px] bg-indigo-600 hover:bg-indigo-700 text-white"
-          />
         </div>
+
+        {/* Group Details */}
         <div className="flex flex-col gap-y-1 mt-5 md:mt-0">
           <h1 className="text-4xl font-bold mb-3">{tribeDetails.group.name}</h1>
           <div className="flex items-center gap-x-2 text-sm">
@@ -122,18 +128,16 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {/* Group Management */}
-        <div className="w-full md:w-3xs md:ml-auto md:self-start mt-5 md:mt-0">
+        <div className="w-full lg:w-70 md:w-40 md:ml-auto md:self-start mt-5 md:mt-0">
           <div className="flex flex-col gap-y-3 items-end">
-            <div className="flex gap-x-4">
-              {/* Invite user button */}
-              <TribeInvite
-                userId={user.id}
-                tribeId={tribeDetails.group.id}
-                tribeName={tribeDetails.group.name}
-                className="hidden sm:flex sm:items-center gap-x-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-              />
-              {/* Admin Button */}
-              {roleId === 1 && (
+            {/* Admin Button */}
+            {roleId === 1 && (
+              <div className="hidden sm:flex justify-end items-center w-full gap-x-5">
+                <RequestInbox
+                  profileId={user.id}
+                  tribeId={tribeId}
+                  tribeImageUrl={tribeDetails.group.image!}
+                />
                 <Button
                   className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
                   asChild
@@ -148,11 +152,11 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
                     </span>
                   </Link>
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Admins */}
-            <Card className="rounded-sm shadow-lg pt-0 max-w-md w-full">
+            <Card className="rounded-sm shadow-lg pt-0 max-w-sm w-full">
               <CardHeader className="bg-primary text-foreground rounded-t-sm p-2 pb-1">
                 <CardTitle className="text-md font-semibold">
                   <span className="flex items-center gap-x-2 justify-center text-white">

@@ -25,12 +25,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
-import RequestInbox from "@/components/tribes/RequestInbox";
+import ActivityLog from "@/components/ActivityLog";
+import { getAllTribeRequests } from "@/components/actions/tribeRequests";
+import { TribeRequest } from "@/lib/interfaces";
 
 interface AppSidebarProps {
   user: {
@@ -64,12 +66,37 @@ const items = {
   ],
 };
 
+// Functions
+const numTribeRequests = (
+  allRequests: TribeRequest[],
+  tribeId: string
+): number => {
+  const filteredRequests = allRequests.filter(
+    (req) => req.data.group_id === tribeId
+  );
+
+  return filteredRequests.length;
+};
+
 export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const pathname = usePathname();
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
   const showCollapsedView = isCollapsed && !sidebar.isMobile;
   const [isTribesOpen, setIsTribesOpen] = useState<boolean>(true);
+  const [requests, setRequests] = useState<TribeRequest[]>([]);
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      const results = await getAllTribeRequests(user.id);
+
+      if (results) {
+        setRequests(results as unknown as TribeRequest[]);
+      }
+    };
+
+    fetchRequests();
+  }, []);
 
   return (
     <Sidebar collapsible="icon">
@@ -82,7 +109,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
               <Image src={Logo} alt="logo" width={30} />
               <span className="font-asimovian text-2xl">TRAKKA</span>
               <div>
-                <RequestInbox profileId={user.id} />
+                <ActivityLog profileId={user.id} />
               </div>
             </a>
           </SidebarMenuButton>
@@ -94,7 +121,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 <span className="font-asimovian text-2xl">TRAKKA</span>
               </a>
               <div>
-                <RequestInbox profileId={user.id} />
+                <ActivityLog profileId={user.id} />
               </div>
             </div>
           </SidebarMenuButton>
@@ -168,15 +195,34 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                     }
                     asChild
                   >
-                    <a href={`/tribe/${item.id}`}>
-                      <Image
-                        src={item.image}
-                        alt="Group Icon"
-                        width={20}
-                        height={20}
-                        className="rounded-full"
-                      />
-                      <span>{item.name}</span>
+                    <a
+                      href={`/tribe/${item.id}`}
+                      className="flex justify-between items-center"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
+                          <Image
+                            src={item.image}
+                            alt="Group Icon"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        {isCollapsed &&
+                          numTribeRequests(requests, item.id) > 0 && (
+                            <span className="absolute bottom-5 -right-1 flex h-2.5 w-2.5 items-center justify-center">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                            </span>
+                          )}
+                        <span>{item.name}</span>
+                      </div>
+                      {numTribeRequests(requests, item.id) > 0 && (
+                        <span className="flex h-2.5 w-2.5 items-center justify-center">
+                          <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-destructive opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                        </span>
+                      )}
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -187,7 +233,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           {/* Add tribes button when sidebar closed */}
           {showCollapsedView && (
             <Button
-              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center"
+              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center bg-sidebar-accent border-sidebar"
               variant="outline"
               asChild
             >

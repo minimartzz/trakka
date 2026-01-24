@@ -24,6 +24,8 @@ interface joinedCompGameLog extends SelectCompGameLog {
   lastName: string;
   username: string;
   profilePic: string;
+  profileId: number;
+  position: number | null;
 }
 export interface RecentGames {
   comp_game_log: SelectCompGameLog;
@@ -58,3 +60,23 @@ export const Roles = {
   Admin: 2,
   Member: 3,
 };
+
+// For Tribe Requests
+export interface TribeRequest {
+  id: string;
+  profileId: number;
+  type: string;
+  data: {
+    group_id: string;
+    requester: {
+      image: string;
+      username: string;
+      last_name: string;
+      first_name: string;
+    };
+    group_name: string;
+    request_id: string;
+    requester_id: number;
+  };
+  isRead: boolean;
+}

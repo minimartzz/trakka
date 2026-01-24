@@ -1,4 +1,3 @@
-import SplitText from "@/components/gsap/SplitText";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
 import fetchUser from "@/utils/fetchServerUser";
 import { ArrowRight, Calendar, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 const Index = async () => {
   const user = await fetchUser();
@@ -38,12 +38,13 @@ const Index = async () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {user ? (
-              <Button asChild size="lg" className="text-base px-8 py-6">
-                <Link href="/dashboard">
-                  Go to Dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+              // <Button asChild size="lg" className="text-base px-8 py-6">
+              //   <Link href="/dashboard">
+              //     Go to Dashboard
+              //     <ArrowRight className="ml-2 h-4 w-4" />
+              //   </Link>
+              // </Button>
+              redirect("/dashboard")
             ) : (
               <>
                 <Button asChild size="lg" className="text-base px-8 py-6">
@@ -52,9 +53,6 @@ const Index = async () => {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                {/* <Button asChild variant="outline" size="lg" className="text-base px-8 py-6">
-                  <Link href="/guest">Try Demo</Link>
-                </Button> */}
               </>
             )}
           </div>

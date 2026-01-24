@@ -127,6 +127,9 @@ export async function inviteSignUp(
   formData: FormData
 ): Promise<SignUpActionState> {
   const supabase = await createClient();
+  const cookieStore = await cookies();
+
+  const inviteCode = cookieStore.get("pending_invite_code")?.value;
 
   const signUpData = {
     email: formData.get("email") as string,
@@ -142,10 +145,22 @@ export async function inviteSignUp(
   }
 
   // Sign up the user
-  const { error } = await supabase.auth.signUp(signUpData);
+  // Store the invite code in the user details
+  const { error } = await supabase.auth.signUp({
+    ...signUpData,
+    options: {
+      data: {
+        inviteCode: inviteCode || null,
+      },
+    },
+  });
+
   if (error) {
     redirect("/error");
   }
+
+  // Delete the cookie
+  if (inviteCode) cookieStore.delete("pending_invite_code");
 
   revalidatePath("/", "layout");
   redirect("/login/confirm-email");

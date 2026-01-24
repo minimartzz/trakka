@@ -1,13 +1,7 @@
 import React from "react";
 
 const Page = () => {
-  return (
-    <>
-      <div className="pt-20">
-        <h1>Placeholder</h1>
-      </div>
-    </>
-  );
+  return <div>Placedholder</div>;
 };
 
 export default Page;

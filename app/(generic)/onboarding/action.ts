@@ -4,6 +4,7 @@ import { groupInvitesTable } from "@/db/schema/groupInvites";
 import { groupJoinRequestTable } from "@/db/schema/groupJoinRequests";
 import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
+import { createClient } from "@/utils/supabase/server";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 
@@ -11,7 +12,14 @@ type Gender = "Male" | "Female" | "Others";
 type NewProfile = typeof profileTable.$inferInsert;
 
 export async function saveProfile(formData: FormData) {
-  const cookieStore = await cookies();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "User not found" };
+  }
 
   // Inserts a new user into "profile" table
   const firstName = formData.get("firstName") as string;
@@ -43,8 +51,8 @@ export async function saveProfile(formData: FormData) {
     return { error: "Failed to insert new profile" };
   }
 
-  // Checks if there is an invite cookie to make the request
-  const inviteCode = cookieStore.get("pending_invite_code")?.value;
+  // Retrieve the invite code from the user authentication metadata
+  const inviteCode = user.user_metadata?.inviteCode;
   if (inviteCode) {
     try {
       const invite = await db
@@ -67,8 +75,12 @@ export async function saveProfile(formData: FormData) {
           .where(eq(groupInvitesTable.code, inviteCode));
       }
 
-      // Delete the invite code
-      cookieStore.delete("pending_invite_code");
+      // Remove invite from metadata to prevent reusing the same invite link
+      await supabase.auth.updateUser({
+        data: {
+          inviteCode: null,
+        },
+      });
     } catch (error) {
       console.error("Failed to process auto join:", error);
       return { error: "Failed to process auto join" };

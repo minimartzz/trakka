@@ -1,5 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import Feedback from "@/components/Feedback";
+import Footer from "@/components/Footer";
+import GlobalSearchBar from "@/components/GlobalSearchBar";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,19 +66,12 @@ export default async function AccountLayout({
       />
       <SidebarInset>
         <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
-          <div className="flex items-center gap-2 px-4">
+          <div className="flex items-center gap-2 sm:gap-10 px-4">
             <SidebarTrigger className="-ml-1" />
+            <GlobalSearchBar />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-lora font-semibold">
-            {`Welcome back, ${user.first_name}`}
-          </h2>
           <div className="flex gap-x-4 items-center justify-center">
-            <ShareButton
-              title="Welcome to Trakka"
-              text="Sign up for a free Traaka account"
-              url="https://trakka.co/login?tab=sign-up"
-              className="hidden sm:block"
-            />
+            <ShareButton userId={user.id} tribes={groups} />
             <Button
               className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
               asChild
@@ -91,13 +86,12 @@ export default async function AccountLayout({
           </div>
         </header>
         {children}
-        <footer>
-          <div className="flex justify-end-safe">
-            <div className="fixed bottom-5 right-4 z-10">
-              <Feedback profileId={user.id} />
-            </div>
+        <div className="flex justify-end-safe">
+          <div className="fixed bottom-5 right-4 z-10">
+            <Feedback profileId={user.id} />
           </div>
-        </footer>
+        </div>
+        <Footer />
       </SidebarInset>
     </SidebarProvider>
   );
