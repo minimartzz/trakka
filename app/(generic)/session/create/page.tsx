@@ -89,28 +89,21 @@ const Page = () => {
     },
   ]);
 
-  // Form control
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleSubmit = async (formData: FormData) => {
-    setIsSubmitting(true);
     // Initial Checks
     // Check 1: If no game was selected
     if (!gameDetails) {
       toast.error("No game selected.");
-      setIsSubmitting(false);
       return;
     }
     // Check 2: If no date was selected
     if (!date) {
       toast.error("No date was selected.");
-      setIsSubmitting(false);
       return;
     }
     // Check 3: No tribe was selected
     if (!tribe) {
       toast.error("No tribe was selected.");
-      setIsSubmitting(false);
       return;
     }
     // Check 4: No player names
@@ -121,14 +114,12 @@ const Page = () => {
       console.log(missingPlayers);
       const missingPositions = missingPlayers.join(", ");
       toast.error(`Missing player info at position ${missingPositions}.`);
-      setIsSubmitting(false);
       return;
     }
     // Check 5: Ensure at least 1 winner
     const containWinner = submittingPlayers.some((player) => player.isWinner);
     if (!containWinner) {
       toast.error("At least one winner must be selected.");
-      setIsSubmitting(false);
       return;
     }
 
@@ -185,7 +176,6 @@ const Page = () => {
       toast.error(
         "Error in submitting. Please check your fields and try again",
       );
-      setIsSubmitting(false);
       return;
     }
 
@@ -224,8 +214,6 @@ const Page = () => {
         toast.error(
           "Failed to submit new session. Please check fields and try again.",
         );
-      } finally {
-        setIsSubmitting(false);
       }
     }
   };
@@ -234,10 +222,7 @@ const Page = () => {
     const fetchPlayerDetails = async (tribeId: string) => {
       try {
         const response = await getSelectablePlayers(tribeId);
-
-        if (response.length > 0) {
-          setSelectablePlayers(response);
-        }
+        setSelectablePlayers(response);
       } catch (error) {
         console.error("Failed to retrieve selectable players:", error);
       }
@@ -249,7 +234,11 @@ const Page = () => {
       return;
     }
 
-    fetchPlayerDetails(tribe!.id);
+    if (tribe?.id) {
+      fetchPlayerDetails(tribe.id);
+    } else {
+      setSelectablePlayers([]);
+    }
   }, [tribe]);
 
   const router = useRouter();
@@ -338,7 +327,6 @@ const Page = () => {
                   selectablePlayers={selectablePlayers}
                   players={submittingPlayers}
                   setPlayers={setSubmittingPlayers}
-                  submitting={isSubmitting}
                 />
               </div>
             </Form>

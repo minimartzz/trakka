@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, Minus, Plus, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 
 interface PlayerControllerProps {
   players: Player[];
@@ -19,7 +20,6 @@ interface PlayerSessionSelectionProps {
   selectablePlayers: Awaited<ReturnType<typeof getSelectablePlayers>>[number][];
   players: Player[];
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
-  submitting: boolean;
 }
 
 const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
@@ -75,8 +75,9 @@ const PlayerSessionSelection = ({
   selectablePlayers,
   players,
   setPlayers,
-  submitting,
 }: PlayerSessionSelectionProps) => {
+  const { pending } = useFormStatus();
+
   // Functions
   const handleAddPlayer = () => {
     const newPlayer: Player = {
@@ -99,8 +100,8 @@ const PlayerSessionSelection = ({
   const handleUpdates = (id: string, updates: Partial<Player>) => {
     setPlayers((prev) =>
       prev.map((player) =>
-        player.id === id ? { ...player, ...updates } : player
-      )
+        player.id === id ? { ...player, ...updates } : player,
+      ),
     );
   };
 
@@ -114,9 +115,9 @@ const PlayerSessionSelection = ({
           variant="outline"
           size="sm"
           className="bg-green-600/80 text-white hover:bg-green-600/40 focus-visible:ring-green-600/20 hover:text-green-600 dark:bg-green-400/10 dark:text-green-400 dark:hover:bg-green-400/20 dark:focus-visible:ring-green-400/40 font-semibold"
-          disabled={submitting}
+          disabled={pending}
         >
-          {submitting ? (
+          {pending ? (
             <div className="flex items-center">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               <span>Saving ...</span>
