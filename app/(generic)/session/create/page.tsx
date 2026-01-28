@@ -111,7 +111,6 @@ const Page = () => {
       .map((player, idx) => (player.name === "" ? idx + 1 : null))
       .filter((idx): idx is number => idx !== null);
     if (missingPlayers.length > 0) {
-      console.log(missingPlayers);
       const missingPositions = missingPlayers.join(", ");
       toast.error(`Missing player info at position ${missingPositions}.`);
       return;
@@ -140,8 +139,17 @@ const Page = () => {
     // Create the payload
     let payload = null;
     try {
-      const promises = submittingPlayers.map(async (player, idx) => {
-        const position = idx + 1;
+      const promises = submittingPlayers.map(async (player, idx, array) => {
+        let position: number;
+        if (idx === 0) {
+          position = 1;
+        } else if (player.score === array[idx - 1].score) {
+          const firstMatch = array.findIndex((p) => p.score === player.score);
+          position = firstMatch + 1;
+        } else {
+          position = idx + 1;
+        }
+
         const victoryPoints = player.score;
         const score = getScore(
           position,

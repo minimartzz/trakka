@@ -36,7 +36,7 @@ export const compGameLogTable = pgTable(
     isVp: boolean("is_vp").notNull(),
     victoryPoints: integer("victory_points"),
     isWinner: boolean("is_winner"),
-    position: smallint("position"),
+    position: smallint("position").notNull(),
     winContrib: smallint("win_contrib"),
     score: real("score"),
     highScore: boolean("high_score"),
