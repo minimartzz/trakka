@@ -1,6 +1,7 @@
 "use client";
 import {
   getSelectablePlayers,
+  notifyPlayersOfSession,
   submitNewSession,
 } from "@/app/(generic)/session/create/action";
 import useAuth from "@/app/hooks/useAuth";
@@ -59,7 +60,7 @@ const Page = () => {
 
   // Game details
   const [gameDetails, setGameDetails] = useState<BGGDetailsInterface | null>(
-    null
+    null,
   );
 
   // Tribe details
@@ -155,7 +156,7 @@ const Page = () => {
           position,
           numPlayers,
           bgg.gameLength,
-          parseFloat(bgg.gameWeight)
+          parseFloat(bgg.gameWeight),
         );
 
         return {
@@ -182,7 +183,7 @@ const Page = () => {
     } catch (error) {
       console.error("Failed to gather necessary info for session");
       toast.error(
-        "Error in submitting. Please check your fields and try again"
+        "Error in submitting. Please check your fields and try again",
       );
       setIsSubmitting(false);
       return;
@@ -193,18 +194,35 @@ const Page = () => {
         const response = await submitNewSession(payload);
         if (!response.success) {
           toast.error(
-            "Failed to submit new session. Please check fields and try again."
+            "Failed to submit new session. Please check fields and try again.",
           );
         } else {
+          // After: Notify players of new session
+          try {
+            const sessionNotification = payload.map((player) => ({
+              type: "new_session",
+              data: {
+                gameImageUrl: gameDetails.image,
+                gameTitle: gameDetails.title,
+                tribeName: tribe.name,
+              },
+              isRead: false,
+              profileId: player.profileId,
+            }));
+            await notifyPlayersOfSession(sessionNotification);
+          } catch {
+            console.error("Failed to notify players of new session");
+          }
+
           toast.success(
-            `Successfully saved session ${gameDetails.title} on ${datePlayed}! 🎉`
+            `Successfully saved session ${gameDetails.title} on ${datePlayed}! 🎉`,
           );
           router.push("/recent-games");
         }
       } catch (error) {
         console.error("Client side failed to submit");
         toast.error(
-          "Failed to submit new session. Please check fields and try again."
+          "Failed to submit new session. Please check fields and try again.",
         );
       } finally {
         setIsSubmitting(false);
@@ -275,7 +293,7 @@ const Page = () => {
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
+                        !date && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
