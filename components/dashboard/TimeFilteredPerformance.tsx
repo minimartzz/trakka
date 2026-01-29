@@ -82,6 +82,7 @@ interface RecentActivityCardProps {
   }[];
   date: string;
   isWinner: boolean;
+  isLoser: boolean;
   isTied: boolean;
 }
 const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
@@ -91,6 +92,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   date,
   isWinner,
   isTied,
+  isLoser,
 }) => {
   const dateObject = new Date(date);
   const formattedDate = format(dateObject, "dd MMM yyyy");
@@ -131,32 +133,33 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{formattedDate}</p>
       </div>
-      {isWinner && position === 1 ? (
-        <Badge variant="default" className="bg-yellow-500 font-bold text-white">
-          <Trophy className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      ) : position === 2 ? (
-        <Badge variant="default" className="bg-gray-600 font-bold text-white">
-          <Medal className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      ) : position === 3 ? (
-        <Badge variant="default" className="bg-[#9a6748] font-bold text-white">
-          <Medal className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      ) : isTied ? (
-        <Badge className="bg-orange-400 font-bold text-white">
-          <Weight className="h-3 w-3 mr-1" />
-          {`Tied: ${positionWithSuffix}`}
-        </Badge>
-      ) : (
-        <Badge variant="destructive" className="font-bold">
-          <Weight className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      )}
+      <div className="flex items-center gap-x-3">
+        {isTied && (
+          <span className="flex items-center text-base leading-none">🤝</span>
+        )}
+        {isWinner ? (
+          <Badge
+            variant="default"
+            className="bg-green-600 font-bold text-white"
+          >
+            <Trophy className="h-3 w-3 mr-1" />
+            {positionWithSuffix}
+          </Badge>
+        ) : isLoser ? (
+          <Badge variant="destructive" className="font-bold">
+            <Weight className="h-3 w-3 mr-1" />
+            {positionWithSuffix}
+          </Badge>
+        ) : (
+          <Badge
+            variant="default"
+            className="bg-orange-400 font-bold text-white"
+          >
+            <Medal className="h-3 w-3 mr-1" />
+            {positionWithSuffix}
+          </Badge>
+        )}
+      </div>
     </div>
   );
 };
@@ -372,6 +375,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                 date={session.datePlayed}
                 isTied={session.isTied}
                 isWinner={session.isWinner}
+                isLoser={session.isLoser}
               />
             ))}
           </CardContent>
