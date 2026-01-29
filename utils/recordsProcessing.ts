@@ -1,102 +1,103 @@
 import {
-  CombinedRecentGames,
   FilteredCounts,
-  RecentGames,
+  GroupedSession,
+  SessionDataInterface,
+  SessionPlayer,
 } from "@/lib/interfaces";
 
-export const filterSessions = (
+export const filterSessionData = (
   userId: number,
-  data: RecentGames[]
-): CombinedRecentGames[] => {
-  const combinedData = data.map((item: RecentGames) => ({
-    ...item.comp_game_log,
-    firstName: item.sqUser.firstName,
-    lastName: item.sqUser.lastName,
-    username: item.sqUser.username,
-    profilePic: item.sqUser.profilePic,
-    tribe: item.sqGroup.name,
-  }));
+  data: SessionDataInterface[],
+): GroupedSession[] => {
+  const sessionMap = new Map<string, GroupedSession>();
 
-  const sessionMap = new Map<string, CombinedRecentGames>();
-
-  combinedData.forEach((record) => {
+  // Group records into sessions
+  data.forEach((record) => {
     if (!sessionMap.has(record.sessionId)) {
       sessionMap.set(record.sessionId, {
         sessionId: record.sessionId,
-        gameTitle: record.gameTitle,
-        createdAt: record.createdAt,
         datePlayed: record.datePlayed,
+        gameTitle: record.gameTitle,
+        gameId: record.gameId,
+        createdAt: new Date(record.createdAt),
+        numPlayers: record.numPlayers,
+        tribe: record.tribeName,
+        players: [],
+        isVp: record.isVp,
         isPlayer: false,
         isWinner: false,
-        isLoser: false,
         isTied: false,
-        players: [],
-        tribe: record.tribe,
-        rating: record.rating || 0,
+        isLoser: false,
+        isFirstPlay: record.isFirstPlay,
+        isHighScore: record.isHighScore,
+        rating: record.rating,
       });
     }
 
-    // Get the existing session info
-    const session = sessionMap.get(record.sessionId);
+    const player: SessionPlayer = {
+      profileId: record.profileId,
+      firstName: record.firstName,
+      lastName: record.lastName,
+      username: record.username,
+      profilePic: record.profilePic,
+      victoryPoints: record.victoryPoints,
+      position: record.position,
+      isWinner: record.isWinner,
+      isTie: record.isTie,
+      isFirstPlay: record.isFirstPlay,
+      isHighScore: record.isHighScore,
+    };
 
-    // Populate the information
-    if (record.profileId === userId) {
-      session!.isPlayer = true;
-      if (record.isTie) session!.isTied = true;
-      if (record.isWinner) session!.isWinner = true;
-      if (session!.isPlayer && !record.isWinner) {
-        session!.isLoser = true;
-      }
-    }
-
-    // Add original players to the list
-    session!.players.push(record);
+    sessionMap.get(record.sessionId)!.players.push(player);
   });
 
-  // Sort the players by position in ascending order
-  sessionMap.forEach((session) => {
-    session.players.sort((a, b) => {
-      return a.position! - b.position!;
+  // Sort players, remove invalid sessions (players != numPlayers), user stats
+  const cleanedSessions = Array.from(sessionMap.values())
+    // Remove sessions where numPlayers != found players in session
+    .filter((session) => {
+      return session.players.length === session.numPlayers;
+    })
+    .map((session) => {
+      // Sort players by position
+      session.players.sort((a, b) => a.position! - b.position!);
+
+      // Find the player records
+      const userRecord = session.players.find(
+        (player) => player.profileId === userId,
+      );
+      if (!userRecord) return session;
+
+      // Find out if player is loser by comparing their position to highest position in session
+      const allPosition = session.players.map((player) => player.position);
+      const highestPosition = Math.max(...allPosition);
+
+      return {
+        ...session,
+        isPlayer: true,
+        isWinner: userRecord.isWinner,
+        isTied: userRecord.isTie,
+        isLoser: userRecord.position === highestPosition,
+        isFirstPlay: userRecord.isFirstPlay,
+        isHighScore: userRecord.isHighScore,
+        rating:
+          data.find(
+            (e) => e.sessionId === session.sessionId && e.profileId === userId,
+          )?.rating ?? null,
+      };
     });
-  });
 
-  // Filter out entries that don't match player count
-  const groups = Array.from(sessionMap.values());
-  const results = Object.values(groups).filter((group) => {
-    const expectedPlayers = group.players[0].numPlayers;
-    return group.players.length === expectedPlayers;
-  });
-
-  // Sort results
-  results.sort((a, b) => {
-    // 1. Sort on when the game was played in descending
-    const datePlayedA = new Date(a.datePlayed);
-    const datePlayedB = new Date(b.datePlayed);
-    const datePlayedComparison = datePlayedB.getTime() - datePlayedA.getTime();
-
-    if (datePlayedComparison !== 0) {
-      return datePlayedComparison;
+  // Sort sessions by descending order
+  const sortedSessions = cleanedSessions.sort((a, b) => {
+    if (b.datePlayed !== a.datePlayed) {
+      return b.datePlayed.localeCompare(a.datePlayed);
     }
-
-    // 2. Sort on when the entry was added in descending order
-    const dateCreatedA = new Date(a.createdAt!);
-    const dateCreatedB = new Date(b.createdAt!);
-    const createdAtComparison = dateCreatedB.getTime() - dateCreatedA.getTime();
-
-    if (createdAtComparison !== 0) {
-      return createdAtComparison;
-    }
-
-    // 3. Sort on game title in ascending order
-    return a.gameTitle.localeCompare(b.gameTitle);
+    return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
-  return results;
+  return sortedSessions;
 };
 
-export const getFilteredCounts = (
-  data: CombinedRecentGames[]
-): FilteredCounts => {
+export const getFilteredCounts = (data: GroupedSession[]): FilteredCounts => {
   const counts = data.reduce<FilteredCounts>(
     (acc, item) => {
       acc.numGames += 1;
@@ -112,13 +113,13 @@ export const getFilteredCounts = (
       numLoss: 0,
       numPlayed: 0,
       numTied: 0,
-    }
+    },
   );
 
   return counts;
 };
 
-export const getAvailableGames = (data: CombinedRecentGames[]): string[] => {
+export const getAvailableGames = (data: GroupedSession[]): string[] => {
   return [...new Set(data.map((items) => items.gameTitle))].sort();
 };
 

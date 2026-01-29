@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { CombinedRecentGames, RecentGames } from "@/lib/interfaces";
+import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
 import {
   format,
   isWithinInterval,
@@ -48,8 +48,8 @@ import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 
 interface TimeFilteredPerformanceProps {
   userId: number;
-  recentActivity: CombinedRecentGames[];
-  sessions: RecentGames[];
+  recentActivity: GroupedSession[];
+  sessions: SessionDataInterface[];
 }
 
 interface MetricCardProps {
@@ -112,14 +112,14 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
                   className={cn(
                     "w-6 h-6",
                     player.isWinner &&
-                      "ring-2 ring-offset-2 ring-chart-2 transition-all duration-300"
+                      "ring-2 ring-offset-2 ring-chart-2 transition-all duration-300",
                   )}
                 >
                   <AvatarImage
                     src={player.profilePic}
                     className={cn(
                       "object-cover w-full h-full",
-                      !player.isWinner && "grayscale"
+                      !player.isWinner && "grayscale",
                     )}
                   />
                   <AvatarFallback>P</AvatarFallback>
@@ -227,7 +227,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
         isWithinInterval(activity.parsedDate, {
           start: finalFromDate!,
           end: finalToDate!,
-        })
+        }),
       );
     }
 
@@ -239,7 +239,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
   const { top5Players, topGamesStats } = useMemo(() => {
     const sessionsWithDates = sessions.map((session) => ({
       ...session,
-      parsedDate: new Date(session.comp_game_log.datePlayed),
+      parsedDate: new Date(session.datePlayed),
     }));
 
     let finalFromDate: Date | undefined;
@@ -266,7 +266,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       isWithinInterval(session.parsedDate, {
         start: finalFromDate!,
         end: finalToDate!,
-      })
+      }),
     );
 
     const topPlayers = topOpponents(userId, filteredSessions);
@@ -416,7 +416,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                     <TableCell
                       className={cn(
                         "text-right font-semibold",
-                        game.winRate <= 50 ? "text-red-500" : "text-green-600"
+                        game.winRate <= 50 ? "text-red-500" : "text-green-600",
                       )}
                     >{`${game.winRate}%`}</TableCell>
                   </TableRow>
