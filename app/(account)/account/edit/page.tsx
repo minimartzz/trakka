@@ -25,7 +25,7 @@ const GENERIC_IMAGE_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/st
 
 const Page = () => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
-    null
+    null,
   );
   const router = useRouter();
 

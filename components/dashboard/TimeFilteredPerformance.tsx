@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import MeepleIcon from "../icons/MeepleIcon";
-import { Medal, Trophy, Users, Weight } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -45,6 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+import DotsIcon from "@/components/icons/DotsIcon";
 
 interface TimeFilteredPerformanceProps {
   userId: number;
@@ -142,12 +143,12 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
             variant="default"
             className="bg-green-600 font-bold text-white"
           >
-            <Trophy className="h-3 w-3 mr-1" />
+            <DotsIcon value={players.length} />
             {positionWithSuffix}
           </Badge>
         ) : isLoser ? (
           <Badge variant="destructive" className="font-bold">
-            <Weight className="h-3 w-3 mr-1" />
+            <DotsIcon value={players.length} />
             {positionWithSuffix}
           </Badge>
         ) : (
@@ -155,7 +156,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
             variant="default"
             className="bg-orange-400 font-bold text-white"
           >
-            <Medal className="h-3 w-3 mr-1" />
+            <DotsIcon value={players.length} />
             {positionWithSuffix}
           </Badge>
         )}
