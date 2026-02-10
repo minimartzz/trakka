@@ -1,14 +1,14 @@
 "use client";
 import { getSelectablePlayers } from "@/app/(generic)/session/create/action";
 import { Player } from "@/app/(generic)/session/create/page";
-import PlayerInput2 from "@/components/PlayerInput2";
+import PlayerInput from "@/components/PlayerInput";
 import ScoreInput from "@/components/ScoreInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, Minus, Plus, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useFormStatus } from "react-dom";
 
 interface PlayerControllerProps {
@@ -32,8 +32,12 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
   const handleAddPlayer = () => {
     const newPlayer: Player = {
       id: Date.now().toString(),
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      groupId: "",
+      profilePic: "",
       score: null,
       isWinner: false,
       isTie: false,
@@ -82,8 +86,12 @@ const PlayerSessionSelection = ({
   const handleAddPlayer = () => {
     const newPlayer: Player = {
       id: Date.now().toString(),
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      groupId: "",
+      profilePic: "",
       score: null,
       isWinner: false,
       isTie: false,
@@ -91,9 +99,9 @@ const PlayerSessionSelection = ({
     setPlayers([...players, newPlayer]);
   };
 
-  const handleReducePlayer = () => {
+  const handleReducePlayer = (id: string) => {
     if (players.length > 1) {
-      setPlayers(players.slice(0, -1));
+      setPlayers(players.filter((player) => player.id !== id));
     }
   };
 
@@ -149,7 +157,7 @@ const PlayerSessionSelection = ({
               type="button"
               size="icon"
               className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              onClick={handleReducePlayer}
+              onClick={() => handleReducePlayer(player.id)}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -157,12 +165,11 @@ const PlayerSessionSelection = ({
             {/* Card Body */}
             <CardContent className="relative z-10 py-0 px-10">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                {/* TODO: Player Input */}
                 <div className="w-full md:max-w-lg md:flex-1 md:pr-0">
                   <Label className="text-muted-foreground mb-2">
                     Player Name
                   </Label>
-                  <PlayerInput2
+                  <PlayerInput
                     selectablePlayers={selectablePlayers}
                     playerId={player.id}
                     playerSelect={handleUpdates}

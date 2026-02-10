@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { db } from "@/utils/db";
 import { and, eq, notInArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { Player } from "@/components/tribes/EditTribes";
 
 type updatedProfileGroup = typeof profileGroupTable.$inferInsert;
 type updatedGroup = Omit<
@@ -18,7 +19,7 @@ const formatDate = (dateStr: string): string => {
   return format(new Date(dateStr), "yyyy-MM-dd");
 };
 
-export async function syncTribes(formData: FormData) {
+export async function syncTribes(formData: FormData, playersUpdate: Player[]) {
   const dateUpdated = new Date();
   const groupId = formData.get("groupId") as string;
   const profileGroupList = formData.get("profileGroupList") as string;
@@ -38,9 +39,8 @@ export async function syncTribes(formData: FormData) {
       .set(groupInfo)
       .where(eq(groupTable.id, formData.get("groupId") as string));
 
-    // Deserialise the profileGroupList
-    const usersList: updatedProfileGroup[] = JSON.parse(profileGroupList);
-    const incomingProfileIds = usersList.map((user) => user.profileId);
+    // // Deserialise the profileGroupList
+    const incomingProfileIds = playersUpdate.map((player) => player.profileId);
 
     // Delete and Upsert Profile Group table
     await db.transaction(async (tx) => {
@@ -50,8 +50,8 @@ export async function syncTribes(formData: FormData) {
           .where(
             and(
               eq(profileGroupTable.groupId, groupId),
-              notInArray(profileGroupTable.profileId, incomingProfileIds)
-            )
+              notInArray(profileGroupTable.profileId, incomingProfileIds),
+            ),
           );
       } else {
         await tx
@@ -59,18 +59,18 @@ export async function syncTribes(formData: FormData) {
           .where(eq(profileGroupTable.groupId, groupId));
       }
 
-      const upsertPromises = usersList.map((user) => {
+      const upsertPromises = playersUpdate.map((player) => {
         return tx
           .insert(profileGroupTable)
           .values({
             groupId: groupId,
-            profileId: user.profileId,
-            roleId: user.roleId,
+            profileId: player.profileId,
+            roleId: player.roleId,
           })
           .onConflictDoUpdate({
             target: [profileGroupTable.groupId, profileGroupTable.profileId],
             set: {
-              roleId: user.roleId,
+              roleId: player.roleId,
             },
           });
       });
@@ -84,7 +84,7 @@ export async function syncTribes(formData: FormData) {
       message: "User roles and permissions successfully updated",
     };
   } catch (error) {
-    console.error("Failed to update user roles", error);
-    return { success: false, message: "Failed to update user roles" };
+    console.error("Failed to update player roles", error);
+    return { success: false, message: "Failed to update player roles" };
   }
 }

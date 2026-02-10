@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X } from "lucide-react";
-import React, { useState } from "react";
+import { Loader2, Minus, Plus, X } from "lucide-react";
+import React, { useActionState, useState } from "react";
 import { Roles } from "@/lib/interfaces";
-import PlayerInput from "@/components/PlayerInput";
 import {
   Select,
   SelectContent,
@@ -19,16 +18,34 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { syncTribes } from "@/app/(account)/tribe/[id]/edit/action";
 import Form from "next/form";
-import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import PlayerInput from "@/components/PlayerInput";
 
 // Interfaces and Types
-interface Player {
-  id: string;
-  userId: number;
-  name: string;
+interface SelectablePlayers {
+  profileId: number;
+  firstName: string;
+  lastName: string;
   username: string;
-  role: number;
+  profilePic?: string;
+}
+
+export interface Player extends SelectablePlayers {
+  id: string;
+  roleId: number;
+}
+
+interface PlayerCardProps {
+  player: Player;
+  players: Player[];
+  selectablePlayers: SelectablePlayers[];
+  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+}
+
+interface PlayerControllerProps {
+  players: Player[];
+  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
 }
 
 interface EditTribesProps {
@@ -36,24 +53,67 @@ interface EditTribesProps {
   profilePic: string;
   groupName: string;
   description: string;
+  selectablePlayers: SelectablePlayers[];
   playersDetails: Player[];
 }
 
 const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/groups/generic_group.png`;
 
-const EditTribes = ({
-  tribeId,
-  profilePic,
-  groupName,
-  description,
-  playersDetails,
-}: EditTribesProps) => {
-  const [groupPictureUrl, setGroupPictureUrl] = useState<string | null>(
-    profilePic
-  );
-  const [players, setPlayers] = useState<Player[]>(playersDetails);
-  const router = useRouter();
+const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
+  const handleReducePlayer = () => {
+    if (players.length > 1) {
+      setPlayers(players.slice(0, -1));
+    }
+  };
 
+  const handleAddPlayer = () => {
+    const newPlayer: Player = {
+      id: Date.now().toString(),
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      roleId: 0,
+    };
+    setPlayers([...players, newPlayer]);
+  };
+
+  return (
+    <div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
+      <Button
+        variant="outline"
+        type="button"
+        size="icon"
+        className="rounded-none rounded-l-md shadow-none focus-visible:z-10"
+        onClick={handleReducePlayer}
+        disabled={players.length <= 1}
+      >
+        <Minus className="w-4 h-4" />
+        <span className="sr-only">Remove Player</span>
+      </Button>
+      <span className="bg-background dark:border-input dark:bg-input/30 flex items-center border px-3 text-sm font-medium">
+        {players.length}
+      </span>
+      <Button
+        variant="outline"
+        type="button"
+        size="icon"
+        className="rounded-none rounded-r-md shadow-none focus-visible:z-10"
+        onClick={handleAddPlayer}
+      >
+        <Plus className="w-4 h-4" />
+        <span className="sr-only">Add Player</span>
+      </Button>
+    </div>
+  );
+};
+
+const PlayerCard = ({
+  player,
+  players,
+  selectablePlayers,
+  setPlayers,
+}: PlayerCardProps) => {
   const reverseObject = (obj: typeof Roles) => {
     const entries = Object.entries(obj);
     const reversedEntries = entries.map((a) => a.reverse());
@@ -63,90 +123,116 @@ const EditTribes = ({
   };
   const reversedRoles = reverseObject(Roles);
 
-  const SubmitButton = () => {
-    const { pending } = useFormStatus();
-    return (
-      <div className="flex mt-8 gap-x-3 items-center">
-        <Button variant="outline" asChild>
-          <Link href={`/tribe/${tribeId}`}>Cancel</Link>
-        </Button>
-        <Button
-          type="submit"
-          className="font-semibold bg-add-button hover:bg-green-600 cursor-pointer"
-          disabled={pending}
-        >
-          {pending ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
+  const handleReducePlayer = () => {
+    if (players.length > 1) {
+      setPlayers(players.filter((p) => p.id !== player.id));
+    }
+  };
+
+  const handleUpdates = (id: string, updates: Partial<Player>) => {
+    setPlayers((prev) =>
+      prev.map((player) =>
+        player.id === id ? { ...player, ...updates } : player,
+      ),
     );
   };
+  return (
+    <Card
+      key={player.id}
+      className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
+    >
+      {/* Remove Player */}
+      <Button
+        variant="ghost"
+        type="button"
+        size="icon"
+        className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        onClick={handleReducePlayer}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+
+      <CardContent className="relative z-10 py-0 px-3 sm:px-5">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          {/* Player Input */}
+          <div className="w-full md:max-w-lg md:flex-1 md:pr-0">
+            <Label className="text-muted-foreground mb-2">Player Name</Label>
+            <PlayerInput
+              selectablePlayers={selectablePlayers}
+              playerId={player.id}
+              playerSelect={handleUpdates}
+              playerDetails={player}
+            />
+          </div>
+
+          {/* Role */}
+          <div>
+            <Label className="text-muted-foreground mb-2">Role</Label>
+            <Select
+              onValueChange={(roleName) => {
+                const roleValue = Roles[roleName as keyof typeof Roles];
+                handleUpdates(player.id, { roleId: roleValue });
+              }}
+              defaultValue={reversedRoles[player.roleId]}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Role" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(Roles).map((role) => (
+                  <SelectItem value={role} key={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const EditTribes = ({
+  tribeId,
+  profilePic,
+  groupName,
+  description,
+  selectablePlayers,
+  playersDetails,
+}: EditTribesProps) => {
+  const [groupPictureUrl, setGroupPictureUrl] = useState<string | null>(
+    profilePic,
+  );
+  const [players, setPlayers] = useState<Player[]>(playersDetails);
+  const router = useRouter();
 
   const handleImageUrlChange = (url: string | null) => {
     setGroupPictureUrl(url);
   };
 
-  // Player controls
-  const addPlayer = () => {
-    const newPlayer: Player = {
-      id: Date.now().toString(),
-      userId: 0,
-      name: "",
-      username: "",
-      role: 0,
-    };
-    setPlayers([...players, newPlayer]);
-  };
-
-  const removePlayer = (id: string) => {
-    if (players.length > 1) {
-      setPlayers(players.filter((player) => player.id !== id));
-    }
-  };
-
-  const updatePlayerName = (id: string, name: string, userId: number) => {
-    setPlayers(
-      players.map((player) =>
-        player.id === id ? { ...player, name, userId } : player
-      )
-    );
-  };
-
-  const updatePlayerRole = (id: string, value: string) => {
-    setPlayers(
-      players.map((player) =>
-        player.id === id
-          ? { ...player, role: Roles[value as keyof typeof Roles] }
-          : player
-      )
-    );
-  };
-
   // Submit Form
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (prevState: any, formData: FormData) => {
     // ProfileGroup information
-    const playersWithGroup = players.map(({ userId, role }) => ({
-      profileId: userId,
-      groupId: tribeId,
-      roleId: role,
-    }));
-
-    if (!playersWithGroup.some((p) => p.roleId === 1)) {
-      toast.error("Error: No Admin user selected", {
-        description:
-          "Every group must contain at least one Admin user. Please select one",
-        position: "bottom-right",
-        className: "bg-destructive",
-      });
+    if (!players.some((p) => p.profileId !== 0)) {
+      toast.error(
+        "Some players have not been selected. Please ensure that all players are filled.",
+      );
+      return;
+    }
+    if (!players.some((p) => p.roleId === 1)) {
+      toast.error(
+        "No SuperAdmin user selected. Please ensure at least one user is a SuperAdmin.",
+      );
       return;
     }
 
-    const profileGroupList = JSON.stringify(playersWithGroup);
+    // Creating the form object
     formData.append("groupId", tribeId);
     formData.append("groupImage", groupPictureUrl || GENERIC_GROUP_URL);
-    formData.append("profileGroupList", profileGroupList);
 
-    const result = await syncTribes(formData);
-
+    // Making the DB changes
+    const result = await syncTribes(formData, players);
     if (result.success) {
       toast.success(result.message);
       router.push(`/tribe/${tribeId}`);
@@ -154,6 +240,7 @@ const EditTribes = ({
       toast.error(result.message);
     }
   };
+  const [state, formAction, pending] = useActionState(handleSubmit, null);
 
   return (
     <div className="p-0 lg:p-12 lg:w-full">
@@ -173,7 +260,7 @@ const EditTribes = ({
         </div>
       </div>
 
-      <Form action={handleSubmit}>
+      <Form action={formAction}>
         {/* Group information */}
         <div className="my-3">
           <div className="flex flex-col items-center gap-y-5">
@@ -202,89 +289,40 @@ const EditTribes = ({
         </div>
 
         {/* Player information */}
-        <div className="my-12">
-          <div className="flex justify-between items-center mb-3">
+        <div className="flex flex-col mt-6 gap-y-4">
+          <div className="flex justify-between items-center">
             <Label>Players</Label>
-            <Button
-              type="button"
-              onClick={addPlayer}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 h-8 bg-add-button font-semibold cursor-pointer"
-              data-testid="add-player-button"
-              tabIndex={0}
-            >
-              <Plus className="h-4 w-4" />
-              Add Player
-            </Button>
+            <PlayerController players={players} setPlayers={setPlayers} />
           </div>
-          <div className="text-xs text-muted-foreground mb-3">
-            Select players using @ at the start and select. If user does not
-            exist, please ask them to create an account
-          </div>
-          <div className="hidden sm:grid sm:grid-cols-9 items-center gap-4 px-3 py-2 text-sm text-muted-foreground font-medium border rounded-lg bg-muted/30 mb-2">
-            <div className="col-span-5 min-w-0">Player</div>
-            <div className="w-75 text-center">Role</div>
-          </div>
-          {players.map((player, idx) => (
-            <div key={player.id} className="gap-4 mb-3">
-              <div className="grid grid-cols-1 sm:grid-cols-9 items-start sm:items-center gap-3 sm:gap-4 p-3 border rounded-lg bg-card">
-                <div className="col-span-1 sm:col-span-6 min-w-0">
-                  <Label className="block sm:hidden text-xs font-semibold text-muted-foreground tracking-wide">
-                    Player
-                  </Label>
-                  <PlayerInput
-                    value={`${player.name}`}
-                    onChange={(name, userId) =>
-                      updatePlayerName(player.id, name, userId!)
-                    }
-                    placeholder={`Player ${idx + 1}`}
-                    tabIndex={idx * 4 + 1}
-                    className="w-full mt-2"
-                  />
-                </div>
-
-                <div className="col-start-1 sm:col-start-auto sm:col-span-2 col-span-1 min-w-0">
-                  <Label className="block sm:hidden mb-1.5 text-xs font-semibold text-muted-foreground tracking-wide">
-                    Role
-                  </Label>
-                  <Select
-                    onValueChange={(value) =>
-                      updatePlayerRole(player.id, value)
-                    }
-                    defaultValue={reversedRoles[player.role.toString()]}
-                  >
-                    <SelectTrigger className="sm:w-full">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(Roles).map((role) => (
-                        <SelectItem value={role} key={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="col-start-2 row-start-1 row-span-2 sm:row-span-1 sm:col-start-auto flex items-center justify-center h-full sm:h-auto pt-6 sm:pt-0">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removePlayer(player.id)}
-                    className="p-2 text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px] shrink-0"
-                    disabled={players.length <= 1}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {players.map((player) => (
+            <PlayerCard
+              key={player.id}
+              player={player}
+              players={players}
+              selectablePlayers={selectablePlayers}
+              setPlayers={setPlayers}
+            />
           ))}
-          <div className="flex justify-end pt-4">
-            <SubmitButton />
-          </div>
+        </div>
+
+        <div className="flex self-end mt-8 gap-x-3 items-center">
+          <Button variant="outline" asChild>
+            <Link href={`/tribe/${tribeId}`}>Cancel</Link>
+          </Button>
+          <Button
+            type="submit"
+            className="font-semibold bg-add-button hover:bg-green-600 cursor-pointer"
+            disabled={pending}
+          >
+            {pending ? (
+              <div className="flex items-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </div>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
         </div>
       </Form>
     </div>

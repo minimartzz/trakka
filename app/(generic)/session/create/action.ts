@@ -20,13 +20,13 @@ export async function notifyPlayersOfSession(notification: Notification[]) {
 
     if (result.length === 0) {
       console.error(
-        "Failed to insert new session entries into notifications table"
+        "Failed to insert new session entries into notifications table",
       );
     }
   } catch (error) {
     console.error(
       "Issue when trying to insert into notifications table:",
-      error
+      error,
     );
   }
 }
@@ -53,8 +53,8 @@ export async function getTribes(profileId: number) {
       .where(
         and(
           eq(profileGroupTable.profileId, profileId),
-          inArray(profileGroupTable.roleId, [1, 2])
-        )
+          inArray(profileGroupTable.roleId, [1, 2]),
+        ),
       )
       .orderBy(sq.name);
 
@@ -92,8 +92,8 @@ export async function getRecentUsedTribes(profileId: number) {
       .where(
         and(
           eq(compGameLogTable.profileId, profileId),
-          eq(compGameLogTable.createdBy, profileId)
-        )
+          eq(compGameLogTable.createdBy, profileId),
+        ),
       )
       .orderBy(compGameLogTable.groupId, desc(compGameLogTable.createdAt))
       .limit(3);
@@ -119,9 +119,9 @@ export async function getSelectablePlayers(tribeId: string) {
         profilePic: playerDetails.image,
       })
       .from(profileGroupTable)
-      .leftJoin(
+      .innerJoin(
         playerDetails,
-        eq(profileGroupTable.profileId, playerDetails.id)
+        eq(profileGroupTable.profileId, playerDetails.id),
       )
       .where(eq(profileGroupTable.groupId, tribeId));
 

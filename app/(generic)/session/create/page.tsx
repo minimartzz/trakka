@@ -43,10 +43,8 @@ type selectablePlayersType = Awaited<
   ReturnType<typeof getSelectablePlayers>
 >[number];
 
-export interface Player {
+export interface Player extends selectablePlayersType {
   id: string;
-  userId: number;
-  name: string;
   score: number | null;
   isWinner: boolean;
   isTie: boolean;
@@ -73,16 +71,24 @@ const Page = () => {
   const [submittingPlayers, setSubmittingPlayers] = useState<Player[]>([
     {
       id: "1",
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      profilePic: "",
+      groupId: "",
       score: null,
       isWinner: false,
       isTie: false,
     },
     {
       id: "2",
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      profilePic: "",
+      groupId: "",
       score: null,
       isWinner: false,
       isTie: false,
@@ -108,7 +114,7 @@ const Page = () => {
     }
     // Check 4: No player names
     const missingPlayers = submittingPlayers
-      .map((player, idx) => (player.name === "" ? idx + 1 : null))
+      .map((player, idx) => (player.firstName === "" ? idx + 1 : null))
       .filter((idx): idx is number => idx !== null);
     if (missingPlayers.length > 0) {
       const missingPositions = missingPlayers.join(", ");
@@ -163,7 +169,7 @@ const Page = () => {
           datePlayed,
           ...bgg,
           numPlayers,
-          profileId: player.userId,
+          profileId: player.profileId,
           groupId,
           isVp,
           victoryPoints: victoryPoints,
@@ -173,7 +179,7 @@ const Page = () => {
           score: score,
           highScore: false, // TODO: Need to think of a new way to handle this
           ...dateInfo,
-          isFirstPlay: await getFirstPlay(bgg.gameId, player.userId),
+          isFirstPlay: await getFirstPlay(bgg.gameId, player.profileId),
           isTie: player.isTie,
           createdBy: user!.id,
         };
