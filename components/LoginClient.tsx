@@ -16,7 +16,8 @@ import { signUpFormSchema } from "@/utils/signUpSchema";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import React, { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 

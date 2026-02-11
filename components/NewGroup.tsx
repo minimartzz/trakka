@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Roles } from "@/lib/interfaces";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { toast } from "sonner";
 import { getAllPlayers } from "@/components/actions/fetchPlayers";
 import { Card, CardContent } from "@/components/ui/card";
