@@ -31,7 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <NextTopLoader color="#3156a2" height={5} />
+          <NextTopLoader color="#3156a2" height={5} showSpinner={false} />
           {children}
           <Toaster richColors />
         </ThemeProvider>

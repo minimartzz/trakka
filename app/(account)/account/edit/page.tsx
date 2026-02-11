@@ -63,7 +63,7 @@ const Page = () => {
         </Button>
         <Button
           type="submit"
-          className="font-semibold bg-add-button hover:bg-green-600 cursor-pointer"
+          className="font-semibold bg-accent-5/80 hover:bg-accent-5 cursor-pointer text-white"
           disabled={pending}
         >
           {pending ? "Saving..." : "Save Changes"}

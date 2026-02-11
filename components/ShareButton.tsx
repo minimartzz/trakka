@@ -86,8 +86,11 @@ const ShareButton = ({ userId, tribes }: ShareButtonProps) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button className="gap-x-2" variant="outline">
-          <Share className="h-4 w-4" />
+        <Button
+          className="gap-x-2 bg-accent-4 hover:bg-accent-4/80 dark:bg-accent-4/80 dark:hover:bg-accent-4"
+          variant="outline"
+        >
+          <Share className="h-4 w-4 text-white" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-85">
@@ -131,7 +134,6 @@ const ShareButton = ({ userId, tribes }: ShareButtonProps) => {
                   <span>Share Invite Link</span>
                 </div>
               )}
-              <p className="hidden sm:block">Invite a Friend</p>
             </Button>
           </div>
         </div>

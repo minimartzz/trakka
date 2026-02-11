@@ -305,13 +305,13 @@ const EditTribes = ({
           ))}
         </div>
 
-        <div className="flex self-end mt-8 gap-x-3 items-center">
+        <div className="flex w-full justify-end mt-8 gap-x-3 items-center">
           <Button variant="outline" asChild>
             <Link href={`/tribe/${tribeId}`}>Cancel</Link>
           </Button>
           <Button
             type="submit"
-            className="font-semibold bg-add-button hover:bg-green-600 cursor-pointer"
+            className="font-semibold bg-accent-5/80 hover:bg-accent-5 cursor-pointer text-white"
             disabled={pending}
           >
             {pending ? (

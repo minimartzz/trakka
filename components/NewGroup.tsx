@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Minus, Plus, X } from "lucide-react";
+import { Loader2, Minus, Plus, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import React, { useActionState, useEffect, useState } from "react";
 import ProfilePictureUploader from "@/components/ProfilePictureUploader";
@@ -241,8 +241,8 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
 
     // Field checks on players
     // 1. Check if any player is empty
-    const hasEmptyName = players.some((player) => player.firstName === "");
-    if (hasEmptyName) {
+    const hasEmptyPlayer = players.some((player) => player.profileId === 0);
+    if (hasEmptyPlayer) {
       toast.error("Please ensure all players are selected.");
       return { fields: { groupName: groupName, description: description } };
     }
@@ -271,6 +271,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
       groupId: groupId,
       roleId: player.role,
     }));
+    console.log(playersPayload);
 
     // Insert entries into tables
     try {
@@ -372,7 +373,10 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
               disabled={isPending}
             >
               {isPending ? (
-                <span className="flex items-center gap-2">Creating...</span>
+                <div className="flex items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span className="flex items-center gap-2">Creating...</span>
+                </div>
               ) : (
                 "Create Tribe"
               )}

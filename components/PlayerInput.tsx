@@ -68,6 +68,21 @@ const PlayerInput = <T extends BasePlayer>({
     }
   };
 
+  const selectPlayer = (player: T) => {
+    const displayString = `${player.firstName} ${player.lastName} (${player.username})`;
+    setInput(displayString);
+
+    playerSelect(playerId, {
+      profileId: player.profileId,
+      firstName: player.firstName,
+      lastName: player.lastName,
+      username: player.username,
+      profilePic: player.profilePic,
+    });
+
+    setOpen(false);
+  };
+
   // Keyboard controls
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Opens the suggestions when the user presses down after focus
@@ -87,15 +102,7 @@ const PlayerInput = <T extends BasePlayer>({
     } else if (e.key === "Enter") {
       if (open && filteredPlayers[activeIndex]) {
         e.preventDefault();
-        const selectedPlayer = filteredPlayers[activeIndex];
-        setInput(
-          `${selectedPlayer.firstName} ${selectedPlayer.lastName} (${selectedPlayer.username})`,
-        );
-        playerSelect(playerId, {
-          profileId: selectedPlayer.profileId,
-          ...playerDetails,
-        });
-        setOpen(false);
+        selectPlayer(filteredPlayers[activeIndex]);
       }
     } else if (e.key === "Escape") {
       setOpen(false);
@@ -134,17 +141,7 @@ const PlayerInput = <T extends BasePlayer>({
                 <li
                   key={player.username}
                   onMouseEnter={() => setActiveIndex(idx)}
-                  onClick={() => {
-                    setInput(
-                      `${player.firstName} ${player.lastName} (${player.username})`,
-                    );
-                    playerSelect(playerId, {
-                      userId: player.profileId,
-                      // name: `${player.firstName} ${player.lastName}`,
-                      ...player,
-                    });
-                    setOpen(false);
-                  }}
+                  onClick={() => selectPlayer(player)}
                   className={cn(
                     "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
                     activeIndex === idx

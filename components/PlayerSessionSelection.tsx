@@ -122,7 +122,7 @@ const PlayerSessionSelection = ({
           type="submit"
           variant="outline"
           size="sm"
-          className="bg-green-600/80 text-white hover:bg-green-600/40 focus-visible:ring-green-600/20 hover:text-green-600 dark:bg-green-400/10 dark:text-green-400 dark:hover:bg-green-400/20 dark:focus-visible:ring-green-400/40 font-semibold"
+          className="font-semibold text-white bg-accent-5 hover:bg-accent-5/80 focus-visible:ring-accent-5/20bg-accent-5 dark:bg-accent-5 dark:hover:bg-accent-5/80 hover:cursor-pointer"
           disabled={pending}
         >
           {pending ? (
@@ -196,7 +196,7 @@ const PlayerSessionSelection = ({
                     </Label>
                     <Checkbox
                       id={`winner-${idx}`}
-                      className="h-7 w-7 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-blue-600 rounded-full"
+                      className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
                       checked={player.isWinner}
                       onCheckedChange={(checked) =>
                         handleUpdates(player.id, {
@@ -214,7 +214,7 @@ const PlayerSessionSelection = ({
                     </Label>
                     <Checkbox
                       id={`tied-${idx}`}
-                      className="h-7 w-7 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-blue-600 rounded-full"
+                      className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
                       checked={player.isTie}
                       onCheckedChange={(checked) =>
                         handleUpdates(player.id, {
