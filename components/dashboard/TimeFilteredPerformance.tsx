@@ -392,19 +392,23 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Game</TableHead>
-                  <TableHead>No. of Plays</TableHead>
-                  <TableHead className="text-right">Win %</TableHead>
+                  <TableHead className="w-full min-w-[120px]">Game</TableHead>
+                  <TableHead className="text-center w-[100px] sm:w-[150px] sm:pr-10">
+                    No. of Plays
+                  </TableHead>
+                  <TableHead className="text-right w-[80px]">Win %</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topGamesStats.slice(0, 10).map((game) => (
                   <TableRow key={game.game.gameId}>
-                    <TableCell className="font-medium">
-                      {game.game.gameTitle}
+                    <TableCell className="max-w-[120px] sm:max-w-none">
+                      <div className="overflow-x-auto whitespace-nowarp no-scrollbar font-medium">
+                        {game.game.gameTitle}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex h-2 w-full overflow-hidden rounded-full bg-red-500 shadow-inner">
+                      <div className="hidden sm:flex h-2 w-full overflow-hidden rounded-full bg-red-500 shadow-inner">
                         <div
                           className="bg-green-600 transition-all duration-500 ease-out"
                           style={{ width: `${game.winRate}%` }}
@@ -416,6 +420,11 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                         <span className="text-[10px]">
                           Losses: {game.count - game.wins}
                         </span>
+                      </div>
+
+                      {/* On Mobile: Show only number */}
+                      <div className="sm:hidden text-sm font-medium">
+                        {game.count}
                       </div>
                     </TableCell>
                     <TableCell
