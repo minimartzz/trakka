@@ -1,49 +1,29 @@
-import RequestInbox from "@/components/tribes/RequestInbox";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { groupTable } from "@/db/schema/group";
-import { profileTable } from "@/db/schema/profile";
+import { groupTable, SelectGroup } from "@/db/schema/group";
+import { profileTable, SelectProfile } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
-import { db } from "@/utils/db";
+import { compGameLogTable } from "@/db/schema/compGameLog";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
-import { eq } from "drizzle-orm";
-import { Calendar, Crown, Gavel, Settings, Users2 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import React from "react";
+import TribePageClient from "@/components/tribes/TribePageClient";
+import { GameSession } from "@/components/tribes/TribeHomeTab";
+import { TribeMember } from "@/components/tribes/TribePlayersTab";
+import {
+  processGameSessions,
+  processMembersWithStats,
+  TribeMemberInterface,
+} from "@/utils/tribesProcessing";
+import {
+  getTribeDetails,
+  getTribeGameSessions,
+  getTribeMembers,
+} from "@/app/(account)/tribe/[id]/action";
+import { notFound } from "next/navigation";
 
 // Interfaces & Types
 interface TribeDetailsInterface {
-  group: typeof groupTable.$inferSelect;
-  profile: typeof profileTable.$inferSelect | null;
+  group: SelectGroup;
+  profile: SelectProfile | null;
 }
-
-interface TribeMemberInterface {
-  profile_group: typeof profileGroupTable.$inferSelect;
-  profile: typeof profileTable.$inferSelect | null;
-}
-
-// Static DB calls
-const getTribeMembers = async (groupId: string) => {
-  const members = await db
-    .select()
-    .from(profileGroupTable)
-    .leftJoin(profileTable, eq(profileGroupTable.profileId, profileTable.id))
-    .where(eq(profileGroupTable.groupId, groupId));
-
-  return members;
-};
-
-const getTribeDetails = async (groupId: string) => {
-  const tribeDetails = await db
-    .select()
-    .from(groupTable)
-    .leftJoin(profileTable, eq(groupTable.createdBy, profileTable.id))
-    .where(eq(groupTable.id, groupId));
-
-  return tribeDetails;
-};
 
 // Formatting functions
 const formatDate = (dateStr: string): string => {
@@ -57,132 +37,63 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeDetails: TribeDetailsInterface = (
     await getTribeDetails(tribeId)
   )[0];
+  if (!tribeDetails) {
+    notFound();
+  }
+  const gameLogsRaw = await getTribeGameSessions(tribeId);
+
+  // Process game sessions
+  const sessions = processGameSessions(gameLogsRaw);
 
   // User role
-  const roleId = tribeMembers.filter(
-    (tribeMember) => tribeMember.profile_group.profileId === user.id
-  )[0].profile_group.roleId;
+  const userMembership = tribeMembers.find(
+    (tribeMember) => tribeMember.profileGroup.profileId === user.id,
+  );
+  const roleId = userMembership?.profileGroup.roleId || 0;
+  const isSuperAdmin = roleId === 1;
+  const isAdmin = roleId === 2;
 
   // Get tribe admins
-  const tribeAdmins = tribeMembers.filter(
-    (tribeMember) => tribeMember.profile_group.roleId === 1
-  );
+  const tribeAdmins = tribeMembers
+    .filter((tribeMember) => tribeMember.profileGroup.roleId === 1)
+    .map((admin) => ({
+      profileGroup: {
+        id: admin.profileGroup.id,
+        profileId: admin.profileGroup.profileId,
+        groupId: admin.profileGroup.groupId,
+        roleId: admin.profileGroup.roleId,
+      },
+      profile: admin.profile
+        ? {
+            id: admin.profile.id,
+            username: admin.profile.username,
+            firstName: admin.profile.firstName,
+            lastName: admin.profile.lastName,
+            image: admin.profile.image,
+          }
+        : null,
+    }));
+
+  // Process members with stats
+  const membersWithStats = processMembersWithStats(tribeMembers, sessions);
 
   return (
-    <div className="p-4 sm:p-12">
-      <div className="flex flex-col md:flex-row gap-x-7 items-center justify-center">
-        <div className="relative">
-          <div className="relative w-42 h-42 rounded-2xl overflow-hidden">
-            <Image
-              src={tribeDetails.group.image!}
-              alt="Tribe picture"
-              className="object-cover"
-              fill
-            />
-          </div>
-          {roleId === 1 && (
-            <div className="sm:hidden absolute top-0 right-[-80px] flex flex-col items-center gap-y-3">
-              <Button
-                className="dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
-                asChild
-              >
-                <Link
-                  className="dark:text-black text-white"
-                  href={`/tribe/${tribeId}/edit`}
-                >
-                  <Settings className="dark:text-black text-white" />
-                </Link>
-              </Button>
-              <RequestInbox
-                profileId={user.id}
-                tribeId={tribeId}
-                tribeImageUrl={tribeDetails.group.image!}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Group Details */}
-        <div className="flex flex-col gap-y-1 mt-5 md:mt-0">
-          <h1 className="text-4xl font-bold mb-3">{tribeDetails.group.name}</h1>
-          <div className="flex items-center gap-x-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>
-              <p className="text-muted-foreground">{`Formed on: ${formatDate(
-                tribeDetails.group.dateCreated
-              )}`}</p>
-            </span>
-          </div>
-          <div className="flex items-center gap-x-2 text-sm">
-            <Users2 className="h-4 w-4 text-muted-foreground" />
-            <span>
-              <p className="text-muted-foreground">{`Members: ${tribeMembers.length}`}</p>
-            </span>
-          </div>
-          <div className="flex items-center gap-x-2 text-sm">
-            <Gavel className="h-4 w-4 text-muted-foreground" />
-            <span>
-              <p className="text-muted-foreground">{`Created by: ${tribeDetails.profile?.username}`}</p>
-            </span>
-          </div>
-        </div>
-
-        {/* Group Management */}
-        <div className="w-full lg:w-70 md:w-40 md:ml-auto md:self-start mt-5 md:mt-0">
-          <div className="flex flex-col gap-y-3 items-end">
-            {/* Admin Button */}
-            {roleId === 1 && (
-              <div className="hidden sm:flex justify-end items-center w-full gap-x-5">
-                <RequestInbox
-                  profileId={user.id}
-                  tribeId={tribeId}
-                  tribeImageUrl={tribeDetails.group.image!}
-                />
-                <Button
-                  className="hidden md:block dark:text-background text-foreground font-semibold bg-muted-foreground hover:bg-gray-500"
-                  asChild
-                >
-                  <Link
-                    className="dark:text-black text-white"
-                    href={`/tribe/${tribeId}/edit`}
-                  >
-                    <span className="flex items-center gap-x-2">
-                      <Settings className="dark:text-black text-white" />
-                      Settings
-                    </span>
-                  </Link>
-                </Button>
-              </div>
-            )}
-
-            {/* Admins */}
-            <Card className="rounded-sm shadow-lg pt-0 max-w-sm w-full">
-              <CardHeader className="bg-primary text-foreground rounded-t-sm p-2 pb-1">
-                <CardTitle className="text-md font-semibold">
-                  <span className="flex items-center gap-x-2 justify-center text-white">
-                    <Crown className="w-4 h-4" />
-                    Admins
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className=" pt-0 pb-0 space-y-1">
-                {/* TODO: This needs to be changed to links to profile pages */}
-                {tribeAdmins.map((admin) => (
-                  <div
-                    key={admin.profile_group.id}
-                    className="flex items-center space-x-3"
-                  >
-                    <p>{admin.profile?.username}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-      <p className="pl-4 mt-8 italic">{`"${tribeDetails.group.description}"`}</p>
-      <hr className="mt-4" />
-    </div>
+    <TribePageClient
+      tribeId={tribeId}
+      tribeName={tribeDetails.group.name}
+      tribeImage={tribeDetails.group.image!}
+      tribeDescription={tribeDetails.group.description || "No description"}
+      dateFormed={formatDate(tribeDetails.group.dateCreated)}
+      memberCount={tribeMembers.length}
+      gamesPlayed={sessions.length}
+      creatorUsername={tribeDetails.profile?.username || "Unknown"}
+      admins={tribeAdmins}
+      isSuperAdmin={isSuperAdmin}
+      isAdmin={isAdmin}
+      userId={user.id}
+      members={membersWithStats}
+      sessions={sessions}
+    />
   );
 };
 

@@ -74,9 +74,10 @@ const RequestInbox = ({
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          className="relative !h-10 !w-10 rounded-full p-0"
+          className="relative h-9 w-9 sm:w-fit sm:px-4 sm:rounded-md rounded-full p-0 bg-accent-2/80 hover:bg-accent-2 dark:hover:bg-accent-2/60 hover:cursor-pointer"
         >
-          <Inbox className="!h-6 !w-6" />
+          <Inbox className="!h-4 !w-4" />
+          <span className="hidden sm:block">Inbox</span>
           {requests.length > 0 && (
             <span className="absolute top-2 right-2 flex h-3 w-3 items-center justify-center rounded-full bg-destructive text-[10px] text-white font-semibold">
               {requests.length}
