@@ -20,9 +20,10 @@ const BGGSearchBar = ({
   const [exactMatch, setExactMatch] = useState(false);
   const [searchResults, setSearchResults] = useState<BGGDetailsInterface[]>([]);
   const [selectedGame, setSelectedGame] = useState<BGGDetailsInterface | null>(
-    null
+    null,
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -41,16 +42,14 @@ const BGGSearchBar = ({
       setSearchError(null);
 
       try {
-        const bggData = await fetchBGGIds(query, exactMatch, controller.signal);
+        const bggData = await fetchBGGIds(query, exactMatch);
         if (bggData.length === 0) {
           setLoading(false);
           return;
         }
 
-        const bggDetailed: BGGDetailsInterface[] = await fetchBGGDetails(
-          bggData,
-          controller.signal
-        );
+        const bggDetailed: BGGDetailsInterface[] =
+          await fetchBGGDetails(bggData);
         if (bggDetailed.length === 0) {
           setLoading(false);
           return;
@@ -72,14 +71,14 @@ const BGGSearchBar = ({
 
   const handleSelect = async (result: BGGDetailsInterface) => {
     setIsDropdownOpen(false);
+    setIsTyping(false);
     setQuery("");
     setSelectedGame(null);
 
     try {
-      const response = await fetchBGGDetails(
-        [{ id: result.id, type: result.type }],
-        new AbortController().signal
-      );
+      const response = await fetchBGGDetails([
+        { id: result.id, type: result.type },
+      ]);
       if (response != null) {
         setSelectedGame(response[0]);
         setQuery(response[0].title);
@@ -100,6 +99,7 @@ const BGGSearchBar = ({
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
+          setIsTyping(true);
         }}
         onFocus={() => setIsDropdownOpen(query.length >= 2)}
         onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
@@ -123,7 +123,7 @@ const BGGSearchBar = ({
       </div>
 
       {/* Game Dropdown */}
-      {isDropdownOpen && !selectedGame && (
+      {isDropdownOpen && isTyping && (
         <ul className="z-10 top-20 w-full max-w-md border border-border rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
           {/* If still looking for games */}
           {loading && searchResults.length === 0 && (
@@ -226,10 +226,10 @@ const BGGSearchBar = ({
                         parseFloat(selectedGame.rating) == 0
                           ? "bg-gray-600"
                           : parseFloat(selectedGame.rating) < 5
-                          ? "bg-red-700 text-white"
-                          : parseFloat(selectedGame.rating) < 7.5
-                          ? "bg-orange-500 text-white"
-                          : "bg-green-600"
+                            ? "bg-red-700 text-white"
+                            : parseFloat(selectedGame.rating) < 7.5
+                              ? "bg-orange-500 text-white"
+                              : "bg-green-600"
                       }`}
               >
                 {selectedGame.rating.length > 3
@@ -276,10 +276,10 @@ const BGGSearchBar = ({
                         parseFloat(selectedGame.rating) == 0
                           ? "bg-gray-600"
                           : parseFloat(selectedGame.rating) < 5
-                          ? "bg-red-700 text-white"
-                          : parseFloat(selectedGame.rating) < 7.5
-                          ? "bg-orange-500 text-white"
-                          : "bg-green-600"
+                            ? "bg-red-700 text-white"
+                            : parseFloat(selectedGame.rating) < 7.5
+                              ? "bg-orange-500 text-white"
+                              : "bg-green-600"
                       }`}
                 >
                   {selectedGame.rating.length > 3

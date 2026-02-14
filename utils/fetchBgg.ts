@@ -1,3 +1,4 @@
+"use server";
 // Functions related to calling BGG API
 import * as xml2js from "xml2js";
 import * as processors from "xml2js/lib/processors";
@@ -21,7 +22,6 @@ export interface BGGDetailsInterface extends BGGIdsInterface {
 export const fetchBGGIds = async (
   query: string,
   exact: boolean,
-  signal: AbortSignal,
 ): Promise<BGGIdsInterface[] | []> => {
   try {
     const url = exact
@@ -32,8 +32,8 @@ export const fetchBGGIds = async (
       method: "GET",
       headers: {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_BGG_TOKEN}`,
+        "User-Agent": "Trakka/1.0",
       },
-      signal: signal,
       next: { revalidate: 36000 },
     });
 
@@ -71,7 +71,6 @@ export const fetchBGGIds = async (
 
 export const fetchBGGDetails = async (
   params: BGGIdsInterface[],
-  signal: AbortSignal,
 ): Promise<BGGDetailsInterface[] | []> => {
   try {
     const ids = params
@@ -84,8 +83,8 @@ export const fetchBGGDetails = async (
       method: "GET",
       headers: {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_BGG_TOKEN}`,
+        "User-Agent": "Trakka/1.0",
       },
-      signal: signal,
       next: { revalidate: 36000 },
     });
 
