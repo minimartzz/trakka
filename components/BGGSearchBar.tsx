@@ -90,6 +90,7 @@ const BGGSearchBar = ({
       setLoading(false);
     }
   };
+  console.log(selectedGame);
 
   return (
     <div className="pt-1">

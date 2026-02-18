@@ -26,5 +26,7 @@ export const notificationsTableRelations = relations(
       fields: [notificationsTable.profileId],
       references: [profileTable.id],
     }),
-  })
+  }),
 );
+
+export type SelectNotifications = typeof notificationsTable.$inferSelect;

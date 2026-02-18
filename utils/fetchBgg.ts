@@ -8,16 +8,87 @@ interface BGGIdsInterface {
   id: string;
 }
 
+interface BGGAPILink {
+  $: {
+    type: string;
+    id: string;
+    value: string;
+  };
+}
+
+interface BGGLinkInterface {
+  id: string;
+  name: string;
+}
+
 export interface BGGDetailsInterface extends BGGIdsInterface {
   thumbnail: string;
   image: string;
   title: string;
   description: string;
+  minPlayers: string;
+  maxPlayers: string;
+  recPlayers: string;
+  playingTime: string;
+  minPlayingTime: string;
+  maxPlayingTime: string;
+  minAge: string;
   rating: string;
   weight: string;
+  categories: BGGLinkInterface[];
+  mechanics: BGGLinkInterface[];
+  families: BGGLinkInterface[];
   playingtime: string;
   yearPublished: string;
 }
+
+const extractRecommendedPlayers = (polls: any): string => {
+  if (!polls) return "n/a";
+
+  const pollArray = Array.isArray(polls) ? polls : [polls];
+  const playerPoll = pollArray.find(
+    (p) => p["$"]["name"] === "suggested_numplayers",
+  );
+
+  if (!playerPoll || !playerPoll["results"]) return "n/a";
+
+  let bestCount = "n/a";
+  let maxVotes = -1;
+
+  const pollResults = Array.isArray(playerPoll.results)
+    ? playerPoll.results
+    : [playerPoll.results];
+
+  pollResults.forEach((r: any) => {
+    const numPlayers = r["$"]["numplayers"];
+    const votes = Array.isArray(r["result"]) ? r["result"] : [r["result"]];
+
+    const bestVote = votes.find((v: any) => v["$"]["value"] === "Best");
+    const bestVoteCount = parseInt(bestVote?.["$"]["numvotes"] || "0", 10);
+
+    if (bestVoteCount > maxVotes) {
+      maxVotes = bestVoteCount;
+      bestCount = numPlayers;
+    }
+  });
+
+  return bestCount;
+};
+
+const extractBgTags = (
+  links: BGGAPILink[],
+  type: string,
+): BGGLinkInterface[] => {
+  if (!links) return [];
+  const linkArray = Array.isArray(links) ? links : [links];
+
+  return linkArray
+    .filter((item: BGGAPILink) => item["$"]["type"] === type)
+    .map((item: BGGAPILink) => ({
+      id: item["$"]["id"],
+      name: item["$"]["value"],
+    }));
+};
 
 export const fetchBGGIds = async (
   query: string,
@@ -104,40 +175,40 @@ export const fetchBGGDetails = async (
     }
 
     const games = data.items.item;
-    let details;
+    let details: BGGDetailsInterface[];
+
+    const extractDetails = (item: any): BGGDetailsInterface => ({
+      id: item["$"]["id"],
+      type: item["$"]["type"],
+      thumbnail: item["thumbnail"],
+      image: item["image"],
+      title: Array.isArray(item["name"])
+        ? item["name"][0]["$"]["value"]
+        : item["name"]["$"]["value"],
+      description: item["description"],
+      minPlayers: item["minplayers"]["$"]["value"],
+      maxPlayers: item["maxplayers"]["$"]["value"],
+      recPlayers: extractRecommendedPlayers(item["poll"]),
+      playingTime: item["playingtime"]["$"]["value"],
+      minPlayingTime: item["minplaytime"]["$"]["value"],
+      maxPlayingTime: item["maxplaytime"]["$"]["value"],
+      minAge: item["minage"]["$"]["value"],
+      rating: item["statistics"]["ratings"]["average"]["$"]["value"],
+      weight: item["statistics"]["ratings"]["averageweight"]["$"]["value"],
+      playingtime: item["playingtime"]["$"]["value"],
+      yearPublished: item["yearpublished"]["$"]["value"],
+      // Tag related information
+      categories: extractBgTags(item["link"], "boardgamecategory"),
+      mechanics: extractBgTags(item["link"], "boardgamemechanic"),
+      families: extractBgTags(item["link"], "boardgamefamily"),
+    });
+
     if (Array.isArray(games)) {
-      details = games.map((item) => ({
-        id: item["$"]["id"],
-        type: item["$"]["type"],
-        thumbnail: item["thumbnail"],
-        image: item["image"],
-        title: Array.isArray(item["name"])
-          ? item["name"][0]["$"]["value"]
-          : item["name"]["$"]["value"],
-        description: item["description"],
-        rating: item["statistics"]["ratings"]["average"]["$"]["value"],
-        weight: item["statistics"]["ratings"]["averageweight"]["$"]["value"],
-        playingtime: item["playingtime"]["$"]["value"],
-        yearPublished: item["yearpublished"]["$"]["value"],
-      }));
+      details = games.map(extractDetails);
     } else {
-      details = [
-        {
-          id: games["$"]["id"],
-          type: games["$"]["type"],
-          thumbnail: games["thumbnail"],
-          image: games["image"],
-          title: Array.isArray(games["name"])
-            ? games["name"][0]["$"]["value"]
-            : games["name"]["$"]["value"],
-          description: games["description"],
-          rating: games["statistics"]["ratings"]["average"]["$"]["value"],
-          weight: games["statistics"]["ratings"]["averageweight"]["$"]["value"],
-          playingtime: games["playingtime"]["$"]["value"],
-          yearPublished: games["yearpublished"]["$"]["value"],
-        },
-      ];
+      details = [extractDetails(games)];
     }
+
     return details;
   } catch (error) {
     console.error(error);

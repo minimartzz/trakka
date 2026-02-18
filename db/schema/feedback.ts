@@ -15,3 +15,5 @@ export const feedbackTableRelations = relations(feedbackTable, ({ one }) => ({
     references: [profileTable.id],
   }),
 }));
+
+export type SelectFeedback = typeof feedbackTable.$inferSelect;
