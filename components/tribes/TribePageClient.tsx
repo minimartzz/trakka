@@ -86,7 +86,11 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
       {/* Tabbed Content */}
       <TribeTabs
         homeContent={
-          <TribeHomeTab sessions={sessions} memberCount={memberCount} />
+          <TribeHomeTab
+            sessions={sessions}
+            memberCount={memberCount}
+            currentUserId={userId}
+          />
         }
         playersContent={<TribePlayersTab members={members} />}
         gamesContent={<TribeGamesTab sessions={sessions} />}

@@ -3,6 +3,7 @@
 import { Trophy, Target, TrendingUp, Flame, Dices } from "lucide-react";
 import StatCard from "./StatCard";
 import PlayerLeaderboard from "./PlayerLeaderboard";
+import RecentSessions from "./RecentSessions";
 import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
@@ -23,12 +24,16 @@ export interface GameSession {
     isWinner: boolean;
     position: number;
     score: number | null;
+    victoryPoints: number | null;
+    winContrib: number | null;
+    isFirstPlay?: boolean;
   }[];
 }
 
 interface TribeHomeTabProps {
   sessions: GameSession[];
   memberCount: number;
+  currentUserId?: number;
 }
 
 /**
@@ -46,6 +51,7 @@ interface TribeHomeTabProps {
 const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   sessions,
   memberCount,
+  currentUserId,
 }) => {
   // Calculate statistics from sessions data
   const totalGamesPlayed = sessions.length;
@@ -183,19 +189,39 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         />
       </section>
 
+      {/* Section: Recent Sessions */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.35 }}
+          className="flex items-center gap-2 mb-4"
+        >
+          <Dices className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">Recent Sessions</h2>
+        </motion.div>
+
+        <RecentSessions
+          sessions={sessions}
+          currentUserId={currentUserId}
+          emptyMessage="No sessions recorded yet"
+          delay={0.4}
+        />
+      </section>
+
       {/* Section: Popular Games */}
       <section>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
+          transition={{ duration: 0.3, delay: 0.45 }}
           className="flex items-center gap-2 mb-4"
         >
           <Flame className="w-5 h-5 text-orange-500" />
           <h2 className="text-lg font-semibold">Popular Games</h2>
         </motion.div>
 
-        <PopularGamesCarousel games={popularGames} delay={0.45} />
+        <PopularGamesCarousel games={popularGames} delay={0.5} />
       </section>
 
       {/* Empty state for new tribes */}

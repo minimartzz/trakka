@@ -44,6 +44,8 @@ export function processGameSessions(
       isWinner: compGameLog.isWinner,
       position: compGameLog.position,
       score: compGameLog.score,
+      victoryPoints: compGameLog.victoryPoints,
+      winContrib: compGameLog.winContrib,
     });
   });
 
