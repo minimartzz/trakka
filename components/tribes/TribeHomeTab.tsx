@@ -1,8 +1,8 @@
 "use client";
 
-import { Trophy, Target, TrendingUp, Users, Flame, Dices } from "lucide-react";
+import { Trophy, Target, TrendingUp, Flame, Dices } from "lucide-react";
 import StatCard from "./StatCard";
-import Leaderboard, { LeaderboardPlayer } from "./Leaderboard";
+import PlayerLeaderboard from "./PlayerLeaderboard";
 import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
@@ -11,8 +11,9 @@ import { motion } from "motion/react";
 export interface GameSession {
   sessionId: string;
   datePlayed: string;
-  gameId: string;
+  gameId: number;
   gameTitle: string;
+  gameImageUrl: string | null;
   players: {
     profileId: number;
     username: string;
@@ -74,101 +75,6 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
     return calculateWPA();
   };
 
-  // Get most active players (by number of games played)
-  const getMostActivePlayers = (): LeaderboardPlayer[] => {
-    const playerStats: Record<
-      number,
-      {
-        username: string;
-        firstName: string;
-        lastName: string;
-        image: string | null;
-        gamesPlayed: number;
-        wins: number;
-      }
-    > = {};
-
-    sessions.forEach((session) => {
-      session.players.forEach((player) => {
-        if (!playerStats[player.profileId]) {
-          playerStats[player.profileId] = {
-            username: player.username,
-            firstName: player.firstName,
-            lastName: player.lastName,
-            image: player.image,
-            gamesPlayed: 0,
-            wins: 0,
-          };
-        }
-        playerStats[player.profileId].gamesPlayed++;
-        if (player.isWinner) {
-          playerStats[player.profileId].wins++;
-        }
-      });
-    });
-
-    return Object.entries(playerStats)
-      .map(([id, data]) => ({
-        id: parseInt(id),
-        username: data.username,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        image: data.image,
-        value: data.gamesPlayed,
-        secondaryText: `${data.wins} wins`,
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6);
-  };
-
-  // Get biggest winners (by win percentage)
-  const getBiggestWinners = (): LeaderboardPlayer[] => {
-    const playerStats: Record<
-      number,
-      {
-        username: string;
-        firstName: string;
-        lastName: string;
-        image: string | null;
-        wins: number;
-        gamesPlayed: number;
-      }
-    > = {};
-
-    sessions.forEach((session) => {
-      session.players.forEach((player) => {
-        if (!playerStats[player.profileId]) {
-          playerStats[player.profileId] = {
-            username: player.username,
-            firstName: player.firstName,
-            lastName: player.lastName,
-            image: player.image,
-            wins: 0,
-            gamesPlayed: 0,
-          };
-        }
-        playerStats[player.profileId].gamesPlayed++;
-        if (player.isWinner) {
-          playerStats[player.profileId].wins++;
-        }
-      });
-    });
-
-    return Object.entries(playerStats)
-      .map(([id, data]) => ({
-        id: parseInt(id),
-        username: data.username,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        image: data.image,
-        // Value is win percentage for sorting
-        value: Math.round((data.wins / data.gamesPlayed) * 100),
-        secondaryText: `${data.wins} wins`,
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6);
-  };
-
   // Get most popular games
   const getPopularGames = (): PopularGame[] => {
     const gameCounts: Record<
@@ -177,6 +83,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         gameTitle: string;
         playCount: number;
         lastPlayed: string;
+        imageUrl: string | null;
       }
     > = {};
 
@@ -186,6 +93,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           gameTitle: session.gameTitle,
           playCount: 0,
           lastPlayed: session.datePlayed,
+          imageUrl: session.gameImageUrl,
         };
       }
       gameCounts[session.gameId].playCount++;
@@ -201,6 +109,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         gameTitle: data.gameTitle,
         playCount: data.playCount,
         lastPlayed: data.lastPlayed,
+        imageUrl: data.imageUrl,
       }))
       .sort((a, b) => b.playCount - a.playCount)
       .slice(0, 5);
@@ -208,8 +117,6 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
 
   const wpa = calculateWPA();
   const overallWinPct = calculateOverallWinPercentage();
-  const mostActivePlayers = getMostActivePlayers();
-  const biggestWinners = getBiggestWinners();
   const popularGames = getPopularGames();
 
   return (
@@ -258,7 +165,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         </div>
       </section>
 
-      {/* Section: Leaderboards */}
+      {/* Section: Leaderboard */}
       <section>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -267,32 +174,14 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           className="flex items-center gap-2 mb-4"
         >
           <Trophy className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">Leaderboards</h2>
+          <h2 className="text-lg font-semibold">Leaderboard</h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Most Active Players */}
-          <Leaderboard
-            type="player"
-            title="Most Active Players"
-            icon={<Users className="w-4 h-4 text-primary" />}
-            items={mostActivePlayers}
-            valueSuffix=" games"
-            emptyMessage="No games played yet"
-            delay={0.3}
-          />
-
-          {/* Biggest Winners */}
-          <Leaderboard
-            type="player"
-            title="Biggest Winners"
-            icon={<Trophy className="w-4 h-4 text-amber-500" />}
-            items={biggestWinners}
-            valueSuffix="%"
-            emptyMessage="No winners yet"
-            delay={0.35}
-          />
-        </div>
+        <PlayerLeaderboard
+          sessions={sessions}
+          emptyMessage="No games played yet"
+          delay={0.3}
+        />
       </section>
 
       {/* Section: Popular Games */}

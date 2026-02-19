@@ -3,6 +3,7 @@ import {
   getSelectablePlayers,
   notifyPlayersOfSession,
   submitNewSession,
+  upsertGameDetails,
 } from "@/app/(generic)/session/create/action";
 import useAuth from "@/app/hooks/useAuth";
 import BGGSearchBar from "@/components/BGGSearchBar";
@@ -132,7 +133,7 @@ const Page = () => {
     const sessionId = generateSessionId();
     const datePlayed = format(date, "yyyy-MM-dd");
     const bgg = {
-      gameId: gameDetails.id,
+      gameId: parseInt(gameDetails.id),
       gameTitle: gameDetails.title,
       gameWeight: gameDetails.weight,
       gameLength: parseInt(gameDetails.playingtime),
@@ -179,7 +180,7 @@ const Page = () => {
           score: score,
           highScore: false, // TODO: Need to think of a new way to handle this
           ...dateInfo,
-          isFirstPlay: await getFirstPlay(bgg.gameId, player.profileId),
+          isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
           createdBy: user!.id,
         };
@@ -195,8 +196,17 @@ const Page = () => {
 
     if (payload) {
       try {
-        const response = await submitNewSession(payload);
-        if (!response.success) {
+        // Upsert game details and submit session in parallel
+        const [gameUpsertResponse, sessionResponse] = await Promise.all([
+          upsertGameDetails(gameDetails),
+          submitNewSession(payload),
+        ]);
+
+        if (!gameUpsertResponse.success) {
+          console.error("Failed to upsert game details");
+        }
+
+        if (!sessionResponse.success) {
           toast.error(
             "Failed to submit new session. Please check fields and try again.",
           );

@@ -11,18 +11,49 @@ import {
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { Dices } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
 
 export interface PopularGame {
   gameId: string;
   gameTitle: string;
   playCount: number;
   lastPlayed: string;
+  imageUrl?: string | null;
 }
 
 interface PopularGamesCarouselProps {
   games: PopularGame[];
   delay?: number;
 }
+
+const GameImage: React.FC<{
+  imageUrl?: string | null;
+  gameTitle: string;
+}> = ({ imageUrl, gameTitle }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (!imageUrl || imageError) {
+    return (
+      <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 mx-auto mt-4 mb-3">
+        <Dices className="w-6 h-6 text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-32 justify-center rounded-lg overflow-hidden mx-auto">
+      <Image
+        src={imageUrl}
+        alt={`${gameTitle} cover`}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        className="object-cover object-top"
+        onError={() => setImageError(true)}
+        fill
+      />
+    </div>
+  );
+};
 
 /**
  * PopularGamesCarousel - Scrollable carousel of popular games
@@ -112,24 +143,25 @@ const PopularGamesCarousel: React.FC<PopularGamesCarouselProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: delay + index * 0.05 }}
                 >
-                  <Card className="relative p-4 hover:bg-muted/50 transition-colors">
+                  <Card className="relative overflow-hidden hover:bg-muted/50 transition-colors h-full flex flex-col py-0 gap-0">
                     {/* Position badge */}
                     <div
                       className={cn(
-                        "absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md",
+                        "absolute z-10 top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md",
                         getPositionStyle(position),
                       )}
                     >
                       {position}
                     </div>
 
-                    {/* Game icon */}
-                    <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 mx-auto mt-4 mb-3">
-                      <Dices className="w-6 h-6 text-primary" />
-                    </div>
+                    {/* Game image or icon */}
+                    <GameImage
+                      imageUrl={game.imageUrl}
+                      gameTitle={game.gameTitle}
+                    />
 
                     {/* Game info */}
-                    <div className="text-center space-y-1">
+                    <div className="text-center space-y-1 flex-grow p-4">
                       <p
                         className="font-medium text-sm truncate"
                         title={game.gameTitle}

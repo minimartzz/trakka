@@ -1,6 +1,7 @@
 import { GameSession } from "@/components/tribes/TribeHomeTab";
 import { TribeMember } from "@/components/tribes/TribePlayersTab";
 import { compGameLogTable, SelectCompGameLog } from "@/db/schema/compGameLog";
+import { SelectGame } from "@/db/schema/game";
 import { profileTable, SelectProfile } from "@/db/schema/profile";
 import { SelectProfileGroup } from "@/db/schema/profileGroup";
 
@@ -14,12 +15,13 @@ export function processGameSessions(
   logs: {
     compGameLog: SelectCompGameLog;
     profile: SelectProfile | null;
+    gameDetails: SelectGame | null;
   }[],
 ): GameSession[] {
   const sessionMap = new Map<string, GameSession>();
 
   logs.forEach((log) => {
-    const { compGameLog, profile } = log;
+    const { compGameLog, profile, gameDetails } = log;
 
     if (!sessionMap.has(compGameLog.sessionId)) {
       sessionMap.set(compGameLog.sessionId, {
@@ -27,6 +29,7 @@ export function processGameSessions(
         datePlayed: compGameLog.datePlayed,
         gameId: compGameLog.gameId,
         gameTitle: compGameLog.gameTitle,
+        gameImageUrl: gameDetails?.imageUrl || null,
         players: [],
       });
     }

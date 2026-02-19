@@ -5,7 +5,7 @@ import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 export const gameFamilyTable = pgTable("game_family", {
   id: integer("id").primaryKey().notNull(),
   family: text("family").notNull(),
-  familyRename: text("family_rename"),
+  familyRenamed: text("family_renamed"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

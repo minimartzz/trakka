@@ -22,7 +22,7 @@ export const compGameLogTable = pgTable(
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     sessionId: varchar("session_id").notNull(),
     datePlayed: date("date_played").notNull(),
-    gameId: varchar("game_id").notNull(),
+    gameId: integer("game_id").notNull(),
     gameTitle: text("game_title").notNull(),
     gameWeight: numeric("game_weight").notNull(),
     gameLength: integer("game_length").notNull(),

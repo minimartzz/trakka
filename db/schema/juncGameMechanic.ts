@@ -4,7 +4,7 @@ import { relations } from "drizzle-orm";
 import { integer, pgTable, timestamp } from "drizzle-orm/pg-core";
 
 export const juncGameMechanicTable = pgTable("junc_game_mechanic", {
-  id: integer("id").primaryKey().notNull(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   gameId: integer("game_id").notNull(),
   mechanicId: integer("mechanic_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),

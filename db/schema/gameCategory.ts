@@ -9,7 +9,7 @@ export const gameCategoryTable = pgTable("game_category", {
 });
 
 export const gameCategoryRelations = relations(
-  juncGameCategoryTable,
+  gameCategoryTable,
   ({ many }) => ({
     juncGameCategory: many(juncGameCategoryTable),
   }),
