@@ -147,21 +147,20 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
             delay={0.1}
           />
           <StatCard
-            title="Win Rate (WPA)"
-            value={wpa}
-            suffix="%"
+            title="Avg WPA"
+            value="-"
             icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
             color="bg-linear-to-bl from-accent-2 to-accent-3"
             delay={0.15}
           />
-          <StatCard
+          {/* <StatCard
             title="Overall Win %"
             value={overallWinPct}
             suffix="%"
             icon={<Trophy className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
             color="bg-linear-to-bl from-accent-3 to-accent-5"
             delay={0.2}
-          />
+          /> */}
         </div>
       </section>
 

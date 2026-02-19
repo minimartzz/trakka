@@ -218,7 +218,7 @@ const TribeHeader: React.FC<TribeHeaderProps> = ({
             >
               <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                 <Crown className="w-4 h-4 text-accent-5 fill-accent-5" />
-                Admins:
+                SuperAdmins:
               </span>
               <div className="flex -space-x-2">
                 {admins.map((admin, index) => (

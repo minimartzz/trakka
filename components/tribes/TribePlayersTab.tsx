@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { Crown, Users, Trophy, Dices, TrendingUp } from "lucide-react";
+import { Crown, Users, Trophy, Dices, TrendingUp, Shield } from "lucide-react";
 
 export interface TribeMember {
   profileId: number;
@@ -46,9 +46,20 @@ const TribePlayersTab: React.FC<TribePlayersTabProps> = ({ members }) => {
       return (
         <Badge
           variant="default"
-          className="bg-amber-500 hover:bg-amber-600 text-white"
+          className="bg-accent-5 hover:bg-accent-5/90 text-white"
         >
-          <Crown className="w-3 h-3 mr-1" />
+          <Crown className="w-3 h-3 mr-1 fill-white" />
+          SuperAdmin
+        </Badge>
+      );
+    }
+    if (roleId === 2) {
+      return (
+        <Badge
+          variant="default"
+          className="bg-accent-2 hover:bg-accent-2/90 text-white"
+        >
+          <Shield className="w-3 h-3 mr-1 fill-white" />
           Admin
         </Badge>
       );
