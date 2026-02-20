@@ -8,42 +8,65 @@ type UserProfile = Database["public"]["Tables"]["profile"]["Row"];
 export type User = AuthUser & UserProfile;
 
 // For Recent Games section
-export interface SqUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  profilePic: string;
-}
-interface SqGroup {
-  id: string;
-  name: string;
-}
-interface joinedCompGameLog extends SelectCompGameLog {
-  firstName: string;
-  lastName: string;
-  username: string;
-  profilePic: string;
-  profileId: number;
-  position: number | null;
-}
-export interface RecentGames {
-  comp_game_log: SelectCompGameLog;
-  sqUser: SqUser;
-  sqGroup: SqGroup;
-}
-export interface CombinedRecentGames {
+// Raw player data from comp game log table
+export interface SessionDataInterface {
   sessionId: string;
-  gameTitle: string;
-  createdAt: Date | null;
   datePlayed: string;
+  gameTitle: string;
+  gameId: number;
+  createdAt: Date;
+  numPlayers: number;
+  tribeId: string;
+  tribeName: string;
+  profileId: number;
+  firstName: string;
+  lastName: string;
+  username: string;
+  profilePic: string;
+  isVp: boolean;
+  victoryPoints: number | null;
+  position: number;
+  isWinner: boolean;
+  isTie: boolean;
+  isFirstPlay: boolean;
+  isHighScore: boolean;
+  rating: number | null;
+}
+
+// Formatted player in each session
+export interface SessionPlayer {
+  profileId: number;
+  firstName: string;
+  lastName: string;
+  username: string;
+  profilePic: string;
+  victoryPoints: number | null;
+  position: number;
+  isWinner: boolean;
+  isTie: boolean;
+  isFirstPlay: boolean;
+  isHighScore: boolean;
+}
+
+// Final grouped session format
+export interface GroupedSession {
+  sessionId: string;
+  datePlayed: string;
+  gameTitle: string;
+  gameId: number;
+  createdAt: Date;
+  numPlayers: number;
+  tribe: string;
+  players: SessionPlayer[];
+  isVp: boolean;
+  // Calculated fields
   isPlayer: boolean;
   isWinner: boolean;
-  isLoser: boolean;
   isTied: boolean;
-  players: joinedCompGameLog[];
-  tribe: string;
-  rating: number;
+  isLoser: boolean;
+  isFirstPlay: boolean;
+  isHighScore: boolean;
+  rating: number | null;
 }
 
 export interface FilteredCounts {

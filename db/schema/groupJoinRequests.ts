@@ -22,5 +22,7 @@ export const groupJoinRequestTableRelations = relations(
       fields: [groupJoinRequestTable.groupId],
       references: [groupTable.id],
     }),
-  })
+  }),
 );
+
+export type SelectGroupJoinRequest = typeof groupJoinRequestTable.$inferSelect;

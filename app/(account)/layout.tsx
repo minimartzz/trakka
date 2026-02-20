@@ -73,11 +73,11 @@ export default async function AccountLayout({
           <div className="flex gap-x-4 items-center justify-center">
             <ShareButton userId={user.id} tribes={groups} />
             <Button
-              className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2 mr-10"
+              className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-10 bg-[#1e4790] hover:bg-primary"
               asChild
             >
               <Link href="/session/create">
-                <Play className="text-white" />
+                <Play className="text-white fill-white" />
                 <span className="hidden sm:block font-semibold text-[16px] text-white">
                   New Session
                 </span>

@@ -25,19 +25,11 @@ import {
   Moon,
   RefreshCcw,
   Settings,
-  Share2,
   Sun,
   User,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
-interface ShareInterface {
-  title: string;
-  text: string;
-  url: string;
-}
 
 const SidebarUser = ({
   user,

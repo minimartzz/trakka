@@ -37,8 +37,12 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-accent-1: var(--accent-1);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --color-accent-4: var(--accent-4);
+  --color-accent-5: var(--accent-5);
   --color-accent-foreground: var(--accent-foreground);
-  --color-add-button: var(--add-button);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -85,13 +89,17 @@
   --muted: oklch(96.7% 0.0029 264.54);
   --muted-foreground: oklch(53.41% 0.0386 264.97);
   --accent: oklch(89.35% 0.0249 265.58);
+  --accent-1: oklch(86.09% 0.1305 156.53);
+  --accent-2: oklch(76.13% 0.0869 203.06);
+  --accent-3: oklch(63.29% 0.1774 258.56);
+  --accent-4: oklch(57.59% 0.2098 276.65);
+  --accent-5: oklch(55.63% 0.2445 297.66);
   --accent-foreground: oklch(28.87% 0.0796 262.2);
   --destructive: oklch(63.68% 0.2078 25.33);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(91.78% 0.0104 261.79);
   --input: oklch(91.78% 0.0104 261.79);
   --ring: oklch(41.12% 0.1454 262.39);
-  --add-button: oklch(71.305% 0.22943 141.86);
   --gradient-primary: linear-gradient(
     135deg,
     oklch(41.12% 0.1454 262.39),
@@ -134,6 +142,11 @@
   --muted: oklch(25.63% 0.0262 265.33);
   --muted-foreground: oklch(70.77% 0.0282 264.38);
   --accent: oklch(30.14% 0.039 263.72);
+  --accent-1: oklch(88% 0.08 156.53);
+  --accent-2: oklch(82% 0.06 203.06);
+  --accent-3: oklch(72% 0.12 258.56);
+  --accent-4: oklch(68% 0.15 276.65);
+  --accent-5: oklch(65% 0.18 297.66);
   --accent-foreground: oklch(95.85% 0.0054 274.96);
   --destructive: oklch(56.27% 0.1974 26.33);
   --destructive-foreground: oklch(100% 0 0);
@@ -184,4 +197,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
 }

@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
       .where(inArray(groupTable.id, permittedGroups));
     // const allGroups = await db.select().from(groupTable);
 
-    return NextResponse.json(selectableGroups);
+    return NextResponse.json(selectableGroups, {
+      headers: {
+        "Cache-Control": "private, s-maxage=60, stale-while-revalidate=300",
+      },
+    });
   } catch (error) {
     console.error("Error fetching groups:", error);
 

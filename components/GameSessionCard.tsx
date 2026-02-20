@@ -1,7 +1,7 @@
 import StarRating from "@/components/StarRating";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CombinedRecentGames } from "@/lib/interfaces";
+import { GroupedSession } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { format } from "date-fns";
@@ -11,7 +11,7 @@ import React from "react";
 
 interface GameSessionsCardProps {
   userId: number;
-  session: CombinedRecentGames;
+  session: GroupedSession;
 }
 interface VariantAndColourInterface {
   variant:
@@ -29,6 +29,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
   userId,
   session: {
     sessionId,
+    datePlayed,
     gameTitle,
     isPlayer,
     isWinner,
@@ -36,6 +37,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     isTied,
     players,
     tribe,
+    rating,
   },
 }) => {
   const playerDetails = players.find((player) => player.profileId === userId);
@@ -45,33 +47,19 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
   const getResultsBadge = () => {
     // Results badge
     const getVariantAndColour = (): VariantAndColourInterface => {
-      if (isPlayer && !isTied && isWinner) {
+      if (isPlayer && isWinner) {
         return {
           variant: "default" as const,
           className:
-            "bg-yellow-500 hover:bg-yellow-600 text-white rounded-full font-semibold",
+            "bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold",
           result: `${positionWithSuffix} Place`,
         };
-      } else if (isPlayer && !isTied && position === 2) {
-        return {
-          variant: "default" as const,
-          className:
-            "bg-gray-600 hover:bg-gray-700 text-white rounded-full font-semibold",
-          result: `${positionWithSuffix} Place`,
-        };
-      } else if (isPlayer && !isTied && position === 3) {
-        return {
-          variant: "default" as const,
-          className:
-            "bg-[#9a6748] hover:bg-[#915e44] text-white rounded-full font-semibold",
-          result: `${positionWithSuffix} Place`,
-        };
-      } else if (isPlayer && isTied && isWinner) {
+      } else if (isPlayer && !isWinner && !isLoser) {
         return {
           variant: "secondary" as const,
           className:
-            "bg-orange-500 hover:bg-orange-600 text-white rounded-full font-semibold",
-          result: `Tied: ${positionWithSuffix}`,
+            "bg-orange-400 hover:bg-orange-500 text-white rounded-full font-semibold",
+          result: `${positionWithSuffix} Place`,
         };
       } else if (isPlayer && isLoser) {
         return {
@@ -92,9 +80,9 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     const { variant, className, result } = getVariantAndColour();
     return (
       <Badge variant={variant} className={className}>
-        {result === "1st Place" ? (
+        {variant === "default" ? (
           <Trophy className="h-3 w-3 mr-1" />
-        ) : result === "2nd Place" || result === "3rd Place" ? (
+        ) : variant === "secondary" ? (
           <Medal className="h-3 w-3 mr-1" />
         ) : (
           <Weight className="h-3 w-3 mr-1" />
@@ -109,9 +97,6 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     return format(new Date(dateString), "dd MMM yyyy");
   };
 
-  // Get rating for current game
-  const rating = players.find((player) => player.profileId === userId)?.rating;
-
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="px-6">
@@ -124,7 +109,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
               <p className="text-sm">{tribe}</p>
             </div>
             <div className="text-sm text-muted-foreground">
-              {formatGameDate(players[0].datePlayed)}
+              {formatGameDate(datePlayed)}
             </div>
           </div>
           <div className="flex flex-col items-end gap-5">
@@ -145,11 +130,11 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
           <ul className="divide-y divide-border/50">
             {players.map((player, index) => (
               <li
-                key={player.id}
+                key={player.profileId}
                 className={cn(
                   "flex items-center justify-between py-2.5 px-1 text-sm",
                   player.profileId === userId && "bg-accent/20 rounded-sm",
-                  index % 2 === 0 ? "bg-muted/20" : "bg-background"
+                  index % 2 === 0 ? "bg-muted/20" : "bg-background",
                 )}
               >
                 {/* Rank column - fixed Width */}
@@ -175,7 +160,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                         "h-3 w-3 flex-shrink-0",
                         player.profileId === userId
                           ? "text-blue-600"
-                          : "text-gray-400"
+                          : "text-gray-400",
                       )}
                     />
                   )}
@@ -187,7 +172,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                     className={cn(
                       "text-sm font-medium text-foreground truncate block",
                       player.profileId === userId &&
-                        "font-semibold text-blue-600"
+                        "font-semibold text-blue-600",
                     )}
                   >
                     {player.firstName}
@@ -221,7 +206,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 {/* Mobile: Display */}
                 <div className="sm:hidden flex items-center justify-center min-w-0">
                   {player.isWinner && <p>🏆</p>}
-                  {player.isTie && <p>🪢</p>}
+                  {player.isTie && <p>🤝</p>}
                 </div>
 
                 {/* Score aligned right */}

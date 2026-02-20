@@ -62,13 +62,13 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
 }) => {
   const supabase = createClient();
   const [imageUrl, setImageUrl] = useState<string | null>(
-    initialImageUrl || null
+    initialImageUrl || null,
   );
   const [isUploading, setIsUploading] = useState(false);
 
   // Handle image upload
   const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -141,9 +141,8 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
           objectFit="cover"
         />
       </div>
-      {/* <div className="flex max-w-4/5 md:max-w-96 p-2 justify-between items-center gap-x-4 overflow-x-auto scrollbar-hide"> */}
-      <div className="w-full">
-        <div className="flex flex-nowrap items-center justify-center gap-3 py-2 overflow-x-auto">
+      <div className="w-70 sm:w-full">
+        <div className="flex flex-nowrap items-center gap-3 py-2 px-1 overflow-x-auto scrollbar-hide snap-x snap-mandatory justify-start sm:justify-center">
           {DEFAULT_AVATARS.map((avatar) => (
             <Button
               key={avatar.id}

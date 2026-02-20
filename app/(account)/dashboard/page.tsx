@@ -1,24 +1,25 @@
+import { fetchSessions } from "@/app/(account)/recent-games/action";
 import TimeFilteredPerformance from "@/components/dashboard/TimeFilteredPerformance";
-import { RecentGames } from "@/lib/interfaces";
-import { topGames, topOpponents } from "@/utils/dashboardProcessing";
+import { SessionDataInterface } from "@/lib/interfaces";
 import fetchUser from "@/utils/fetchServerUser";
-import { filterSessions } from "@/utils/recordsProcessing";
+import { filterSessionData } from "@/utils/recordsProcessing";
 import { redirect } from "next/navigation";
 import React from "react";
+import { toast } from "sonner";
 
-const baseUrl = process.env.BASE_URL;
-
-const fetchRecentGamesByProfile = async (id: number | string) => {
-  const profileId = String(id);
+const fetchSessionsByProfile = async (
+  id: number,
+): Promise<SessionDataInterface[]> => {
   try {
-    const response = await fetch(`${baseUrl}/api/session/profile/${profileId}`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+    const response = await fetchSessions(id);
+    if (!response.success) {
+      toast.error(response.message);
+      return [];
     }
-    const data = await response.json();
-    return data;
+    return response.data ?? [];
   } catch (error) {
     console.error(error);
+    return [];
   }
 };
 
@@ -30,9 +31,8 @@ const Page = async () => {
   }
 
   // Get All games that user has played
-  const fetchedData = await fetchRecentGamesByProfile(user.id);
-  const sessions: RecentGames[] = fetchedData.rawSessions;
-  const processedSessions = filterSessions(user.id as number, sessions);
+  const sessionData = await fetchSessionsByProfile(user.id);
+  const processedSessions = filterSessionData(user.id, sessionData);
 
   return (
     <div className="p-4 sm:p-8 space-y-6">
@@ -45,7 +45,7 @@ const Page = async () => {
       <TimeFilteredPerformance
         userId={user.id}
         recentActivity={processedSessions}
-        sessions={sessions}
+        sessions={sessionData}
       />
     </div>
   );

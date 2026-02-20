@@ -17,7 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import createClient from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import React, { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ const Page = () => {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
-    null
+    null,
   );
   const router = useRouter();
 

@@ -1,14 +1,15 @@
 "use client";
 import { getSelectablePlayers } from "@/app/(generic)/session/create/action";
 import { Player } from "@/app/(generic)/session/create/page";
-import PlayerInput2 from "@/components/PlayerInput2";
+import PlayerInput from "@/components/PlayerInput";
 import ScoreInput from "@/components/ScoreInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, Minus, Plus, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useFormStatus } from "react-dom";
 
 interface PlayerControllerProps {
   players: Player[];
@@ -19,7 +20,6 @@ interface PlayerSessionSelectionProps {
   selectablePlayers: Awaited<ReturnType<typeof getSelectablePlayers>>[number][];
   players: Player[];
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
-  submitting: boolean;
 }
 
 const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
@@ -32,8 +32,12 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
   const handleAddPlayer = () => {
     const newPlayer: Player = {
       id: Date.now().toString(),
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      groupId: "",
+      profilePic: "",
       score: null,
       isWinner: false,
       isTie: false,
@@ -75,14 +79,19 @@ const PlayerSessionSelection = ({
   selectablePlayers,
   players,
   setPlayers,
-  submitting,
 }: PlayerSessionSelectionProps) => {
+  const { pending } = useFormStatus();
+
   // Functions
   const handleAddPlayer = () => {
     const newPlayer: Player = {
       id: Date.now().toString(),
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      groupId: "",
+      profilePic: "",
       score: null,
       isWinner: false,
       isTie: false,
@@ -90,17 +99,17 @@ const PlayerSessionSelection = ({
     setPlayers([...players, newPlayer]);
   };
 
-  const handleReducePlayer = () => {
+  const handleReducePlayer = (id: string) => {
     if (players.length > 1) {
-      setPlayers(players.slice(0, -1));
+      setPlayers(players.filter((player) => player.id !== id));
     }
   };
 
   const handleUpdates = (id: string, updates: Partial<Player>) => {
     setPlayers((prev) =>
       prev.map((player) =>
-        player.id === id ? { ...player, ...updates } : player
-      )
+        player.id === id ? { ...player, ...updates } : player,
+      ),
     );
   };
 
@@ -113,10 +122,10 @@ const PlayerSessionSelection = ({
           type="submit"
           variant="outline"
           size="sm"
-          className="bg-green-600/80 text-white hover:bg-green-600/40 focus-visible:ring-green-600/20 hover:text-green-600 dark:bg-green-400/10 dark:text-green-400 dark:hover:bg-green-400/20 dark:focus-visible:ring-green-400/40 font-semibold"
-          disabled={submitting}
+          className="font-semibold text-white bg-accent-5 hover:bg-accent-5/80 focus-visible:ring-accent-5/20bg-accent-5 dark:bg-accent-5 dark:hover:bg-accent-5/80 hover:cursor-pointer"
+          disabled={pending}
         >
-          {submitting ? (
+          {pending ? (
             <div className="flex items-center">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               <span>Saving ...</span>
@@ -148,7 +157,7 @@ const PlayerSessionSelection = ({
               type="button"
               size="icon"
               className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              onClick={handleReducePlayer}
+              onClick={() => handleReducePlayer(player.id)}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -156,12 +165,11 @@ const PlayerSessionSelection = ({
             {/* Card Body */}
             <CardContent className="relative z-10 py-0 px-10">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                {/* TODO: Player Input */}
                 <div className="w-full md:max-w-lg md:flex-1 md:pr-0">
                   <Label className="text-muted-foreground mb-2">
                     Player Name
                   </Label>
-                  <PlayerInput2
+                  <PlayerInput
                     selectablePlayers={selectablePlayers}
                     playerId={player.id}
                     playerSelect={handleUpdates}
@@ -188,7 +196,7 @@ const PlayerSessionSelection = ({
                     </Label>
                     <Checkbox
                       id={`winner-${idx}`}
-                      className="h-7 w-7 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-blue-600 rounded-full"
+                      className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
                       checked={player.isWinner}
                       onCheckedChange={(checked) =>
                         handleUpdates(player.id, {
@@ -206,7 +214,7 @@ const PlayerSessionSelection = ({
                     </Label>
                     <Checkbox
                       id={`tied-${idx}`}
-                      className="h-7 w-7 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-blue-600 rounded-full"
+                      className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
                       checked={player.isTie}
                       onCheckedChange={(checked) =>
                         handleUpdates(player.id, {

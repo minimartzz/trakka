@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  CombinedRecentGames,
   FilteredCounts,
-  RecentGames,
+  GroupedSession,
+  SessionDataInterface,
 } from "@/lib/interfaces";
 import Link from "next/link";
 import {
-  filterSessions,
+  filterSessionData,
   getAvailableGames,
   getFilteredCounts,
 } from "@/utils/recordsProcessing";
@@ -31,40 +31,29 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import useAuth from "@/app/hooks/useAuth";
+import { fetchSessions } from "@/app/(account)/recent-games/action";
+import { toast } from "sonner";
 
 interface GameFilter {
   result: "all" | "won" | "lost" | "tie" | "not_involved";
   game: string;
 }
 
-const fetchRecentGamesByProfile = async (id: number | string) => {
-  const profileId = String(id);
+const fetchSessionsByProfile = async (
+  id: number,
+): Promise<SessionDataInterface[]> => {
   try {
-    const response = await fetch(`/api/session/profile/${profileId}`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+    const response = await fetchSessions(id);
+    if (!response.success) {
+      toast.error(response.message);
+      return [];
     }
-    const data = await response.json();
-    return data;
+    return response.data ?? [];
   } catch (error) {
     console.error(error);
+    return [];
   }
 };
-
-// const fetchRecentGamesByGroup = async () => {
-//   // TODO: Get the user group?
-//   const groupId = "a16cb5c8-8272-4fef-bf8d-5c0a532ce22d";
-//   try {
-//     const response = await fetch(`/api/session/group/${groupId}`);
-//     if (!response.ok) {
-//       throw new Error("Network response was not ok");
-//     }
-//     const data = await response.json();
-//     return data;
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
 
 const Page = () => {
   const [loading, setLoading] = useState(true);
@@ -72,10 +61,10 @@ const Page = () => {
     result: "all",
     game: "all",
   });
-  const [gameSessions, setGameSessions] = useState<CombinedRecentGames[]>([]);
-  const [filteredSessions, setFilteredSessions] = useState<
-    CombinedRecentGames[]
-  >([]);
+  const [gameSessions, setGameSessions] = useState<GroupedSession[]>([]);
+  const [filteredSessions, setFilteredSessions] = useState<GroupedSession[]>(
+    [],
+  );
   const [availableGames, setAvailableGames] = useState<string[]>([]);
   const [filterCounts, setFilterCounts] = useState<FilteredCounts>({
     numGames: 0,
@@ -96,7 +85,7 @@ const Page = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentSessions = filteredSessions.slice(
     indexOfFirstItem,
-    indexOfLastItem
+    indexOfLastItem,
   );
 
   // Handle page changes
@@ -113,14 +102,15 @@ const Page = () => {
     }
 
     const getData = async () => {
-      const fetchedData = await fetchRecentGamesByProfile(user.id);
-      const sessions: RecentGames[] = fetchedData.rawSessions;
-      const processedSessions = filterSessions(user.id as number, sessions);
-      const filteredCounts = getFilteredCounts(processedSessions);
-      const uniqueGames = getAvailableGames(processedSessions);
+      const sessionData: SessionDataInterface[] = await fetchSessionsByProfile(
+        user.id,
+      );
+      const groupedSessions = filterSessionData(user.id, sessionData);
+      const filteredCounts = getFilteredCounts(groupedSessions);
+      const uniqueGames = getAvailableGames(groupedSessions);
 
-      setGameSessions(processedSessions);
-      setFilteredSessions(processedSessions);
+      setGameSessions(groupedSessions);
+      setFilteredSessions(groupedSessions);
       setFilterCounts(filteredCounts);
       setAvailableGames(uniqueGames);
 
@@ -164,7 +154,7 @@ const Page = () => {
     // Filtering on game selection
     if (selectedFilter.game !== "all") {
       filtered = filtered.filter(
-        (session) => session.gameTitle === selectedFilter.game
+        (session) => session.gameTitle === selectedFilter.game,
       );
     }
 
@@ -275,7 +265,7 @@ const Page = () => {
       <div className="sm:hidden flex text-sm justify-between">
         <p>Legends:</p>
         <p>🏆 = Winner</p>
-        <p>🪢 = Tied</p>
+        <p>🤝 = Tied</p>
       </div>
 
       {/* Game Sessions */}

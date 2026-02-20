@@ -3,7 +3,7 @@ import React from "react";
 
 const Footer = () => {
   return (
-    <footer className="relative w-full h-8 bg-secondary dark:text-white flex items-center justify-between p-4">
+    <footer className="absolute bottom-0 w-full h-8 bg-secondary dark:text-white flex items-center justify-between p-4">
       <p className="text-sm">📝 Record it in your Trakka</p>
       <Image
         src="/bgg/powered-by-bgg-reversed-rgb.svg"

@@ -50,7 +50,7 @@ const Page = async () => {
           </p>
         </div>
         <Button
-          className="hidden md:block dark:text-background text-foreground ml-auto self-start font-semibold bg-gray-500 hover:bg-gray-600"
+          className="hidden md:block text-white ml-auto self-start font-semibold bg-gray-500 hover:bg-gray-600"
           asChild
         >
           <Link href="/account/edit">

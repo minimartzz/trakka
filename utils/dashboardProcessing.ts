@@ -1,18 +1,25 @@
-import { RecentGames } from "@/lib/interfaces";
-import { SqUser } from "@/lib/interfaces";
+import { SessionDataInterface } from "@/lib/interfaces";
+
+export interface OpponentCountsUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  profilePic: string;
+}
 
 export interface TopOpponentsCount {
   count: number;
-  player: SqUser;
+  player: OpponentCountsUser;
 }
 export function topOpponents(
   userId: number,
-  sessions: RecentGames[]
+  sessions: SessionDataInterface[],
 ): TopOpponentsCount[] {
   const counts = new Map<number, TopOpponentsCount>();
 
   for (const session of sessions) {
-    const playerId = parseInt(session.sqUser.id);
+    const playerId = session.profileId;
 
     if (playerId === userId) {
       continue; // Skip if it matches a user
@@ -23,7 +30,13 @@ export function topOpponents(
     } else {
       counts.set(playerId, {
         count: 1,
-        player: session.sqUser,
+        player: {
+          id: session.profileId.toString(),
+          firstName: session.firstName,
+          lastName: session.lastName,
+          username: session.username,
+          profilePic: session.profilePic,
+        },
       });
     }
   }
@@ -33,7 +46,7 @@ export function topOpponents(
     (entry) => ({
       count: entry.count,
       player: entry.player,
-    })
+    }),
   );
 
   topSessions.sort((a, b) => b.count - a.count);
@@ -45,22 +58,22 @@ export interface TopGamesCount {
   count: number;
   wins: number;
   winRate: number;
-  game: { gameId: string; gameTitle: string };
+  game: { gameId: number; gameTitle: string };
 }
 
-export function topGames(userId: number, sessions: RecentGames[]) {
+export function topGames(userId: number, sessions: SessionDataInterface[]) {
   const counts = new Map<
-    string,
+    number,
     {
       count: number;
       wins: number;
-      game: { gameId: string; gameTitle: string };
+      game: { gameId: number; gameTitle: string };
     }
   >();
 
   for (const session of sessions) {
-    const playerId = parseInt(session.sqUser.id);
-    const bggGameId = session.comp_game_log.gameId;
+    const playerId = session.profileId;
+    const bggGameId = session.gameId;
 
     if (playerId !== userId) {
       continue; // Skip if it matches a user
@@ -68,17 +81,17 @@ export function topGames(userId: number, sessions: RecentGames[]) {
 
     if (counts.has(bggGameId)) {
       counts.get(bggGameId)!.count += 1;
-      if (session.comp_game_log.isWinner) {
+      if (session.isWinner) {
         counts.get(bggGameId)!.wins += 1;
       }
     } else {
-      if (session.comp_game_log.isWinner) {
+      if (session.isWinner) {
         counts.set(bggGameId, {
           count: 1,
           wins: 1,
           game: {
-            gameId: session.comp_game_log.gameId,
-            gameTitle: session.comp_game_log.gameTitle,
+            gameId: session.gameId,
+            gameTitle: session.gameTitle,
           },
         });
       } else {
@@ -86,8 +99,8 @@ export function topGames(userId: number, sessions: RecentGames[]) {
           count: 1,
           wins: 0,
           game: {
-            gameId: session.comp_game_log.gameId,
-            gameTitle: session.comp_game_log.gameTitle,
+            gameId: session.gameId,
+            gameTitle: session.gameTitle,
           },
         });
       }
@@ -103,7 +116,7 @@ export function topGames(userId: number, sessions: RecentGames[]) {
         gameId: entry.game.gameId,
         gameTitle: entry.game.gameTitle,
       },
-    })
+    }),
   );
 
   const topGamesSorted = topGames.sort((a, b) => b.count - a.count);

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import React, { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ const GENERIC_IMAGE_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/st
 
 const Page = () => {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
-    null
+    null,
   );
   const router = useRouter();
 
@@ -63,7 +63,7 @@ const Page = () => {
         </Button>
         <Button
           type="submit"
-          className="font-semibold bg-add-button hover:bg-green-600 cursor-pointer"
+          className="font-semibold bg-accent-5/80 hover:bg-accent-5 cursor-pointer text-white"
           disabled={pending}
         >
           {pending ? "Saving..." : "Save Changes"}

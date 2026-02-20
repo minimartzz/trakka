@@ -1,7 +1,9 @@
 "use client";
 import {
   getSelectablePlayers,
+  notifyPlayersOfSession,
   submitNewSession,
+  upsertGameDetails,
 } from "@/app/(generic)/session/create/action";
 import useAuth from "@/app/hooks/useAuth";
 import BGGSearchBar from "@/components/BGGSearchBar";
@@ -34,7 +36,7 @@ import {
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon } from "lucide-react";
 import Form from "next/form";
-import { useRouter } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -42,10 +44,8 @@ type selectablePlayersType = Awaited<
   ReturnType<typeof getSelectablePlayers>
 >[number];
 
-export interface Player {
+export interface Player extends selectablePlayersType {
   id: string;
-  userId: number;
-  name: string;
   score: number | null;
   isWinner: boolean;
   isTie: boolean;
@@ -59,7 +59,7 @@ const Page = () => {
 
   // Game details
   const [gameDetails, setGameDetails] = useState<BGGDetailsInterface | null>(
-    null
+    null,
   );
 
   // Tribe details
@@ -72,62 +72,60 @@ const Page = () => {
   const [submittingPlayers, setSubmittingPlayers] = useState<Player[]>([
     {
       id: "1",
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      profilePic: "",
+      groupId: "",
       score: null,
       isWinner: false,
       isTie: false,
     },
     {
       id: "2",
-      userId: 0,
-      name: "",
+      profileId: 0,
+      firstName: "",
+      lastName: "",
+      username: "",
+      profilePic: "",
+      groupId: "",
       score: null,
       isWinner: false,
       isTie: false,
     },
   ]);
 
-  // Form control
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleSubmit = async (formData: FormData) => {
-    setIsSubmitting(true);
     // Initial Checks
     // Check 1: If no game was selected
     if (!gameDetails) {
       toast.error("No game selected.");
-      setIsSubmitting(false);
       return;
     }
     // Check 2: If no date was selected
     if (!date) {
       toast.error("No date was selected.");
-      setIsSubmitting(false);
       return;
     }
     // Check 3: No tribe was selected
     if (!tribe) {
       toast.error("No tribe was selected.");
-      setIsSubmitting(false);
       return;
     }
     // Check 4: No player names
     const missingPlayers = submittingPlayers
-      .map((player, idx) => (player.name === "" ? idx + 1 : null))
+      .map((player, idx) => (player.firstName === "" ? idx + 1 : null))
       .filter((idx): idx is number => idx !== null);
     if (missingPlayers.length > 0) {
-      console.log(missingPlayers);
       const missingPositions = missingPlayers.join(", ");
       toast.error(`Missing player info at position ${missingPositions}.`);
-      setIsSubmitting(false);
       return;
     }
     // Check 5: Ensure at least 1 winner
     const containWinner = submittingPlayers.some((player) => player.isWinner);
     if (!containWinner) {
       toast.error("At least one winner must be selected.");
-      setIsSubmitting(false);
       return;
     }
 
@@ -135,7 +133,7 @@ const Page = () => {
     const sessionId = generateSessionId();
     const datePlayed = format(date, "yyyy-MM-dd");
     const bgg = {
-      gameId: gameDetails.id,
+      gameId: parseInt(gameDetails.id),
       gameTitle: gameDetails.title,
       gameWeight: gameDetails.weight,
       gameLength: parseInt(gameDetails.playingtime),
@@ -148,14 +146,23 @@ const Page = () => {
     // Create the payload
     let payload = null;
     try {
-      const promises = submittingPlayers.map(async (player, idx) => {
-        const position = idx + 1;
+      const promises = submittingPlayers.map(async (player, idx, array) => {
+        let position: number;
+        if (idx === 0) {
+          position = 1;
+        } else if (player.score === array[idx - 1].score) {
+          const firstMatch = array.findIndex((p) => p.score === player.score);
+          position = firstMatch + 1;
+        } else {
+          position = idx + 1;
+        }
+
         const victoryPoints = player.score;
         const score = getScore(
           position,
           numPlayers,
           bgg.gameLength,
-          parseFloat(bgg.gameWeight)
+          parseFloat(bgg.gameWeight),
         );
 
         return {
@@ -163,7 +170,7 @@ const Page = () => {
           datePlayed,
           ...bgg,
           numPlayers,
-          profileId: player.userId,
+          profileId: player.profileId,
           groupId,
           isVp,
           victoryPoints: victoryPoints,
@@ -173,7 +180,7 @@ const Page = () => {
           score: score,
           highScore: false, // TODO: Need to think of a new way to handle this
           ...dateInfo,
-          isFirstPlay: await getFirstPlay(bgg.gameId, player.userId),
+          isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
           createdBy: user!.id,
         };
@@ -182,32 +189,55 @@ const Page = () => {
     } catch (error) {
       console.error("Failed to gather necessary info for session");
       toast.error(
-        "Error in submitting. Please check your fields and try again"
+        "Error in submitting. Please check your fields and try again",
       );
-      setIsSubmitting(false);
       return;
     }
 
     if (payload) {
       try {
-        const response = await submitNewSession(payload);
-        if (!response.success) {
+        // Upsert game details and submit session in parallel
+        const [gameUpsertResponse, sessionResponse] = await Promise.all([
+          upsertGameDetails(gameDetails),
+          submitNewSession(payload),
+        ]);
+
+        if (!gameUpsertResponse.success) {
+          console.error("Failed to upsert game details");
+        }
+
+        if (!sessionResponse.success) {
           toast.error(
-            "Failed to submit new session. Please check fields and try again."
+            "Failed to submit new session. Please check fields and try again.",
           );
         } else {
+          // After: Notify players of new session
+          try {
+            const sessionNotification = payload.map((player) => ({
+              type: "new_session",
+              data: {
+                gameImageUrl: gameDetails.image,
+                gameTitle: gameDetails.title,
+                tribeName: tribe.name,
+              },
+              isRead: false,
+              profileId: player.profileId,
+            }));
+            await notifyPlayersOfSession(sessionNotification);
+          } catch {
+            console.error("Failed to notify players of new session");
+          }
+
           toast.success(
-            `Successfully saved session ${gameDetails.title} on ${datePlayed}! 🎉`
+            `Successfully saved session ${gameDetails.title} on ${datePlayed}! 🎉`,
           );
           router.push("/recent-games");
         }
       } catch (error) {
         console.error("Client side failed to submit");
         toast.error(
-          "Failed to submit new session. Please check fields and try again."
+          "Failed to submit new session. Please check fields and try again.",
         );
-      } finally {
-        setIsSubmitting(false);
       }
     }
   };
@@ -216,10 +246,7 @@ const Page = () => {
     const fetchPlayerDetails = async (tribeId: string) => {
       try {
         const response = await getSelectablePlayers(tribeId);
-
-        if (response.length > 0) {
-          setSelectablePlayers(response);
-        }
+        setSelectablePlayers(response);
       } catch (error) {
         console.error("Failed to retrieve selectable players:", error);
       }
@@ -231,7 +258,11 @@ const Page = () => {
       return;
     }
 
-    fetchPlayerDetails(tribe!.id);
+    if (tribe?.id) {
+      fetchPlayerDetails(tribe.id);
+    } else {
+      setSelectablePlayers([]);
+    }
   }, [tribe]);
 
   const router = useRouter();
@@ -275,7 +306,7 @@ const Page = () => {
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
+                        !date && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -320,7 +351,6 @@ const Page = () => {
                   selectablePlayers={selectablePlayers}
                   players={submittingPlayers}
                   setPlayers={setSubmittingPlayers}
-                  submitting={isSubmitting}
                 />
               </div>
             </Form>

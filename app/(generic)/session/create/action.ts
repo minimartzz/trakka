@@ -1,12 +1,20 @@
 "use server";
 
 import { compGameLogTable } from "@/db/schema/compGameLog";
+import { gameTable } from "@/db/schema/game";
+import { gameCategoryTable } from "@/db/schema/gameCategory";
+import { gameFamilyTable } from "@/db/schema/gameFamily";
+import { gameMechanicTable } from "@/db/schema/gameMechanic";
+import { juncGameCategoryTable } from "@/db/schema/juncGameCategory";
+import { juncGameFamilyTable } from "@/db/schema/juncGameFamily";
+import { juncGameMechanicTable } from "@/db/schema/juncGameMechanic";
 import { groupTable } from "@/db/schema/group";
 import { notificationsTable } from "@/db/schema/notifications";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { BGGDetailsInterface } from "@/utils/fetchBgg";
 
 type Notification = typeof notificationsTable.$inferInsert;
 type CompGameLog = typeof compGameLogTable.$inferInsert;
@@ -20,13 +28,13 @@ export async function notifyPlayersOfSession(notification: Notification[]) {
 
     if (result.length === 0) {
       console.error(
-        "Failed to insert new session entries into notifications table"
+        "Failed to insert new session entries into notifications table",
       );
     }
   } catch (error) {
     console.error(
       "Issue when trying to insert into notifications table:",
-      error
+      error,
     );
   }
 }
@@ -53,8 +61,8 @@ export async function getTribes(profileId: number) {
       .where(
         and(
           eq(profileGroupTable.profileId, profileId),
-          inArray(profileGroupTable.roleId, [1, 2])
-        )
+          inArray(profileGroupTable.roleId, [1, 2]),
+        ),
       )
       .orderBy(sq.name);
 
@@ -92,8 +100,8 @@ export async function getRecentUsedTribes(profileId: number) {
       .where(
         and(
           eq(compGameLogTable.profileId, profileId),
-          eq(compGameLogTable.createdBy, profileId)
-        )
+          eq(compGameLogTable.createdBy, profileId),
+        ),
       )
       .orderBy(compGameLogTable.groupId, desc(compGameLogTable.createdAt))
       .limit(3);
@@ -119,9 +127,9 @@ export async function getSelectablePlayers(tribeId: string) {
         profilePic: playerDetails.image,
       })
       .from(profileGroupTable)
-      .leftJoin(
+      .innerJoin(
         playerDetails,
-        eq(profileGroupTable.profileId, playerDetails.id)
+        eq(profileGroupTable.profileId, playerDetails.id),
       )
       .where(eq(profileGroupTable.groupId, tribeId));
 
@@ -152,5 +160,119 @@ export async function submitNewSession(payload: CompGameLog[]) {
   } catch (error) {
     console.error("Failed to submit session: ", error);
     return { success: false };
+  }
+}
+
+/**
+ * Upserts game details and related metadata (categories, families, mechanics)
+ * into the database. Uses onConflictDoNothing to handle duplicates efficiently.
+ *
+ * Strategy for minimizing DB calls:
+ * 1. Single upsert for the game record
+ * 2. Batch upsert for all categories, families, mechanics (3 calls)
+ * 3. Batch upsert for all junction table entries (3 calls)
+ * Total: 7 DB calls maximum (regardless of data size)
+ */
+export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
+  try {
+    const gameId = parseInt(selectedGame.id);
+
+    // 1. Upsert the game record
+    await db
+      .insert(gameTable)
+      .values({
+        id: gameId,
+        name: selectedGame.title,
+        imageUrl: selectedGame.image || null,
+        yearPublished: parseInt(selectedGame.yearPublished) || 0,
+        description: selectedGame.description,
+        rating: parseFloat(selectedGame.rating) || 0,
+        weight: parseFloat(selectedGame.weight) || 0,
+        minPlayers: parseInt(selectedGame.minPlayers) || null,
+        maxPlayers: parseInt(selectedGame.maxPlayers) || null,
+        recPlayers: parseInt(selectedGame.recPlayers) || null,
+        playingTime: parseInt(selectedGame.playingTime) || null,
+        minPlayingTime: parseInt(selectedGame.minPlayingTime) || null,
+        maxPlayingTime: parseInt(selectedGame.maxPlayingTime) || null,
+        minAge: parseInt(selectedGame.minAge) || null,
+      })
+      .onConflictDoNothing({ target: gameTable.id });
+
+    // 2. Batch upsert categories
+    if (selectedGame.categories.length > 0) {
+      const categoryValues = selectedGame.categories.map((cat) => ({
+        id: parseInt(cat.id),
+        category: cat.name,
+      }));
+      await db
+        .insert(gameCategoryTable)
+        .values(categoryValues)
+        .onConflictDoNothing({ target: gameCategoryTable.id });
+    }
+
+    // 3. Batch upsert families
+    if (selectedGame.families.length > 0) {
+      const familyValues = selectedGame.families.map((fam) => ({
+        id: parseInt(fam.id),
+        family: fam.name,
+      }));
+      await db
+        .insert(gameFamilyTable)
+        .values(familyValues)
+        .onConflictDoNothing({ target: gameFamilyTable.id });
+    }
+
+    // 4. Batch upsert mechanics
+    if (selectedGame.mechanics.length > 0) {
+      const mechanicValues = selectedGame.mechanics.map((mech) => ({
+        id: parseInt(mech.id),
+        mechanic: mech.name,
+      }));
+      await db
+        .insert(gameMechanicTable)
+        .values(mechanicValues)
+        .onConflictDoNothing({ target: gameMechanicTable.id });
+    }
+
+    // 5. Batch upsert junction table: game <-> categories
+    if (selectedGame.categories.length > 0) {
+      const juncCategoryValues = selectedGame.categories.map((cat) => ({
+        gameId: gameId,
+        categoryId: parseInt(cat.id),
+      }));
+      await db
+        .insert(juncGameCategoryTable)
+        .values(juncCategoryValues)
+        .onConflictDoNothing();
+    }
+
+    // 6. Batch upsert junction table: game <-> families
+    if (selectedGame.families.length > 0) {
+      const juncFamilyValues = selectedGame.families.map((fam) => ({
+        gameId: gameId,
+        familyId: parseInt(fam.id),
+      }));
+      await db
+        .insert(juncGameFamilyTable)
+        .values(juncFamilyValues)
+        .onConflictDoNothing();
+    }
+
+    // 7. Batch upsert junction table: game <-> mechanics
+    if (selectedGame.mechanics.length > 0) {
+      const juncMechanicValues = selectedGame.mechanics.map((mech) => ({
+        gameId: gameId,
+        mechanicId: parseInt(mech.id),
+      }));
+      await db
+        .insert(juncGameMechanicTable)
+        .values(juncMechanicValues)
+        .onConflictDoNothing();
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to upsert game details:", error);
+    return { success: false, error };
   }
 }

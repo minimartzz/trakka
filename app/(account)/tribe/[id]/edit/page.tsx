@@ -1,3 +1,4 @@
+import { getAllPlayers } from "@/components/actions/fetchPlayers";
 import EditTribes from "@/components/tribes/EditTribes";
 import { groupTable } from "@/db/schema/group";
 import { profileTable } from "@/db/schema/profile";
@@ -18,12 +19,17 @@ interface TribeMemberInterface {
   profile: typeof profileTable.$inferSelect | null;
 }
 
-interface Player {
-  id: string;
-  userId: number;
-  name: string;
+interface SelectablePlayers {
+  profileId: number;
+  firstName: string;
+  lastName: string;
   username: string;
-  role: number;
+  profilePic?: string;
+}
+
+interface Player extends SelectablePlayers {
+  id: string;
+  roleId: number;
 }
 
 // Static DB calls
@@ -55,11 +61,16 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeMembers: TribeMemberInterface[] = await getTribeMembers(tribeId);
   const players: Player[] = tribeMembers.map((member, idx) => ({
     id: idx.toString(),
-    userId: member.profile!.id,
-    name: `${member.profile!.firstName} (${member.profile!.username})`,
+    profileId: member.profile!.id,
+    firstName: member.profile!.firstName,
+    lastName: member.profile!.lastName,
     username: member.profile!.username,
-    role: member.profile_group.roleId,
+    roleId: member.profile_group.roleId,
   }));
+
+  // Get selectable players
+  const response = await getAllPlayers();
+  const selectablePlayers: SelectablePlayers[] = response.data!;
 
   const tribeDetails: TribeDetailsInterface = (
     await getTribeDetails(tribeId)
@@ -72,6 +83,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
         profilePic={tribeDetails.group.image!}
         groupName={tribeDetails.group.name}
         description={tribeDetails.group.description}
+        selectablePlayers={selectablePlayers}
         playersDetails={players}
       />
     </div>

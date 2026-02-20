@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import MeepleIcon from "../icons/MeepleIcon";
-import { Medal, Trophy, Users, Weight } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { CombinedRecentGames, RecentGames } from "@/lib/interfaces";
+import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
 import {
   format,
   isWithinInterval,
@@ -45,11 +45,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+import DotsIcon from "@/components/icons/DotsIcon";
 
 interface TimeFilteredPerformanceProps {
   userId: number;
-  recentActivity: CombinedRecentGames[];
-  sessions: RecentGames[];
+  recentActivity: GroupedSession[];
+  sessions: SessionDataInterface[];
 }
 
 interface MetricCardProps {
@@ -82,6 +83,7 @@ interface RecentActivityCardProps {
   }[];
   date: string;
   isWinner: boolean;
+  isLoser: boolean;
   isTied: boolean;
 }
 const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
@@ -91,6 +93,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   date,
   isWinner,
   isTied,
+  isLoser,
 }) => {
   const dateObject = new Date(date);
   const formattedDate = format(dateObject, "dd MMM yyyy");
@@ -112,14 +115,14 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
                   className={cn(
                     "w-6 h-6",
                     player.isWinner &&
-                      "ring-2 ring-offset-2 ring-chart-2 transition-all duration-300"
+                      "ring-2 ring-offset-2 ring-chart-2 transition-all duration-300",
                   )}
                 >
                   <AvatarImage
                     src={player.profilePic}
                     className={cn(
                       "object-cover w-full h-full",
-                      !player.isWinner && "grayscale"
+                      !player.isWinner && "grayscale",
                     )}
                   />
                   <AvatarFallback>P</AvatarFallback>
@@ -131,32 +134,33 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{formattedDate}</p>
       </div>
-      {isWinner && position === 1 ? (
-        <Badge variant="default" className="bg-yellow-500 font-bold text-white">
-          <Trophy className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      ) : position === 2 ? (
-        <Badge variant="default" className="bg-gray-600 font-bold text-white">
-          <Medal className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      ) : position === 3 ? (
-        <Badge variant="default" className="bg-[#9a6748] font-bold text-white">
-          <Medal className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      ) : isTied ? (
-        <Badge className="bg-orange-400 font-bold text-white">
-          <Weight className="h-3 w-3 mr-1" />
-          {`Tied: ${positionWithSuffix}`}
-        </Badge>
-      ) : (
-        <Badge variant="destructive" className="font-bold">
-          <Weight className="h-3 w-3 mr-1" />
-          {positionWithSuffix}
-        </Badge>
-      )}
+      <div className="flex items-center gap-x-3">
+        {isTied && (
+          <span className="flex items-center text-base leading-none">🤝</span>
+        )}
+        {isWinner ? (
+          <Badge
+            variant="default"
+            className="bg-green-600 font-bold text-white"
+          >
+            <DotsIcon value={players.length} />
+            {positionWithSuffix}
+          </Badge>
+        ) : isLoser ? (
+          <Badge variant="destructive" className="font-bold">
+            <DotsIcon value={players.length} />
+            {positionWithSuffix}
+          </Badge>
+        ) : (
+          <Badge
+            variant="default"
+            className="bg-orange-400 font-bold text-white"
+          >
+            <DotsIcon value={players.length} />
+            {positionWithSuffix}
+          </Badge>
+        )}
+      </div>
     </div>
   );
 };
@@ -227,7 +231,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
         isWithinInterval(activity.parsedDate, {
           start: finalFromDate!,
           end: finalToDate!,
-        })
+        }),
       );
     }
 
@@ -239,7 +243,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
   const { top5Players, topGamesStats } = useMemo(() => {
     const sessionsWithDates = sessions.map((session) => ({
       ...session,
-      parsedDate: new Date(session.comp_game_log.datePlayed),
+      parsedDate: new Date(session.datePlayed),
     }));
 
     let finalFromDate: Date | undefined;
@@ -266,7 +270,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       isWithinInterval(session.parsedDate, {
         start: finalFromDate!,
         end: finalToDate!,
-      })
+      }),
     );
 
     const topPlayers = topOpponents(userId, filteredSessions);
@@ -372,6 +376,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                 date={session.datePlayed}
                 isTied={session.isTied}
                 isWinner={session.isWinner}
+                isLoser={session.isLoser}
               />
             ))}
           </CardContent>
@@ -387,19 +392,23 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Game</TableHead>
-                  <TableHead>No. of Plays</TableHead>
-                  <TableHead className="text-right">Win %</TableHead>
+                  <TableHead className="w-full min-w-[120px]">Game</TableHead>
+                  <TableHead className="text-center w-[100px] sm:w-[150px] sm:pr-10">
+                    No. of Plays
+                  </TableHead>
+                  <TableHead className="text-right w-[80px]">Win %</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topGamesStats.slice(0, 10).map((game) => (
                   <TableRow key={game.game.gameId}>
-                    <TableCell className="font-medium">
-                      {game.game.gameTitle}
+                    <TableCell className="max-w-[120px] sm:max-w-none">
+                      <div className="overflow-x-auto whitespace-nowarp no-scrollbar font-medium">
+                        {game.game.gameTitle}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex h-2 w-full overflow-hidden rounded-full bg-red-500 shadow-inner">
+                      <div className="hidden sm:flex h-2 w-full overflow-hidden rounded-full bg-red-500 shadow-inner">
                         <div
                           className="bg-green-600 transition-all duration-500 ease-out"
                           style={{ width: `${game.winRate}%` }}
@@ -412,11 +421,16 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                           Losses: {game.count - game.wins}
                         </span>
                       </div>
+
+                      {/* On Mobile: Show only number */}
+                      <div className="sm:hidden text-sm font-medium">
+                        {game.count}
+                      </div>
                     </TableCell>
                     <TableCell
                       className={cn(
                         "text-right font-semibold",
-                        game.winRate <= 50 ? "text-red-500" : "text-green-600"
+                        game.winRate <= 50 ? "text-red-500" : "text-green-600",
                       )}
                     >{`${game.winRate}%`}</TableCell>
                   </TableRow>

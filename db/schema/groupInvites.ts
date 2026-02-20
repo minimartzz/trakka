@@ -22,5 +22,7 @@ export const groupInvitesTableRelations = relations(
       fields: [groupInvitesTable.groupId],
       references: [groupTable.id],
     }),
-  })
+  }),
 );
+
+export type SelectGroupInvites = typeof groupInvitesTable.$inferSelect;
