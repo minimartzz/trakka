@@ -58,16 +58,16 @@ export interface TopGamesCount {
   count: number;
   wins: number;
   winRate: number;
-  game: { gameId: string; gameTitle: string };
+  game: { gameId: number; gameTitle: string };
 }
 
 export function topGames(userId: number, sessions: SessionDataInterface[]) {
   const counts = new Map<
-    string,
+    number,
     {
       count: number;
       wins: number;
-      game: { gameId: string; gameTitle: string };
+      game: { gameId: number; gameTitle: string };
     }
   >();
 

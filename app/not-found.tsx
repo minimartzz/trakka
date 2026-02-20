@@ -35,10 +35,10 @@ export default function Error({
       />
       <div className="flex flex-col gap-2">
         <h2 className="text-3xl font-bold text-accent-4">
-          Oops! We couldn't find that!
+          Oops! We couldn&apos;t find that!
         </h2>
         <p className="text-gray-400 text-sm">
-          Sorry! We didn't find what you were looking for. Return to the
+          Sorry! We didn&apos;t find what you were looking for. Return to the
           homepage and try again.
         </p>
       </div>

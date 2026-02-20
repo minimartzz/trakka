@@ -1,10 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
 import TribeHomeTab, { GameSession } from "./TribeHomeTab";
-import TribePlayersTab, { TribeMember } from "./TribePlayersTab";
-import TribeGamesTab from "./TribeGamesTab";
+import { TribeMember } from "./TribePlayersTab";
+import TabSkeleton from "./TabSkeleton";
+
+// Lazy load tab components that aren't immediately visible
+const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
+  loading: () => <TabSkeleton />,
+});
+
+const TribeGamesTab = dynamic(() => import("./TribeGamesTab"), {
+  loading: () => <TabSkeleton />,
+});
 
 interface TribeAdmin {
   profileGroup: {

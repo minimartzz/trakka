@@ -79,7 +79,7 @@ const RequestInbox = ({
           <Inbox className="!h-4 !w-4" />
           <span className="hidden sm:block">Inbox</span>
           {requests.length > 0 && (
-            <span className="absolute top-2 right-2 flex h-3 w-3 items-center justify-center rounded-full bg-destructive text-[10px] text-white font-semibold">
+            <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[12px] text-white font-semibold">
               {requests.length}
             </span>
           )}

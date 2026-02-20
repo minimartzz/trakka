@@ -19,6 +19,9 @@ import {
 } from "@/app/(account)/tribe/[id]/action";
 import { notFound } from "next/navigation";
 
+// Revalidate page every 60 seconds for ISR caching
+export const revalidate = 60;
+
 // Interfaces & Types
 interface TribeDetailsInterface {
   group: SelectGroup;
@@ -32,15 +35,19 @@ const formatDate = (dateStr: string): string => {
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeId = (await params).id;
-  const user = await fetchUser();
-  const tribeMembers: TribeMemberInterface[] = await getTribeMembers(tribeId);
-  const tribeDetails: TribeDetailsInterface = (
-    await getTribeDetails(tribeId)
-  )[0];
+
+  // Fetch user and tribe data in parallel for better performance
+  const [user, tribeMembers, tribeDetailsArray, gameLogsRaw] = await Promise.all([
+    fetchUser(),
+    getTribeMembers(tribeId),
+    getTribeDetails(tribeId),
+    getTribeGameSessions(tribeId),
+  ]);
+
+  const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
     notFound();
   }
-  const gameLogsRaw = await getTribeGameSessions(tribeId);
 
   // Process game sessions
   const sessions = processGameSessions(gameLogsRaw);

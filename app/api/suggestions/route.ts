@@ -28,7 +28,11 @@ export async function GET(request: Request) {
       .orderBy(profileTable.firstName)
       .limit(5);
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "private, s-maxage=30, stale-while-revalidate=60",
+      },
+    });
   } catch (err) {
     console.log("Error fetching suggestions: ", err);
     return NextResponse.json({ error: "Failed to fetch suggestions" });

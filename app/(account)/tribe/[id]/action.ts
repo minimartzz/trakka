@@ -2,13 +2,7 @@
 
 import { compGameLogTable } from "@/db/schema/compGameLog";
 import { gameTable } from "@/db/schema/game";
-import { gameCategoryTable } from "@/db/schema/gameCategory";
-import { gameFamilyTable } from "@/db/schema/gameFamily";
-import { gameMechanicTable } from "@/db/schema/gameMechanic";
 import { groupTable } from "@/db/schema/group";
-import { juncGameCategoryTable } from "@/db/schema/juncGameCategory";
-import { juncGameFamilyTable } from "@/db/schema/juncGameFamily";
-import { juncGameMechanicTable } from "@/db/schema/juncGameMechanic";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
