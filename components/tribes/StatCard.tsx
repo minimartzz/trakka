@@ -126,7 +126,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
           {/* Trend Details */}
           {trend && (
-            <div className="flex items-center mt-2">
+            <div className="flex items-baseline mt-2">
               {trend && (
                 <Icon
                   className={cn("w-4 h-4 text-md font-semibold", colorClass)}
@@ -137,7 +137,7 @@ const StatCard: React.FC<StatCardProps> = ({
                   {trend.value}
                 </span>
               )}
-              <span className="ml-2 text-gray-300 text-sm">
+              <span className="ml-2 text-gray-300 text-[10px] sm:text-sm">
                 {trend?.content}
               </span>
             </div>

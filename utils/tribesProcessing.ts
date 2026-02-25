@@ -30,6 +30,7 @@ export function processGameSessions(
         gameId: compGameLog.gameId,
         gameTitle: compGameLog.gameTitle,
         gameImageUrl: gameDetails?.imageUrl || null,
+        playingTime: gameDetails?.playingTime || null,
         players: [],
       });
     }

@@ -1,6 +1,14 @@
 "use client";
 
-import { Trophy, Target, TrendingUp, Flame, Dices } from "lucide-react";
+import {
+  Trophy,
+  Target,
+  TrendingUp,
+  Flame,
+  Dices,
+  Clock,
+  Library,
+} from "lucide-react";
 import StatCard from "./StatCard";
 import PlayerLeaderboard from "./PlayerLeaderboard";
 import RecentSessions from "./RecentSessions";
@@ -15,6 +23,7 @@ export interface GameSession {
   gameId: number;
   gameTitle: string;
   gameImageUrl: string | null;
+  playingTime: number | null;
   players: {
     profileId: number;
     username: string;
@@ -57,14 +66,70 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   const totalGamesPlayed = sessions.length;
 
   // Get increase in games in past week
+  const now = new Date();
   const lastWeek = new Date();
   lastWeek.setDate(lastWeek.getDate() - 7);
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
   const pastWeeksGames = sessions.filter((s) => {
     const itemDate = new Date(s.datePlayed);
-    return itemDate >= lastWeek && itemDate <= new Date();
+    return itemDate >= lastWeek && itemDate <= now;
   }).length;
   const pastWeekGamesDir =
     pastWeeksGames > 0 ? "positive" : pastWeeksGames < 0 ? "negative" : "none";
+
+  // Calculate total time spent (in minutes from playingTime, converted to hours)
+  const totalTimeMinutes = sessions.reduce(
+    (acc, s) => acc + (s.playingTime || 0),
+    0,
+  );
+  const totalTimeHours = Math.round((totalTimeMinutes / 60) * 10) / 10;
+
+  // Calculate time spent in the past week vs previous week for trend
+  const thisWeekTimeMinutes = sessions
+    .filter((s) => {
+      const itemDate = new Date(s.datePlayed);
+      return itemDate >= lastWeek && itemDate <= now;
+    })
+    .reduce((acc, s) => acc + (s.playingTime || 0), 0);
+
+  const prevWeekTimeMinutes = sessions
+    .filter((s) => {
+      const itemDate = new Date(s.datePlayed);
+      return itemDate >= twoWeeksAgo && itemDate < lastWeek;
+    })
+    .reduce((acc, s) => acc + (s.playingTime || 0), 0);
+
+  const timeTrendMinutes = thisWeekTimeMinutes - prevWeekTimeMinutes;
+  const timeTrendHours = Math.round((timeTrendMinutes / 60) * 10) / 10;
+  const timeTrendDir: "positive" | "negative" | "none" =
+    timeTrendHours > 0 ? "positive" : timeTrendHours < 0 ? "negative" : "none";
+
+  // Calculate unique games played
+  const uniqueGameIds = new Set(sessions.map((s) => s.gameId));
+  const totalUniqueGames = uniqueGameIds.size;
+
+  // Unique games played this week (new games that weren't played before this week)
+  const gamesBeforeThisWeek = new Set(
+    sessions
+      .filter((s) => new Date(s.datePlayed) < lastWeek)
+      .map((s) => s.gameId),
+  );
+  const gamesThisWeek = new Set(
+    sessions
+      .filter((s) => {
+        const itemDate = new Date(s.datePlayed);
+        return itemDate >= lastWeek && itemDate <= now;
+      })
+      .map((s) => s.gameId),
+  );
+  // Count games played this week that weren't played before
+  const newGamesThisWeek = [...gamesThisWeek].filter(
+    (id) => !gamesBeforeThisWeek.has(id),
+  ).length;
+  const uniqueGamesTrendDir: "positive" | "negative" | "none" =
+    newGamesThisWeek > 0 ? "positive" : "none";
 
   // TODO: Calculate WPA (Wins Per Attempt) - Average win rate across all players
   // TODO: Calculate Change since last week
@@ -139,9 +204,9 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Tribe Overview</h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
-            title="Games Played"
+            title="Sessions Held"
             value={totalGamesPlayed}
             trend={{
               direction: pastWeekGamesDir,
@@ -149,24 +214,41 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               content: "Since last week",
             }}
             icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-4 to-accent-3"
+            color="bg-linear-to-br from-accent-5 to-accent-3"
             delay={0.1}
           />
           <StatCard
             title="Avg WPA"
             value="-"
             icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-2 to-accent-3"
+            color="bg-linear-to-bl from-accent-5 to-accent-3"
             delay={0.15}
           />
-          {/* <StatCard
-            title="Overall Win %"
-            value={overallWinPct}
-            suffix="%"
-            icon={<Trophy className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+          <StatCard
+            title="Gaming Time"
+            value={totalTimeHours}
+            suffix="hrs"
+            trend={{
+              direction: timeTrendDir,
+              value: `${timeTrendHours}`,
+              content: "hrs since last week",
+            }}
+            icon={<Clock className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
             color="bg-linear-to-bl from-accent-3 to-accent-5"
             delay={0.2}
-          /> */}
+          />
+          <StatCard
+            title="Unique Games"
+            value={totalUniqueGames}
+            trend={{
+              direction: uniqueGamesTrendDir,
+              value: `${newGamesThisWeek}`,
+              content: "new since last week",
+            }}
+            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            color="bg-linear-to-br from-accent-3 to-accent-5"
+            delay={0.25}
+          />
         </div>
       </section>
 
