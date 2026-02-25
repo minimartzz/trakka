@@ -1,16 +1,11 @@
-import { groupTable, SelectGroup } from "@/db/schema/group";
-import { profileTable, SelectProfile } from "@/db/schema/profile";
-import { profileGroupTable } from "@/db/schema/profileGroup";
-import { compGameLogTable } from "@/db/schema/compGameLog";
+import { SelectGroup } from "@/db/schema/group";
+import { SelectProfile } from "@/db/schema/profile";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import TribePageClient from "@/components/tribes/TribePageClient";
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
 import {
   processGameSessions,
   processMembersWithStats,
-  TribeMemberInterface,
 } from "@/utils/tribesProcessing";
 import {
   getTribeDetails,
@@ -37,12 +32,13 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeId = (await params).id;
 
   // Fetch user and tribe data in parallel for better performance
-  const [user, tribeMembers, tribeDetailsArray, gameLogsRaw] = await Promise.all([
-    fetchUser(),
-    getTribeMembers(tribeId),
-    getTribeDetails(tribeId),
-    getTribeGameSessions(tribeId),
-  ]);
+  const [user, tribeMembers, tribeDetailsArray, gameLogsRaw] =
+    await Promise.all([
+      fetchUser(),
+      getTribeMembers(tribeId),
+      getTribeDetails(tribeId),
+      getTribeGameSessions(tribeId),
+    ]);
 
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
