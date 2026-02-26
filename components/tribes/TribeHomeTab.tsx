@@ -8,12 +8,14 @@ import {
   Dices,
   Clock,
   Library,
+  History,
 } from "lucide-react";
 import StatCard from "./StatCard";
 import PlayerLeaderboard from "./PlayerLeaderboard";
 import PlayerComplexityChart from "./PlayerComplexityChart";
 import RecentSessions from "./RecentSessions";
 import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
+import HistoricalSessionsChart from "./HistoricalSessionsChart";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
 
@@ -313,6 +315,21 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         </motion.div>
 
         <PopularGamesCarousel games={popularGames} delay={0.5} />
+      </section>
+
+      {/* Section: Historical */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.55 }}
+          className="flex items-center gap-2 mb-4"
+        >
+          <History className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">Historical</h2>
+        </motion.div>
+
+        <HistoricalSessionsChart sessions={sessions} delay={0.6} />
       </section>
 
       {/* Empty state for new tribes */}
