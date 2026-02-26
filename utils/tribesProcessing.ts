@@ -31,6 +31,7 @@ export function processGameSessions(
         gameTitle: compGameLog.gameTitle,
         gameImageUrl: gameDetails?.imageUrl || null,
         playingTime: gameDetails?.playingTime || null,
+        gameWeight: gameDetails?.weight || null,
         players: [],
       });
     }

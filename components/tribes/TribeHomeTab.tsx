@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import StatCard from "./StatCard";
 import PlayerLeaderboard from "./PlayerLeaderboard";
+import PlayerComplexityChart from "./PlayerComplexityChart";
 import RecentSessions from "./RecentSessions";
 import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
 import MeepleIcon from "@/components/icons/MeepleIcon";
@@ -24,6 +25,7 @@ export interface GameSession {
   gameTitle: string;
   gameImageUrl: string | null;
   playingTime: number | null;
+  gameWeight: number | null;
   players: {
     profileId: number;
     username: string;
@@ -204,7 +206,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Tribe Overview</h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Sessions Held"
             value={totalGamesPlayed}
@@ -252,7 +254,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         </div>
       </section>
 
-      {/* Section: Leaderboard */}
+      {/* Section: Leaderboard & Complexity Chart */}
       <section>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -264,11 +266,18 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Leaderboard</h2>
         </motion.div>
 
-        <PlayerLeaderboard
-          sessions={sessions}
-          emptyMessage="No games played yet"
-          delay={0.3}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="col-span-1 lg:col-span-2">
+            <PlayerLeaderboard
+              sessions={sessions}
+              emptyMessage="No games played yet"
+              delay={0.3}
+            />
+          </div>
+          <div className="col-span-1">
+            <PlayerComplexityChart sessions={sessions} delay={0.35} />
+          </div>
+        </div>
       </section>
 
       {/* Section: Recent Sessions */}
