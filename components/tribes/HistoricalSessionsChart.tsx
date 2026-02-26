@@ -738,7 +738,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
     >
-      <Card className="h-full mb-10">
+      <Card className="h-full">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">

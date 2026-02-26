@@ -16,6 +16,7 @@ import PlayerComplexityChart from "./PlayerComplexityChart";
 import RecentSessions from "./RecentSessions";
 import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
 import HistoricalSessionsChart from "./HistoricalSessionsChart";
+import AllGamesPieChart from "./AllGamesPieChart";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
 
@@ -195,7 +196,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   const popularGames = getPopularGames();
 
   return (
-    <div className="p-4 sm:p-6 space-y-8">
+    <div className="p-4 sm:p-6 space-y-8 mb-15">
       {/* Section: Key Stats */}
       <section>
         <motion.div
@@ -329,7 +330,14 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Historical</h2>
         </motion.div>
 
-        <HistoricalSessionsChart sessions={sessions} delay={0.6} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <HistoricalSessionsChart sessions={sessions} delay={0.6} />
+          </div>
+          <div className="lg:col-span-1">
+            <AllGamesPieChart sessions={sessions} delay={0.65} />
+          </div>
+        </div>
       </section>
 
       {/* Empty state for new tribes */}
