@@ -13,8 +13,9 @@ import { notificationsTable } from "@/db/schema/notifications";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
+import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 
 type Notification = typeof notificationsTable.$inferInsert;
 type CompGameLog = typeof compGameLogTable.$inferInsert;
@@ -151,6 +152,30 @@ export async function submitNewSession(payload: CompGameLog[]) {
       .insert(compGameLogTable)
       .values(payload)
       .returning();
+
+    // For rolling statistics
+    const rollingStats = payload.map((log) => ({
+      profileId: log.profileId,
+      groupId: log.groupId,
+      rollingScore: log.score!,
+      sessionsPlayed: 1,
+      latestSession: log.datePlayed,
+    }));
+
+    const rolling = await db
+      .insert(rollingPlayerStatsTable)
+      .values(rollingStats)
+      .onConflictDoUpdate({
+        target: [
+          rollingPlayerStatsTable.profileId,
+          rollingPlayerStatsTable.groupId,
+        ],
+        set: {
+          rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
+          sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + 1`,
+          latestSession: sql`EXCLUDED.latest_session`,
+        },
+      });
 
     if (result.length === 0) {
       return { success: false };
