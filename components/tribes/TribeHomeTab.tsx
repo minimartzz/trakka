@@ -7,6 +7,7 @@ import RecentSessions from "./RecentSessions";
 import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
+import { HistStatsInterface } from "./TribePageClient";
 
 // Types for the game data that will be passed to this component
 export interface GameSession {
@@ -34,6 +35,7 @@ interface TribeHomeTabProps {
   sessions: GameSession[];
   memberCount: number;
   currentUserId?: number;
+  histStats: HistStatsInterface;
 }
 
 /**
@@ -52,6 +54,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   sessions,
   memberCount,
   currentUserId,
+  histStats,
 }) => {
   // Calculate statistics from sessions data
   const totalGamesPlayed = sessions.length;
@@ -66,19 +69,43 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   const pastWeekGamesDir =
     pastWeeksGames > 0 ? "positive" : pastWeeksGames < 0 ? "negative" : "none";
 
-  // TODO: Calculate WPA (Wins Per Attempt) - Average win rate across all players
-  // TODO: Calculate Change since last week
-  const calculateWPA = (): number => {
-    if (sessions.length === 0) return 0;
-    const allPlayers = sessions.flatMap((s) => s.players);
-    const totalWins = allPlayers.filter((p) => p.isWinner).length;
-    const totalPlays = allPlayers.length;
-    return totalPlays > 0 ? Math.round((totalWins / totalPlays) * 100) : 0;
+  // Calculate average WPA from daily snapshot 7 days ago for players with >= 3 sessions
+  const calculateLastWeekAverageWPA = (): number => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoDate = weekAgo.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+    const weekAgoSnapshots = histStats.dailyPlayerStats.filter(
+      (stat) => stat.snapshotDate === weekAgoDate && stat.sessionsPlayed >= 3,
+    );
+
+    if (weekAgoSnapshots.length === 0) return 0;
+
+    const average =
+      weekAgoSnapshots.reduce((acc, stat) => acc + stat.score, 0) /
+      weekAgoSnapshots.length;
+
+    return isNaN(average) ? 0 : parseFloat(average.toFixed(2));
+  };
+
+  const calculateAverageWPA = (): number => {
+    if (histStats.rollingStats.length === 0) return 0;
+
+    // Remove players who have <=3 sessions played
+    const validPlayers = histStats.rollingStats.filter(
+      (player) => player.sessionsPlayed > 3,
+    );
+    const averageWPA =
+      validPlayers.reduce((acc, stat) => {
+        return acc + stat.rollingScore / stat.sessionsPlayed;
+      }, 0) / validPlayers.length;
+
+    return isNaN(averageWPA) ? 0 : parseFloat(averageWPA.toFixed(2));
   };
 
   // TODO: Choose another stat
   const calculateOverallWinPercentage = (): number => {
-    return calculateWPA();
+    return calculateAverageWPA();
   };
 
   // Get most popular games
@@ -121,7 +148,12 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
       .slice(0, 5);
   };
 
-  const wpa = calculateWPA();
+  const wpa = calculateAverageWPA();
+  const lastWeekWpa = calculateLastWeekAverageWPA();
+  const wpaChange =
+    lastWeekWpa === 0 ? 0 : parseFloat((wpa - lastWeekWpa).toFixed(2));
+  const wpaChangeDir =
+    wpaChange > 0 ? "positive" : wpaChange < 0 ? "negative" : "none";
   const overallWinPct = calculateOverallWinPercentage();
   const popularGames = getPopularGames();
 
@@ -154,7 +186,12 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           />
           <StatCard
             title="Avg WPA"
-            value="-"
+            value={wpa === 0 ? "-" : wpa}
+            trend={{
+              direction: wpaChangeDir,
+              value: `${wpaChange}`,
+              content: "Since last week",
+            }}
             icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
             color="bg-linear-to-bl from-accent-2 to-accent-3"
             delay={0.15}
