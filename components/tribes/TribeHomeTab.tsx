@@ -19,6 +19,7 @@ import HistoricalSessionsChart from "./HistoricalSessionsChart";
 import AllGamesPieChart from "./AllGamesPieChart";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
+import { HistStatsInterface } from "./TribePageClient";
 
 // Types for the game data that will be passed to this component
 export interface GameSession {
@@ -48,6 +49,7 @@ interface TribeHomeTabProps {
   sessions: GameSession[];
   memberCount: number;
   currentUserId?: number;
+  histStats: HistStatsInterface;
 }
 
 /**
@@ -66,6 +68,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   sessions,
   memberCount,
   currentUserId,
+  histStats,
 }) => {
   // Calculate statistics from sessions data
   const totalGamesPlayed = sessions.length;
@@ -148,7 +151,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
 
   // TODO: Choose another stat
   const calculateOverallWinPercentage = (): number => {
-    return calculateWPA();
+    return calculateAverageWPA();
   };
 
   // Get most popular games
@@ -191,7 +194,12 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
       .slice(0, 5);
   };
 
-  const wpa = calculateWPA();
+  const wpa = calculateAverageWPA();
+  const lastWeekWpa = calculateLastWeekAverageWPA();
+  const wpaChange =
+    lastWeekWpa === 0 ? 0 : parseFloat((wpa - lastWeekWpa).toFixed(2));
+  const wpaChangeDir =
+    wpaChange > 0 ? "positive" : wpaChange < 0 ? "negative" : "none";
   const overallWinPct = calculateOverallWinPercentage();
   const popularGames = getPopularGames();
 
@@ -224,7 +232,12 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           />
           <StatCard
             title="Avg WPA"
-            value="-"
+            value={wpa === 0 ? "-" : wpa}
+            trend={{
+              direction: wpaChangeDir,
+              value: `${wpaChange}`,
+              content: "Since last week",
+            }}
             icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
             color="bg-linear-to-bl from-accent-5 to-accent-3"
             delay={0.15}

@@ -3,10 +3,13 @@
 import { compGameLogTable } from "@/db/schema/compGameLog";
 import { gameTable } from "@/db/schema/game";
 import { groupTable } from "@/db/schema/group";
+import { histDailyPlayerStatsTable } from "@/db/schema/histDailyPlayerStats";
+import { histMonthlyPlayerStatsTable } from "@/db/schema/histMonthlyPlayerStats";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
+import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { db } from "@/utils/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function getTribeMembers(groupId: string) {
   const members = await db
@@ -77,4 +80,72 @@ export async function getTribeGameSessions(groupId: string) {
     .where(eq(compGameLogTable.groupId, groupId));
 
   return sessions;
+}
+
+// ========================================
+// HISTORICAL PLAYER STATS
+// ========================================
+export async function getRollingPlayerStats(params?: {
+  groupId?: string;
+  profileId?: number;
+}) {
+  const conditions = [];
+
+  if (params?.profileId) {
+    conditions.push(eq(rollingPlayerStatsTable.profileId, params.profileId));
+  }
+  if (params?.groupId) {
+    conditions.push(eq(rollingPlayerStatsTable.groupId, params.groupId));
+  }
+
+  const rollingStats = await db
+    .select()
+    .from(rollingPlayerStatsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+  return rollingStats;
+}
+
+export async function getDailyPlayerStats(params?: {
+  groupId?: string;
+  profileId?: number;
+}) {
+  const conditions = [];
+
+  if (params?.profileId) {
+    conditions.push(eq(histDailyPlayerStatsTable.profileId, params.profileId));
+  }
+  if (params?.groupId) {
+    conditions.push(eq(histDailyPlayerStatsTable.groupId, params.groupId));
+  }
+
+  const dailyPlayerStats = await db
+    .select()
+    .from(histDailyPlayerStatsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+  return dailyPlayerStats;
+}
+
+export async function getMonthlyPlayerStats(params?: {
+  groupId?: string;
+  profileId?: number;
+}) {
+  const conditions = [];
+
+  if (params?.profileId) {
+    conditions.push(
+      eq(histMonthlyPlayerStatsTable.profileId, params.profileId),
+    );
+  }
+  if (params?.groupId) {
+    conditions.push(eq(histMonthlyPlayerStatsTable.groupId, params.groupId));
+  }
+
+  const monthlyPlayerStats = await db
+    .select()
+    .from(histMonthlyPlayerStatsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+  return monthlyPlayerStats;
 }

@@ -42,4 +42,5 @@ export const rollingPlayerStats = relations(
   }),
 );
 
-export type rollingPlayerStats = typeof rollingPlayerStatsTable.$inferSelect;
+export type SelectRollingPlayerStats =
+  typeof rollingPlayerStatsTable.$inferSelect;
