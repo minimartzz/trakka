@@ -40,6 +40,7 @@ export interface BGGDetailsInterface extends BGGIdsInterface {
   families: BGGLinkInterface[];
   playingtime: string;
   yearPublished: string;
+  rank: number; // BGG overall boardgame rank; 999999 = unranked
 }
 
 const extractRecommendedPlayers = (polls: any): string => {
@@ -90,14 +91,33 @@ const extractBgTags = (
     }));
 };
 
+// Extracts the overall BGG boardgame rank; returns 999999 for unranked games
+const extractRank = (item: any): number => {
+  try {
+    const ranks = item?.statistics?.ratings?.ranks?.rank;
+    if (!ranks) return 999999;
+    const rankArray = Array.isArray(ranks) ? ranks : [ranks];
+    const overall = rankArray.find(
+      (r: any) => r?.["$"]?.name === "boardgame",
+    );
+    const val = overall?.["$"]?.value;
+    if (!val || val === "Not Ranked") return 999999;
+    const parsed = parseInt(val, 10);
+    return isNaN(parsed) ? 999999 : parsed;
+  } catch {
+    return 999999;
+  }
+};
+
 export const fetchBGGIds = async (
   query: string,
   exact: boolean,
 ): Promise<BGGIdsInterface[] | []> => {
   try {
+    const encodedQuery = encodeURIComponent(query);
     const url = exact
-      ? `https://boardgamegeek.com/xmlapi2/search?query=${query}&type=boardgame&exact=1`
-      : `https://boardgamegeek.com/xmlapi2/search?query=${query}&type=boardgame`;
+      ? `https://boardgamegeek.com/xmlapi2/search?query=${encodedQuery}&type=boardgame&exact=1`
+      : `https://boardgamegeek.com/xmlapi2/search?query=${encodedQuery}&type=boardgame`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -130,7 +150,7 @@ export const fetchBGGIds = async (
     if (Array.isArray(games)) {
       items = games.map((game: { [x: string]: any }) => game["$"]);
     } else {
-      items = [games["$"]]; // BGG API will return a signal object if only 1 result is available
+      items = [games["$"]]; // BGG API will return a single object if only 1 result
     }
 
     return items;
@@ -197,6 +217,7 @@ export const fetchBGGDetails = async (
       weight: item["statistics"]["ratings"]["averageweight"]["$"]["value"],
       playingtime: item["playingtime"]["$"]["value"],
       yearPublished: item["yearpublished"]["$"]["value"],
+      rank: extractRank(item),
       // Tag related information
       categories: extractBgTags(item["link"], "boardgamecategory"),
       mechanics: extractBgTags(item["link"], "boardgamemechanic"),
@@ -209,7 +230,8 @@ export const fetchBGGDetails = async (
       details = [extractDetails(games)];
     }
 
-    return details;
+    // Sort by BGG rank ascending (popular ranked games first, unranked last)
+    return details.sort((a, b) => a.rank - b.rank);
   } catch (error) {
     console.error(error);
     return [];
