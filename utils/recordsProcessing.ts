@@ -35,6 +35,7 @@ export const filterSessionData = (
     }
 
     const player: SessionPlayer = {
+      rowId: record.rowId,
       profileId: record.profileId,
       firstName: record.firstName,
       lastName: record.lastName,
@@ -58,8 +59,10 @@ export const filterSessionData = (
       return session.players.length === session.numPlayers;
     })
     .map((session) => {
-      // Sort players by position
-      session.players.sort((a, b) => a.position! - b.position!);
+      // Sort players by position, using DB insertion order (rowId) as tiebreaker
+      session.players.sort((a, b) =>
+        a.position !== b.position ? a.position! - b.position! : a.rowId - b.rowId,
+      );
 
       // Find the player records
       const userRecord = session.players.find(
