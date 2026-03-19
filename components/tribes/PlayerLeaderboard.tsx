@@ -10,16 +10,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import {
   TrendingUp,
   ChevronDown,
-  ChevronUp,
   Calendar,
   Users,
   Trophy,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 export interface GameSession {
   sessionId: string;
@@ -87,7 +86,7 @@ const VIEW_CONFIG: Record<
   },
 };
 
-const DEFAULT_VISIBLE_COUNT = 5;
+const PAGE_SIZE = 10;
 
 const getTimeFilterDate = (filter: TimeFilter): Date | null => {
   const now = new Date();
@@ -118,7 +117,9 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
 }) => {
   const [viewType, setViewType] = useState<ViewType>("active");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("past_month");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const getPositionStyle = (position: number) => {
     switch (position) {
@@ -225,11 +226,25 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       .sort((a, b) => b.value - a.value);
   }, [filteredPlayers, viewType]);
 
-  const visiblePlayers = isExpanded
-    ? sortedPlayers
-    : sortedPlayers.slice(0, DEFAULT_VISIBLE_COUNT);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+    setIsAtBottom(false);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [viewType, timeFilter]);
 
-  const hasMorePlayers = sortedPlayers.length > DEFAULT_VISIBLE_COUNT;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollHeight <= el.clientHeight) setIsAtBottom(true);
+  }, [visibleCount, sortedPlayers]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 8);
+  };
+
+  const visiblePlayers = sortedPlayers.slice(0, visibleCount);
+  const hasMore = sortedPlayers.length > visibleCount;
   const isEmpty = filteredPlayers.length === 0;
   const config = VIEW_CONFIG[viewType];
 
@@ -242,12 +257,8 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
     const styles = getPositionStyle(position);
 
     return (
-      <motion.div
+      <div
         key={player.id}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3, delay: delay + index * 0.03 }}
         className={cn(
           "flex items-center gap-3 py-2.5 px-2 rounded-lg transition-colors",
           isTopThree && "bg-muted/40",
@@ -316,7 +327,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             {config.valueSuffix}
           </p>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -394,47 +405,32 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             </div>
           ) : (
             <>
-              {/* Player list with scroll when expanded */}
+              {/* Player list - scrollable */}
               <div
-                className={cn(
-                  "space-y-1",
-                  isExpanded && "max-h-80 overflow-y-auto pr-1",
-                )}
+                ref={scrollRef}
+                className="space-y-1 max-h-[350px] overflow-y-auto pr-1"
+                onScroll={handleScroll}
               >
-                <AnimatePresence mode="popLayout">
-                  {visiblePlayers.map((player, index) =>
-                    renderPlayerItem(player, index),
-                  )}
-                </AnimatePresence>
+                {visiblePlayers.map((player, index) =>
+                  renderPlayerItem(player, index),
+                )}
               </div>
 
-              {/* Show more/less button */}
-              {hasMorePlayers && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: delay + 0.3 }}
-                  className="mt-3 pt-3 border-t"
-                >
+              {/* Show more button — only visible once scrolled to bottom */}
+              {isAtBottom && hasMore && (
+                <div className="mt-3 pt-3 border-t">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                   >
-                    {isExpanded ? (
-                      <>
-                        Show less
-                        <ChevronUp className="w-4 h-4 ml-1" />
-                      </>
-                    ) : (
-                      <>
-                        Show {sortedPlayers.length - DEFAULT_VISIBLE_COUNT} more
-                        <ChevronDown className="w-4 h-4 ml-1" />
-                      </>
-                    )}
+                    Show{" "}
+                    {Math.min(PAGE_SIZE, sortedPlayers.length - visibleCount)}{" "}
+                    more
+                    <ChevronDown className="w-4 h-4 ml-1" />
                   </Button>
-                </motion.div>
+                </div>
               )}
             </>
           )}
