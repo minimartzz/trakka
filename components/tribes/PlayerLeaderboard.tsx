@@ -11,13 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import {
-  TrendingUp,
-  ChevronDown,
-  Calendar,
-  Users,
-  Trophy,
-} from "lucide-react";
+import { TrendingUp, ChevronDown, Calendar, Users, Trophy } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 
 export interface GameSession {
@@ -58,6 +52,7 @@ export type TimeFilter =
 
 interface PlayerLeaderboardProps {
   sessions: GameSession[];
+  currentUserId?: number;
   emptyMessage?: string;
   delay?: number;
 }
@@ -112,6 +107,7 @@ const getTimeFilterDate = (filter: TimeFilter): Date | null => {
 
 const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
   sessions,
+  currentUserId,
   emptyMessage = "No data available",
   delay = 0,
 }) => {
@@ -126,23 +122,23 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       case 1:
         return {
           badge:
-            "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-amber-500/30",
-          text: "text-amber-600 dark:text-amber-400",
-          avatar: "ring-2 ring-amber-400",
+            "bg-[conic-gradient(from_225deg,#A07010,#E8C040,#FFFACC,#E8C040,#A07010)] text-yellow-900 shadow-lg shadow-yellow-400/40",
+          text: "text-amber-400 dark:text-amber-300",
+          avatar: "ring-2 ring-amber-400 ring-offset-1",
         };
       case 2:
         return {
           badge:
-            "bg-gradient-to-br from-gray-300 to-gray-500 text-white shadow-gray-400/30",
-          text: "text-gray-600 dark:text-gray-400",
-          avatar: "ring-2 ring-gray-400",
+            "bg-[conic-gradient(from_225deg,#686868,#C0C0C0,#F8F8F8,#C0C0C0,#686868)] text-zinc-700 shadow-lg shadow-zinc-400/40",
+          text: "text-zinc-500 dark:text-zinc-300",
+          avatar: "ring-2 ring-zinc-400 ring-offset-1",
         };
       case 3:
         return {
           badge:
-            "bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-amber-700/30",
-          text: "text-amber-700 dark:text-amber-500",
-          avatar: "ring-2 ring-amber-600",
+            "bg-[conic-gradient(from_225deg,#7A3008,#D07828,#FFD090,#D07828,#7A3008)] text-orange-950 shadow-lg shadow-orange-400/40",
+          text: "text-orange-600 dark:text-orange-300",
+          avatar: "ring-2 ring-orange-600 ring-offset-1",
         };
       default:
         return {
@@ -314,7 +310,12 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
         </div>
 
         {/* Value */}
-        <div className="text-right shrink-0">
+        <div className="flex items-center gap-5 shrink-0">
+          {player.id === currentUserId && (
+            <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-primary/15 text-primary leading-none">
+              You
+            </span>
+          )}
           <p
             className={cn(
               isTopThree
