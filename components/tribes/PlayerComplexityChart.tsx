@@ -300,7 +300,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
     });
 
     return Object.entries(playerStats)
-      .filter(([, data]) => data.weightCount > 0) // Only include players with weight data
+      .filter(([, data]) => data.weightCount > 0 && data.gamesPlayed >= 4)
       .map(
         ([id, data]): PlayerDataPoint => ({
           profileId: parseInt(id),
