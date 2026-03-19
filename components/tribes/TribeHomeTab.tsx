@@ -9,7 +9,14 @@ import {
   Clock,
   Library,
   History,
+  Info,
 } from "lucide-react";
+import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import StatCard from "./StatCard";
 import PlayerLeaderboard from "./PlayerLeaderboard";
 import PlayerComplexityChart from "./PlayerComplexityChart";
@@ -70,6 +77,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   currentUserId,
   histStats,
 }) => {
+  const [leaderboardInfoOpen, setLeaderboardInfoOpen] = useState(false);
   // Calculate statistics from sessions data
   const totalGamesPlayed = sessions.length;
 
@@ -304,6 +312,24 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
         >
           <Trophy className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Leaderboard</h2>
+          <Tooltip
+            open={leaderboardInfoOpen}
+            onOpenChange={setLeaderboardInfoOpen}
+          >
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setLeaderboardInfoOpen((v) => !v)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[220px] text-center">
+              Only players with a minimum of 4 games are included in the
+              Leaderboard
+            </TooltipContent>
+          </Tooltip>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

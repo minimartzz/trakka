@@ -193,15 +193,17 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       });
     });
 
-    return Object.entries(playerStats).map(([id, data]) => ({
-      id: parseInt(id),
-      username: data.username,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      image: data.image,
-      gamesPlayed: data.gamesPlayed,
-      wins: data.wins,
-    }));
+    return Object.entries(playerStats)
+      .filter(([, data]) => data.gamesPlayed >= 4)
+      .map(([id, data]) => ({
+        id: parseInt(id),
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        image: data.image,
+        gamesPlayed: data.gamesPlayed,
+        wins: data.wins,
+      }));
   }, [sessions, timeFilter]);
 
   // Sort and process players based on view type
