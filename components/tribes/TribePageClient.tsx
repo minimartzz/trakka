@@ -6,6 +6,9 @@ import TribeTabs from "./TribeTabs";
 import TribeHomeTab, { GameSession } from "./TribeHomeTab";
 import { TribeMember } from "./TribePlayersTab";
 import TabSkeleton from "./TabSkeleton";
+import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
+import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
+import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 
 // Lazy load tab components that aren't immediately visible
 const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
@@ -32,6 +35,12 @@ interface TribeAdmin {
   } | null;
 }
 
+export interface HistStatsInterface {
+  rollingStats: SelectRollingPlayerStats[];
+  dailyPlayerStats: SelectHistDailyPlayerStats[];
+  monthlyPlayerStats: SelectHistMonthlyPlayerStats[];
+}
+
 interface TribePageClientProps {
   tribeId: string;
   tribeName: string;
@@ -47,6 +56,7 @@ interface TribePageClientProps {
   userId: number;
   members: TribeMember[];
   sessions: GameSession[];
+  histStats: HistStatsInterface;
 }
 
 /**
@@ -74,6 +84,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   userId,
   members,
   sessions,
+  histStats,
 }) => {
   return (
     <div className="min-h-screen">
@@ -100,6 +111,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             sessions={sessions}
             memberCount={memberCount}
             currentUserId={userId}
+            histStats={histStats}
           />
         }
         playersContent={<TribePlayersTab members={members} />}

@@ -41,6 +41,7 @@ export async function fetchSessions(profileId: number) {
         gameId: compGameLogTable.gameId,
         createdAt: compGameLogTable.createdAt,
         numPlayers: compGameLogTable.numPlayers,
+        rowId: compGameLogTable.id,
         // Tribe Details
         tribeId: tribeDetails.id,
         tribeName: tribeDetails.name,

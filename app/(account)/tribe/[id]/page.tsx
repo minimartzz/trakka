@@ -8,11 +8,17 @@ import {
   processMembersWithStats,
 } from "@/utils/tribesProcessing";
 import {
+  getDailyPlayerStats,
+  getMonthlyPlayerStats,
+  getRollingPlayerStats,
   getTribeDetails,
   getTribeGameSessions,
   getTribeMembers,
 } from "@/app/(account)/tribe/[id]/action";
 import { notFound } from "next/navigation";
+import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
+import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
 
 // Revalidate page every 60 seconds for ISR caching
 export const revalidate = 60;
@@ -39,6 +45,18 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       getTribeDetails(tribeId),
       getTribeGameSessions(tribeId),
     ]);
+
+  const [rollingStats, dailyPlayerStats, monthlyPlayerStats] =
+    await Promise.all([
+      getRollingPlayerStats({ groupId: tribeId }),
+      getDailyPlayerStats({ groupId: tribeId }),
+      getMonthlyPlayerStats({ groupId: tribeId }),
+    ]);
+  const histStats = {
+    rollingStats,
+    dailyPlayerStats,
+    monthlyPlayerStats,
+  };
 
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
@@ -96,6 +114,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       userId={user.id}
       members={membersWithStats}
       sessions={sessions}
+      histStats={histStats}
     />
   );
 };
