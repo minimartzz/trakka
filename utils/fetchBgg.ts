@@ -61,10 +61,12 @@ const extractRecommendedPlayers = (polls: any): string => {
     : [playerPoll.results];
 
   pollResults.forEach((r: any) => {
+    if (!r["result"]) return;
+
     const numPlayers = r["$"]["numplayers"];
     const votes = Array.isArray(r["result"]) ? r["result"] : [r["result"]];
 
-    const bestVote = votes.find((v: any) => v["$"]["value"] === "Best");
+    const bestVote = votes.find((v: any) => v?.["$"]?.["value"] === "Best");
     const bestVoteCount = parseInt(bestVote?.["$"]["numvotes"] || "0", 10);
 
     if (bestVoteCount > maxVotes) {
