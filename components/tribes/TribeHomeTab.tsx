@@ -312,6 +312,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <div className="col-span-1 lg:col-span-2">
             <PlayerLeaderboard
               sessions={sessions}
+              currentUserId={currentUserId}
               emptyMessage="No games played yet"
               delay={0.3}
             />
