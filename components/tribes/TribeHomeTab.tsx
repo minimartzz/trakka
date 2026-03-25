@@ -249,7 +249,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Tribe Overview</h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
           <StatCard
             title="Sessions Held"
             value={totalGamesPlayed}
@@ -332,8 +332,8 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           </Tooltip>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="col-span-1 lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          <div className="col-span-1 lg:col-span-2 h-full">
             <PlayerLeaderboard
               sessions={sessions}
               currentUserId={currentUserId}
@@ -341,7 +341,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               delay={0.3}
             />
           </div>
-          <div className="col-span-1">
+          <div className="col-span-1 h-full">
             <PlayerComplexityChart sessions={sessions} delay={0.35} />
           </div>
         </div>
@@ -394,11 +394,11 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Historical</h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+          <div className="lg:col-span-2 h-full">
             <HistoricalSessionsChart sessions={sessions} delay={0.6} />
           </div>
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 h-full">
             <AllGamesPieChart sessions={sessions} delay={0.65} />
           </div>
         </div>

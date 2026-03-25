@@ -59,6 +59,9 @@ interface RecentSessionsProps {
   currentUserId?: number;
   emptyMessage?: string;
   delay?: number;
+  showFilters?: boolean;
+  pageSize?: number;
+  title?: string;
 }
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
@@ -142,10 +145,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   currentUserId,
   emptyMessage = "No sessions found",
   delay = 0,
+  showFilters = true,
+  pageSize = PAGE_SIZE,
+  title,
 }) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("past_month");
   const [showOnlyMe, setShowOnlyMe] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -172,10 +178,10 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   }, [sessions, timeFilter, showOnlyMe, currentUserId]);
 
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setVisibleCount(pageSize);
     setIsAtBottom(false);
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [timeFilter, showOnlyMe]);
+  }, [timeFilter, showOnlyMe, pageSize]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -209,73 +215,79 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
     >
       <Card className="h-full">
         <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
-            {/* Filters - User Toggle and Time Filter side by side */}
-            <div className="flex items-center justify-between sm:justify-start gap-3">
-              {/* User Toggle */}
-              {currentUserId && (
-                <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1.5 bg-muted/30">
-                  <Label
-                    htmlFor="user-filter"
-                    className={cn(
-                      "text-xs cursor-pointer transition-colors whitespace-nowrap",
-                      !showOnlyMe
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    All Players
-                  </Label>
-                  <Switch
-                    id="user-filter"
-                    checked={showOnlyMe}
-                    onCheckedChange={setShowOnlyMe}
-                    size="sm"
-                  />
-                  <Label
-                    htmlFor="user-filter"
-                    className={cn(
-                      "text-xs cursor-pointer transition-colors whitespace-nowrap",
-                      showOnlyMe
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    Only Me
-                  </Label>
-                </div>
-              )}
+          {showFilters ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+              {/* Filters - User Toggle and Time Filter side by side */}
+              <div className="flex items-center justify-between sm:justify-start gap-3">
+                {/* User Toggle */}
+                {currentUserId && (
+                  <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1.5 bg-muted/30">
+                    <Label
+                      htmlFor="user-filter"
+                      className={cn(
+                        "text-xs cursor-pointer transition-colors whitespace-nowrap",
+                        !showOnlyMe
+                          ? "text-foreground font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      All Players
+                    </Label>
+                    <Switch
+                      id="user-filter"
+                      checked={showOnlyMe}
+                      onCheckedChange={setShowOnlyMe}
+                      size="sm"
+                    />
+                    <Label
+                      htmlFor="user-filter"
+                      className={cn(
+                        "text-xs cursor-pointer transition-colors whitespace-nowrap",
+                        showOnlyMe
+                          ? "text-foreground font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      Only Me
+                    </Label>
+                  </div>
+                )}
 
-              {/* Time Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground inline">
-                  {TIME_FILTER_LABELS[timeFilter]}
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <Calendar className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {(Object.keys(TIME_FILTER_LABELS) as TimeFilter[]).map(
-                      (filter) => (
-                        <DropdownMenuItem
-                          key={filter}
-                          onClick={() => setTimeFilter(filter)}
-                          className={cn(
-                            timeFilter === filter && "bg-muted font-medium",
-                          )}
-                        >
-                          {TIME_FILTER_LABELS[filter]}
-                        </DropdownMenuItem>
-                      ),
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Time Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground inline">
+                    {TIME_FILTER_LABELS[timeFilter]}
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-8 w-8">
+                        <Calendar className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {(Object.keys(TIME_FILTER_LABELS) as TimeFilter[]).map(
+                        (filter) => (
+                          <DropdownMenuItem
+                            key={filter}
+                            onClick={() => setTimeFilter(filter)}
+                            className={cn(
+                              timeFilter === filter && "bg-muted font-medium",
+                            )}
+                          >
+                            {TIME_FILTER_LABELS[filter]}
+                          </DropdownMenuItem>
+                        ),
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {title ?? "Recent Sessions"}
+            </CardTitle>
+          )}
         </CardHeader>
 
         <CardContent className="pt-0">
@@ -470,11 +482,11 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    onClick={() => setVisibleCount((c) => c + pageSize)}
                   >
                     Show{" "}
                     {Math.min(
-                      PAGE_SIZE,
+                      pageSize,
                       filteredSessions.length - visibleCount,
                     )}{" "}
                     more

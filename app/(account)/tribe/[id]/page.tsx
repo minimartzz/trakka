@@ -58,6 +58,10 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
     monthlyPlayerStats,
   };
 
+  if (!user) {
+    notFound();
+  }
+
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
     notFound();

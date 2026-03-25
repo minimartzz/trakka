@@ -11,30 +11,14 @@ import {
 import { motion } from "motion/react";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-
-interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  playingTime: number | null;
-  gameWeight: number | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-    victoryPoints: number | null;
-    winContrib: number | null;
-    isFirstPlay?: boolean;
-  }[];
-}
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, type PieLabelRenderProps } from "recharts";
+import { GameSession } from "@/components/tribes/TribeHomeTab";
+import {
+  COMPLEXITY_COLORS,
+  getCssVar,
+  getComplexityBin,
+  getPlayerCountBin,
+} from "@/utils/chartHelpers";
 
 interface AllGamesPieChartProps {
   sessions: GameSession[];
@@ -50,40 +34,6 @@ interface PieDataPoint {
   percentage: number;
 }
 
-// Color palette for complexity bins
-const COMPLEXITY_COLORS = {
-  light: "#22c55e", // green-500
-  medium: "#f59e0b", // amber-500
-  heavy: "#ef4444", // red-500
-};
-
-// Helper to get computed CSS variable color
-const getCssVar = (varName: string): string => {
-  if (typeof window === "undefined") return "#888";
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(varName)
-    .trim();
-};
-
-const getComplexityBin = (
-  weight: number | null
-): "light" | "medium" | "heavy" => {
-  if (weight === null) return "medium";
-  if (weight <= 2.5) return "light";
-  if (weight <= 3.5) return "medium";
-  return "heavy";
-};
-
-const getPlayerCountBin = (
-  playerCount: number
-): "p1" | "p2" | "p3" | "p4" | "p5plus" => {
-  if (playerCount === 1) return "p1";
-  if (playerCount === 2) return "p2";
-  if (playerCount === 3) return "p3";
-  if (playerCount === 4) return "p4";
-  return "p5plus";
-};
-
 // Custom label renderer for pie slices
 const renderCustomizedLabel = ({
   cx,
@@ -93,21 +43,13 @@ const renderCustomizedLabel = ({
   outerRadius,
   percent,
   name,
-}: {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
-  name: string;
-}) => {
+}: PieLabelRenderProps) => {
   const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  const radius = (innerRadius as number) + ((outerRadius as number) - (innerRadius as number)) * 0.5;
+  const x = (cx as number) + radius * Math.cos(-(midAngle as number) * RADIAN);
+  const y = (cy as number) + radius * Math.sin(-(midAngle as number) * RADIAN);
 
-  if (percent < 0.05) return null; // Don't show label for very small slices
+  if (!percent || percent < 0.05) return null; // Don't show label for very small slices
 
   return (
     <text
@@ -261,6 +203,7 @@ const AllGamesPieChart: React.FC<AllGamesPieChartProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
+      className="h-full"
     >
       <Card className="h-full">
         <CardHeader>

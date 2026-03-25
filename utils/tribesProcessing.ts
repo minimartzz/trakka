@@ -89,6 +89,9 @@ export function processMembersWithStats(
       lastName: member.profile?.lastName || "",
       image: member.profile?.image || null,
       roleId: member.profileGroup.roleId,
+      joinedAt: member.profileGroup.createdAt
+        ? member.profileGroup.createdAt.toISOString()
+        : null,
       gamesPlayed,
       wins,
       winRate,

@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { Crosshair } from "lucide-react";
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import {
   ScatterChart,
   Scatter,
@@ -124,12 +124,13 @@ const CustomDot: React.FC<CustomDotProps> = ({
 }) => {
   const touchedRef = useRef(false);
 
-  if (!cx || !cy || !payload) return null;
+  useEffect(() => {
+    if (cx && cy && payload && onPositionUpdate) {
+      onPositionUpdate(payload.profileId, cx, cy);
+    }
+  }, [cx, cy, payload, onPositionUpdate]);
 
-  // Report position for tooltip positioning
-  if (onPositionUpdate) {
-    onPositionUpdate(payload.profileId, cx, cy);
-  }
+  if (!cx || !cy || !payload) return null;
 
   const isActive = activePlayer === payload.profileId;
   const size = isActive ? 36 : 28;
@@ -326,6 +327,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
+      className="h-full"
     >
       <Card className="h-full">
         <CardHeader className="pb-0">

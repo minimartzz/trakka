@@ -89,10 +89,11 @@ const StatCard: React.FC<StatCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
       whileHover={{ y: -4 }}
+      className="h-full"
     >
       <Card
         className={cn(
-          "relative overflow-hidden transition-shadow duration-300",
+          "relative overflow-hidden transition-shadow duration-300 h-full",
           "hover:shadow-lg p-2",
           color,
         )}
