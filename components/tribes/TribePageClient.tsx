@@ -87,7 +87,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   histStats,
 }) => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen mb-20">
       {/* Tribe Header */}
       <TribeHeader
         tribeId={tribeId}
@@ -114,7 +114,15 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             histStats={histStats}
           />
         }
-        playersContent={<TribePlayersTab members={members} />}
+        playersContent={
+          <TribePlayersTab
+            members={members}
+            sessions={sessions}
+            histStats={histStats}
+            userId={userId}
+            groupId={tribeId}
+          />
+        }
         gamesContent={<TribeGamesTab sessions={sessions} />}
       />
     </div>

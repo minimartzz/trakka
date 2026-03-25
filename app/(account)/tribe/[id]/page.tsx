@@ -61,6 +61,10 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   };
 >>>>>>> a389d3e ([Update] WPA implemented)
 
+  if (!user) {
+    notFound();
+  }
+
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
     notFound();

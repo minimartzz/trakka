@@ -22,29 +22,13 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-
-interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  playingTime: number | null;
-  gameWeight: number | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-    victoryPoints: number | null;
-    winContrib: number | null;
-    isFirstPlay?: boolean;
-  }[];
-}
+import { GameSession } from "@/components/tribes/TribeHomeTab";
+import {
+  COMPLEXITY_COLORS,
+  getCssVar,
+  getComplexityBin,
+  getPlayerCountBin,
+} from "@/utils/chartHelpers";
 
 interface HistoricalSessionsChartProps {
   sessions: GameSession[];
@@ -98,40 +82,6 @@ interface TooltipData {
   x: number;
   y: number;
 }
-
-// Color palette for complexity bins
-const COMPLEXITY_COLORS = {
-  light: "#22c55e", // green-500
-  medium: "#f59e0b", // amber-500
-  heavy: "#ef4444", // red-500
-};
-
-// Helper to get computed CSS variable color
-const getCssVar = (varName: string): string => {
-  if (typeof window === "undefined") return "#888";
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(varName)
-    .trim();
-};
-
-const getComplexityBin = (
-  weight: number | null,
-): "light" | "medium" | "heavy" => {
-  if (weight === null) return "medium"; // Default to medium if unknown
-  if (weight <= 2.5) return "light";
-  if (weight <= 3.5) return "medium";
-  return "heavy";
-};
-
-const getPlayerCountBin = (
-  playerCount: number,
-): "p1" | "p2" | "p3" | "p4" | "p5plus" => {
-  if (playerCount === 1) return "p1";
-  if (playerCount === 2) return "p2";
-  if (playerCount === 3) return "p3";
-  if (playerCount === 4) return "p4";
-  return "p5plus";
-};
 
 const formatDateLabel = (date: Date, timeframe: TimeframeType): string => {
   switch (timeframe) {
@@ -737,6 +687,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
+      className="h-full"
     >
       <Card className="h-full">
         <CardHeader>
