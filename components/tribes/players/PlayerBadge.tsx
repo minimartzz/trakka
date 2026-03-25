@@ -30,7 +30,10 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
   useEffect(() => {
     if (!showTooltip) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setShowTooltip(false);
       }
     };
@@ -48,10 +51,19 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
           "hover:scale-110 active:scale-95 transition-transform cursor-pointer",
           "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1",
         )}
-        onMouseEnter={() => { if (!isTouchRef.current) setShowTooltip(true); }}
-        onMouseLeave={() => { if (!isTouchRef.current) setShowTooltip(false); }}
-        onTouchStart={() => { isTouchRef.current = true; }}
-        onTouchEnd={(e) => { e.preventDefault(); setShowTooltip((v) => !v); }}
+        onMouseEnter={() => {
+          if (!isTouchRef.current) setShowTooltip(true);
+        }}
+        onMouseLeave={() => {
+          if (!isTouchRef.current) setShowTooltip(false);
+        }}
+        onTouchStart={() => {
+          isTouchRef.current = true;
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          setShowTooltip((v) => !v);
+        }}
         aria-label={`${badge.label} badge: ${badge.description}`}
       >
         <Image
@@ -76,7 +88,9 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
           <p className="text-sm font-semibold">{badge.label}</p>
           <p className="text-xs text-muted-foreground">{badge.description}</p>
           {badge.value && (
-            <p className="text-xs text-primary font-medium mt-0.5">{badge.value}</p>
+            <p className="text-xs text-primary font-medium mt-0.5">
+              {badge.value}
+            </p>
           )}
           {/* Arrow pointing right */}
           <div className="absolute left-full top-1/2 -translate-y-1/2 -ml-px">

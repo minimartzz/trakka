@@ -16,7 +16,11 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type HistStatsInterface,
+} from "@/types/tribes";
 import { calculateBadges, BadgeInfo } from "@/utils/playerStatsCalculations";
 import PlayerBadge from "./PlayerBadge";
 

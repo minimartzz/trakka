@@ -602,10 +602,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
       <div
         className="absolute z-50 pointer-events-none"
         style={{
-          left: Math.min(
-            Math.max(x, 110),
-            (width || 300) - 110,
-          ),
+          left: Math.min(Math.max(x, 110), (width || 300) - 110),
           top: Math.max(y - 10, 20),
           transform: "translate(-50%, -100%)",
         }}

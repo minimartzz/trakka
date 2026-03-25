@@ -17,7 +17,11 @@ import {
   Trophy,
   Target,
 } from "lucide-react";
-import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type HistStatsInterface,
+} from "@/types/tribes";
 import {
   calculatePlayerGameStatsDetailed,
   calculateWinsByWeight,
@@ -718,7 +722,12 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
     [sessions, activePlayerId],
   );
   const wpaSparkline = useMemo(
-    () => calculateWpaSparkline(histStats.dailyPlayerStats, activePlayerId, groupId),
+    () =>
+      calculateWpaSparkline(
+        histStats.dailyPlayerStats,
+        activePlayerId,
+        groupId,
+      ),
     [histStats.dailyPlayerStats, activePlayerId, groupId],
   );
   const winRateDelta = useMemo(
@@ -733,7 +742,12 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
         activePlayerId,
         groupId,
       ),
-    [histStats.dailyPlayerStats, histStats.rollingStats, activePlayerId, groupId],
+    [
+      histStats.dailyPlayerStats,
+      histStats.rollingStats,
+      activePlayerId,
+      groupId,
+    ],
   );
 
   const playerBadges = badgeMap.get(activePlayerId) ?? [];

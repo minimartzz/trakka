@@ -312,8 +312,8 @@ export function calculatePlayerGameStats(
 // ── Detailed per-game stats (used by individual player view) ─────────
 
 export interface PlayerGameStatDetailed extends PlayerGameStat {
-  bgaWinRate: number;      // BGA formula: sum(isWinner ? numPlayers : 0) / (played * 2) * 100
-  gameWpa: number | null;  // avg winContrib for this game (null if never recorded)
+  bgaWinRate: number; // BGA formula: sum(isWinner ? numPlayers : 0) / (played * 2) * 100
+  gameWpa: number | null; // avg winContrib for this game (null if never recorded)
   lastPlayed: string | null; // YYYY-MM-DD of most recent session
 }
 
@@ -378,7 +378,8 @@ export function calculatePlayerGameStatsDetailed(
       gameImageUrl: data.imageUrl,
       timesPlayed: data.played,
       wins: data.wins,
-      winRate: data.played > 0 ? Math.round((data.wins / data.played) * 100) : 0,
+      winRate:
+        data.played > 0 ? Math.round((data.wins / data.played) * 100) : 0,
       bgaWinRate:
         data.played > 0
           ? Math.round((data.bgaNumerator / (data.played * 2)) * 100)
@@ -790,7 +791,10 @@ export function calculateWpaSparkline(
   groupId: string,
 ): number[] {
   const playerStats = dailyStats.filter(
-    (s) => s.profileId === profileId && s.groupId === groupId && s.sessionsPlayed > 0,
+    (s) =>
+      s.profileId === profileId &&
+      s.groupId === groupId &&
+      s.sessionsPlayed > 0,
   );
 
   // Take the last entry per month (highest day wins)

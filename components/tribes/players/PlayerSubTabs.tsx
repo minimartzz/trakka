@@ -4,7 +4,11 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Users, User, Swords } from "lucide-react";
-import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type HistStatsInterface,
+} from "@/types/tribes";
 import AllPlayersView from "./AllPlayersView";
 import IndividualPlayerView from "./IndividualPlayerView";
 import HeadToHeadView from "./HeadToHeadView";
