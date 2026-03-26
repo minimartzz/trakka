@@ -20,22 +20,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import RequestInbox from "./RequestInbox";
-
-interface TribeAdmin {
-  profileGroup: {
-    id: number;
-    profileId: number;
-    groupId: string;
-    roleId: number;
-  };
-  profile: {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-  } | null;
-}
+import { type TribeAdmin } from "@/types/tribes";
 
 interface TribeHeaderProps {
   tribeId: string;

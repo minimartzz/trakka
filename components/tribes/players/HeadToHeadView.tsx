@@ -7,9 +7,7 @@ import { Swords, Flame, RotateCcw, Gamepad2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
-import { HistStatsInterface } from "@/components/tribes/TribePageClient";
+import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
 import {
   calculateHeadToHead,
   calculateBgaWinRate,

@@ -12,7 +12,7 @@ import { motion } from "motion/react";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, type PieLabelRenderProps } from "recharts";
-import { GameSession } from "@/components/tribes/TribeHomeTab";
+import { type GameSession } from "@/types/tribes";
 import {
   COMPLEXITY_COLORS,
   getCssVar,

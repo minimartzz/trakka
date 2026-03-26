@@ -21,36 +21,12 @@ import StatCard from "./StatCard";
 import PlayerLeaderboard from "./PlayerLeaderboard";
 import PlayerComplexityChart from "./PlayerComplexityChart";
 import RecentSessions from "./RecentSessions";
-import PopularGamesCarousel, { PopularGame } from "./PopularGamesCarousel";
+import PopularGamesCarousel from "./PopularGamesCarousel";
 import HistoricalSessionsChart from "./HistoricalSessionsChart";
 import AllGamesPieChart from "./AllGamesPieChart";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
-import { HistStatsInterface } from "./TribePageClient";
-
-// Types for the game data that will be passed to this component
-export interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  playingTime: number | null;
-  gameWeight: number | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-    victoryPoints: number | null;
-    winContrib: number | null;
-    isFirstPlay?: boolean;
-  }[];
-}
+import { type GameSession, type HistStatsInterface, type PopularGame } from "@/types/tribes";
 
 interface TribeHomeTabProps {
   sessions: GameSession[];

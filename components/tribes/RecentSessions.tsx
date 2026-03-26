@@ -26,33 +26,7 @@ import { Dices, Calendar, Trophy, ChevronDown, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect } from "react";
 
-export interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-    victoryPoints: number | null;
-    winContrib: number | null;
-    isFirstPlay?: boolean;
-  }[];
-}
-
-export type TimeFilter =
-  | "today"
-  | "past_week"
-  | "past_month"
-  | "past_year"
-  | "all_time";
+import { type GameSession, type TimeFilter } from "@/types/tribes";
 
 interface RecentSessionsProps {
   sessions: GameSession[];

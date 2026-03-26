@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
+import { type TribeMember } from "@/types/tribes";
 import { Search, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
