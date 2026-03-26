@@ -89,10 +89,11 @@ const StatCard: React.FC<StatCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
       whileHover={{ y: -4 }}
+      className="h-full"
     >
       <Card
         className={cn(
-          "relative overflow-hidden transition-shadow duration-300",
+          "relative overflow-hidden transition-shadow duration-300 h-full",
           "hover:shadow-lg p-2",
           color,
         )}
@@ -126,7 +127,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
           {/* Trend Details */}
           {trend && (
-            <div className="flex items-center mt-2">
+            <div className="flex items-baseline mt-2">
               {trend && (
                 <Icon
                   className={cn("w-4 h-4 text-md font-semibold", colorClass)}
@@ -137,7 +138,7 @@ const StatCard: React.FC<StatCardProps> = ({
                   {trend.value}
                 </span>
               )}
-              <span className="ml-2 text-gray-300 text-sm">
+              <span className="ml-2 text-gray-300 text-[10px] sm:text-sm">
                 {trend?.content}
               </span>
             </div>

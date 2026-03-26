@@ -20,22 +20,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import RequestInbox from "./RequestInbox";
-
-interface TribeAdmin {
-  profileGroup: {
-    id: number;
-    profileId: number;
-    groupId: string;
-    roleId: number;
-  };
-  profile: {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-  } | null;
-}
+import { type TribeAdmin } from "@/types/tribes";
 
 interface TribeHeaderProps {
   tribeId: string;
@@ -116,7 +101,7 @@ const TribeHeader: React.FC<TribeHeaderProps> = ({
                   <Button
                     size="icon"
                     variant="secondary"
-                    className="h-9 w-9 rounded-full shadow-lg bg-gray-300"
+                    className="h-9 w-9 rounded-full shadow-lg bg-gray-300 dark:bg-gray-500"
                     asChild
                   >
                     <Link href={`/tribe/${tribeId}/edit`}>
@@ -274,7 +259,11 @@ const TribeHeader: React.FC<TribeHeaderProps> = ({
                 tribeId={tribeId}
                 tribeImageUrl={tribeImage}
               />
-              <Button variant="outline" className="gap-2 bg-gray-300" asChild>
+              <Button
+                variant="outline"
+                className="gap-2 bg-gray-300 dark:bg-gray-500 dark:hover:bg-gray-500/80"
+                asChild
+              >
                 <Link href={`/tribe/${tribeId}/edit`}>
                   <Settings className="w-4 h-4" />
                   Settings

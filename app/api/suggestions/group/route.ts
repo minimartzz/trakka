@@ -1,20 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/utils/db";
 import { groupTable } from "@/db/schema/group";
+import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { and, eq, inArray } from "drizzle-orm";
+import { createClient } from "@/utils/supabase/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const profileId = request.nextUrl.searchParams.get("profileId");
+    // Resolve the authenticated user's profile — ignore any client-supplied profileId
+    const [profile] = await db
+      .select({ id: profileTable.id })
+      .from(profileTable)
+      .where(eq(profileTable.uuid, user.id));
+
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
     const permittedGroups = db
-      .select({
-        groupId: profileGroupTable.groupId,
-      })
+      .select({ groupId: profileGroupTable.groupId })
       .from(profileGroupTable)
       .where(
         and(
-          eq(profileGroupTable.profileId, parseInt(profileId!)),
+          eq(profileGroupTable.profileId, profile.id),
           inArray(profileGroupTable.roleId, [1, 2])
         )
       );
@@ -23,7 +38,6 @@ export async function GET(request: NextRequest) {
       .select()
       .from(groupTable)
       .where(inArray(groupTable.id, permittedGroups));
-    // const allGroups = await db.select().from(groupTable);
 
     return NextResponse.json(selectableGroups, {
       headers: {
@@ -32,10 +46,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching groups:", error);
-
     return NextResponse.json(
       { error: "Failed to fetch groups" },
-
       { status: 500 }
     );
   }

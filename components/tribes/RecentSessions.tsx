@@ -21,51 +21,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "motion/react";
-import {
-  Dices,
-  Calendar,
-  Trophy,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
-} from "lucide-react";
+import { motion } from "motion/react";
+import { Dices, Calendar, Trophy, ChevronDown, Sparkles } from "lucide-react";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
-export interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-    victoryPoints: number | null;
-    winContrib: number | null;
-    isFirstPlay?: boolean;
-  }[];
-}
-
-export type TimeFilter =
-  | "today"
-  | "past_week"
-  | "past_month"
-  | "past_year"
-  | "all_time";
+import { type GameSession, type TimeFilter } from "@/types/tribes";
 
 interface RecentSessionsProps {
   sessions: GameSession[];
   currentUserId?: number;
   emptyMessage?: string;
   delay?: number;
+  showFilters?: boolean;
+  pageSize?: number;
+  title?: string;
 }
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
@@ -76,7 +46,7 @@ const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
   all_time: "All time",
 };
 
-const DEFAULT_VISIBLE_COUNT = 5;
+const PAGE_SIZE = 10;
 
 const getTimeFilterDate = (filter: TimeFilter): Date | null => {
   const now = new Date();
@@ -149,10 +119,15 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   currentUserId,
   emptyMessage = "No sessions found",
   delay = 0,
+  showFilters = true,
+  pageSize = PAGE_SIZE,
+  title,
 }) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("past_month");
   const [showOnlyMe, setShowOnlyMe] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Filter sessions by time and user
   const filteredSessions = useMemo(() => {
@@ -176,11 +151,25 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
     );
   }, [sessions, timeFilter, showOnlyMe, currentUserId]);
 
-  const visibleSessions = isExpanded
-    ? filteredSessions
-    : filteredSessions.slice(0, DEFAULT_VISIBLE_COUNT);
+  useEffect(() => {
+    setVisibleCount(pageSize);
+    setIsAtBottom(false);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [timeFilter, showOnlyMe, pageSize]);
 
-  const hasMoreSessions = filteredSessions.length > DEFAULT_VISIBLE_COUNT;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollHeight <= el.clientHeight) setIsAtBottom(true);
+  }, [visibleCount, filteredSessions]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 8);
+  };
+
+  const visibleSessions = filteredSessions.slice(0, visibleCount);
+  const hasMore = filteredSessions.length > visibleCount;
   const isEmpty = filteredSessions.length === 0;
 
   const getWinner = (session: GameSession) => {
@@ -200,81 +189,79 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
     >
       <Card className="h-full">
         <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Title */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                <Dices className="w-4 h-4 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Recent Sessions</CardTitle>
-            </div>
+          {showFilters ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+              {/* Filters - User Toggle and Time Filter side by side */}
+              <div className="flex items-center justify-between sm:justify-start gap-3">
+                {/* User Toggle */}
+                {currentUserId && (
+                  <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1.5 bg-muted/30">
+                    <Label
+                      htmlFor="user-filter"
+                      className={cn(
+                        "text-xs cursor-pointer transition-colors whitespace-nowrap",
+                        !showOnlyMe
+                          ? "text-foreground font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      All Players
+                    </Label>
+                    <Switch
+                      id="user-filter"
+                      checked={showOnlyMe}
+                      onCheckedChange={setShowOnlyMe}
+                      size="sm"
+                    />
+                    <Label
+                      htmlFor="user-filter"
+                      className={cn(
+                        "text-xs cursor-pointer transition-colors whitespace-nowrap",
+                        showOnlyMe
+                          ? "text-foreground font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      Only Me
+                    </Label>
+                  </div>
+                )}
 
-            {/* Filters - User Toggle and Time Filter side by side */}
-            <div className="flex items-center justify-between sm:justify-start gap-3">
-              {/* User Toggle */}
-              {currentUserId && (
-                <div className="flex items-center gap-1.5 border rounded-lg px-2 py-1.5 bg-muted/30">
-                  <Label
-                    htmlFor="user-filter"
-                    className={cn(
-                      "text-xs cursor-pointer transition-colors whitespace-nowrap",
-                      !showOnlyMe
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    All Players
-                  </Label>
-                  <Switch
-                    id="user-filter"
-                    checked={showOnlyMe}
-                    onCheckedChange={setShowOnlyMe}
-                    size="sm"
-                  />
-                  <Label
-                    htmlFor="user-filter"
-                    className={cn(
-                      "text-xs cursor-pointer transition-colors whitespace-nowrap",
-                      showOnlyMe
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    Only Me
-                  </Label>
+                {/* Time Filter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground inline">
+                    {TIME_FILTER_LABELS[timeFilter]}
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-8 w-8">
+                        <Calendar className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {(Object.keys(TIME_FILTER_LABELS) as TimeFilter[]).map(
+                        (filter) => (
+                          <DropdownMenuItem
+                            key={filter}
+                            onClick={() => setTimeFilter(filter)}
+                            className={cn(
+                              timeFilter === filter && "bg-muted font-medium",
+                            )}
+                          >
+                            {TIME_FILTER_LABELS[filter]}
+                          </DropdownMenuItem>
+                        ),
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              )}
-
-              {/* Time Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground inline">
-                  {TIME_FILTER_LABELS[timeFilter]}
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <Calendar className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {(Object.keys(TIME_FILTER_LABELS) as TimeFilter[]).map(
-                      (filter) => (
-                        <DropdownMenuItem
-                          key={filter}
-                          onClick={() => setTimeFilter(filter)}
-                          className={cn(
-                            timeFilter === filter && "bg-muted font-medium",
-                          )}
-                        >
-                          {TIME_FILTER_LABELS[filter]}
-                        </DropdownMenuItem>
-                      ),
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>
-          </div>
+          ) : (
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {title ?? "Recent Sessions"}
+            </CardTitle>
+          )}
         </CardHeader>
 
         <CardContent className="pt-0">
@@ -285,15 +272,14 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
             </div>
           ) : (
             <>
-              {/* Sessions table with scroll when expanded */}
+              {/* Sessions table - scrollable */}
               <div
-                className={cn(
-                  "overflow-x-auto",
-                  isExpanded && "max-h-96 overflow-y-auto",
-                )}
+                ref={scrollRef}
+                className="max-h-[430px] overflow-y-auto overflow-x-auto"
+                onScroll={handleScroll}
               >
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead className="w-[80px]">Date</TableHead>
                       <TableHead>Game</TableHead>
@@ -306,84 +292,111 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <AnimatePresence mode="popLayout">
-                      {visibleSessions.map((session, index) => {
-                        const winner = getWinner(session);
-                        const currentUser = getCurrentUserInSession(session);
-                        const isCurrentUserWinner =
-                          currentUser?.isWinner ?? false;
+                    {visibleSessions.map((session) => {
+                      const winner = getWinner(session);
+                      const currentUser = getCurrentUserInSession(session);
+                      const isCurrentUserWinner =
+                        currentUser?.isWinner ?? false;
 
-                        return (
-                          <motion.tr
-                            key={session.sessionId}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{
-                              duration: 0.3,
-                              delay: delay + index * 0.03,
-                            }}
-                            className={cn(
-                              "border-b transition-colors hover:bg-muted/50",
-                              currentUser && "bg-primary/5",
-                            )}
-                          >
-                            {/* Date */}
-                            <TableCell className="text-sm text-muted-foreground">
-                              {formatDate(session.datePlayed)}
-                            </TableCell>
+                      return (
+                        <TableRow
+                          key={session.sessionId}
+                          className={cn(
+                            "border-b transition-colors hover:bg-muted/50",
+                            currentUser && "bg-primary/5",
+                          )}
+                        >
+                          {/* Date */}
+                          <TableCell className="text-sm text-muted-foreground">
+                            {formatDate(session.datePlayed)}
+                          </TableCell>
 
-                            {/* Game */}
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <GameImageCell
-                                  imageUrl={session.gameImageUrl}
-                                  gameTitle={session.gameTitle}
-                                />
-                                <span
-                                  className="font-medium truncate max-w-[120px]"
-                                  title={session.gameTitle}
-                                >
-                                  {session.gameTitle}
-                                </span>
-                              </div>
-                            </TableCell>
+                          {/* Game */}
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <GameImageCell
+                                imageUrl={session.gameImageUrl}
+                                gameTitle={session.gameTitle}
+                              />
+                              <span
+                                className="font-medium truncate max-w-[120px]"
+                                title={session.gameTitle}
+                              >
+                                {session.gameTitle}
+                              </span>
+                            </div>
+                          </TableCell>
 
-                            {/* Winner */}
-                            <TableCell>
-                              {winner ? (
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="w-7 h-7">
-                                    <AvatarImage
-                                      src={winner.image || ""}
-                                      alt={winner.username}
-                                      className="object-cover"
-                                    />
-                                    <AvatarFallback className="bg-amber-100 text-amber-700 text-xs font-medium">
-                                      {winner.firstName[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex items-center gap-1.5">
-                                    <Trophy className="w-3 h-3 text-amber-500" />
-                                    <span
-                                      className={cn(
-                                        "text-sm font-medium truncate max-w-[80px]",
-                                        winner.profileId === currentUserId &&
-                                          "text-primary",
-                                      )}
-                                    >
-                                      {winner.firstName}
-                                    </span>
-                                    {winner.isFirstPlay && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-[10px] px-1 py-0 h-4 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                                      >
-                                        <Sparkles className="w-2.5 h-2.5 mr-0.5" />
-                                        1st
-                                      </Badge>
+                          {/* Winner */}
+                          <TableCell>
+                            {winner ? (
+                              <div className="flex items-center gap-2">
+                                <Avatar className="w-7 h-7">
+                                  <AvatarImage
+                                    src={winner.image || ""}
+                                    alt={winner.username}
+                                    className="object-cover"
+                                  />
+                                  <AvatarFallback className="bg-amber-100 text-amber-700 text-xs font-medium">
+                                    {winner.firstName[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex items-center gap-1.5">
+                                  <Trophy className="w-3 h-3 text-amber-500" />
+                                  <span
+                                    className={cn(
+                                      "text-sm font-medium truncate max-w-[80px]",
+                                      winner.profileId === currentUserId &&
+                                        "text-primary",
                                     )}
-                                  </div>
+                                  >
+                                    {winner.firstName}
+                                  </span>
+                                  {winner.isFirstPlay && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] px-1 py-0 h-4 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                                    >
+                                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                                      1st
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+
+                          {/* Current User Position */}
+                          {currentUserId && (
+                            <TableCell>
+                              {currentUser ? (
+                                <div className="flex items-center gap-1.5">
+                                  {isCurrentUserWinner && (
+                                    <Trophy className="w-3 h-3 text-amber-500" />
+                                  )}
+                                  <span
+                                    className={cn(
+                                      "text-sm",
+                                      isCurrentUserWinner
+                                        ? "font-semibold text-amber-600 dark:text-amber-400"
+                                        : "font-medium",
+                                    )}
+                                  >
+                                    #{currentUser.position}
+                                  </span>
+                                  {currentUser.isFirstPlay && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] px-1 py-0 h-4 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                                    >
+                                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                                      1st
+                                    </Badge>
+                                  )}
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground text-sm">
@@ -391,49 +404,36 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 </span>
                               )}
                             </TableCell>
+                          )}
 
-                            {/* Current User Position */}
-                            {currentUserId && (
-                              <TableCell>
-                                {currentUser ? (
-                                  <div className="flex items-center gap-1.5">
-                                    {isCurrentUserWinner && (
-                                      <Trophy className="w-3 h-3 text-amber-500" />
-                                    )}
-                                    <span
-                                      className={cn(
-                                        "text-sm",
-                                        isCurrentUserWinner
-                                          ? "font-semibold text-amber-600 dark:text-amber-400"
-                                          : "font-medium",
-                                      )}
-                                    >
-                                      #{currentUser.position}
-                                    </span>
-                                    {currentUser.isFirstPlay && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-[10px] px-1 py-0 h-4 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                                      >
-                                        <Sparkles className="w-2.5 h-2.5 mr-0.5" />
-                                        1st
-                                      </Badge>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">
-                                    —
-                                  </span>
-                                )}
-                              </TableCell>
+                          {/* Winning VP */}
+                          <TableCell className="text-right">
+                            {winner?.victoryPoints !== null &&
+                            winner?.victoryPoints !== undefined ? (
+                              <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                                {winner.victoryPoints} VP
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">
+                                —
+                              </span>
                             )}
+                          </TableCell>
 
-                            {/* Winning VP */}
+                          {/* Your VP */}
+                          {currentUserId && (
                             <TableCell className="text-right">
-                              {winner?.victoryPoints !== null &&
-                              winner?.victoryPoints !== undefined ? (
-                                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                                  {winner.victoryPoints} VP
+                              {currentUser?.victoryPoints !== null &&
+                              currentUser?.victoryPoints !== undefined ? (
+                                <span
+                                  className={cn(
+                                    "text-sm font-medium",
+                                    isCurrentUserWinner
+                                      ? "text-amber-600 dark:text-amber-400"
+                                      : "text-foreground",
+                                  )}
+                                >
+                                  {currentUser.victoryPoints} VP
                                 </span>
                               ) : (
                                 <span className="text-muted-foreground text-sm">
@@ -441,65 +441,32 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 </span>
                               )}
                             </TableCell>
-
-                            {/* Your VP */}
-                            {currentUserId && (
-                              <TableCell className="text-right">
-                                {currentUser?.victoryPoints !== null &&
-                                currentUser?.victoryPoints !== undefined ? (
-                                  <span
-                                    className={cn(
-                                      "text-sm font-medium",
-                                      isCurrentUserWinner
-                                        ? "text-amber-600 dark:text-amber-400"
-                                        : "text-foreground",
-                                    )}
-                                  >
-                                    {currentUser.victoryPoints} VP
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">
-                                    —
-                                  </span>
-                                )}
-                              </TableCell>
-                            )}
-                          </motion.tr>
-                        );
-                      })}
-                    </AnimatePresence>
+                          )}
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
 
-              {/* Show more/less button */}
-              {hasMoreSessions && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: delay + 0.3 }}
-                  className="mt-3 pt-3 border-t"
-                >
+              {/* Show more button — only visible once scrolled to bottom */}
+              {isAtBottom && hasMore && (
+                <div className="mt-3 pt-3 border-t">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => setVisibleCount((c) => c + pageSize)}
                   >
-                    {isExpanded ? (
-                      <>
-                        Show less
-                        <ChevronUp className="w-4 h-4 ml-1" />
-                      </>
-                    ) : (
-                      <>
-                        Show {filteredSessions.length - DEFAULT_VISIBLE_COUNT}{" "}
-                        more
-                        <ChevronDown className="w-4 h-4 ml-1" />
-                      </>
-                    )}
+                    Show{" "}
+                    {Math.min(
+                      pageSize,
+                      filteredSessions.length - visibleCount,
+                    )}{" "}
+                    more
+                    <ChevronDown className="w-4 h-4 ml-1" />
                   </Button>
-                </motion.div>
+                </div>
               )}
             </>
           )}

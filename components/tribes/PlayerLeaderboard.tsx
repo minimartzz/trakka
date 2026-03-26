@@ -10,36 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "motion/react";
-import {
-  TrendingUp,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  Users,
-  Trophy,
-} from "lucide-react";
-import { useState, useMemo } from "react";
+import { motion } from "motion/react";
+import { TrendingUp, ChevronDown, Calendar, Users, Trophy } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
-export interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-  }[];
-}
+import { type GameSession, type TimeFilter } from "@/types/tribes";
 
-export interface LeaderboardPlayer {
+interface LeaderboardPlayer {
   id: number;
   username: string;
   firstName: string;
@@ -49,16 +26,11 @@ export interface LeaderboardPlayer {
   wins: number;
 }
 
-export type ViewType = "active" | "winners";
-export type TimeFilter =
-  | "today"
-  | "past_week"
-  | "past_month"
-  | "past_year"
-  | "all_time";
+type ViewType = "active" | "winners";
 
 interface PlayerLeaderboardProps {
   sessions: GameSession[];
+  currentUserId?: number;
   emptyMessage?: string;
   delay?: number;
 }
@@ -87,7 +59,7 @@ const VIEW_CONFIG: Record<
   },
 };
 
-const DEFAULT_VISIBLE_COUNT = 5;
+const PAGE_SIZE = 10;
 
 const getTimeFilterDate = (filter: TimeFilter): Date | null => {
   const now = new Date();
@@ -113,35 +85,38 @@ const getTimeFilterDate = (filter: TimeFilter): Date | null => {
 
 const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
   sessions,
+  currentUserId,
   emptyMessage = "No data available",
   delay = 0,
 }) => {
   const [viewType, setViewType] = useState<ViewType>("active");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("past_month");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const getPositionStyle = (position: number) => {
     switch (position) {
       case 1:
         return {
           badge:
-            "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-amber-500/30",
-          text: "text-amber-600 dark:text-amber-400",
-          avatar: "ring-2 ring-amber-400",
+            "bg-[conic-gradient(from_225deg,#A07010,#E8C040,#FFFACC,#E8C040,#A07010)] text-yellow-900 shadow-lg shadow-yellow-400/40",
+          text: "text-amber-400 dark:text-amber-300",
+          avatar: "ring-2 ring-amber-400 ring-offset-1",
         };
       case 2:
         return {
           badge:
-            "bg-gradient-to-br from-gray-300 to-gray-500 text-white shadow-gray-400/30",
-          text: "text-gray-600 dark:text-gray-400",
-          avatar: "ring-2 ring-gray-400",
+            "bg-[conic-gradient(from_225deg,#686868,#C0C0C0,#F8F8F8,#C0C0C0,#686868)] text-zinc-700 shadow-lg shadow-zinc-400/40",
+          text: "text-zinc-500 dark:text-zinc-300",
+          avatar: "ring-2 ring-zinc-400 ring-offset-1",
         };
       case 3:
         return {
           badge:
-            "bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-amber-700/30",
-          text: "text-amber-700 dark:text-amber-500",
-          avatar: "ring-2 ring-amber-600",
+            "bg-[conic-gradient(from_225deg,#7A3008,#D07828,#FFD090,#D07828,#7A3008)] text-orange-950 shadow-lg shadow-orange-400/40",
+          text: "text-orange-600 dark:text-orange-300",
+          avatar: "ring-2 ring-orange-600 ring-offset-1",
         };
       default:
         return {
@@ -193,15 +168,17 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       });
     });
 
-    return Object.entries(playerStats).map(([id, data]) => ({
-      id: parseInt(id),
-      username: data.username,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      image: data.image,
-      gamesPlayed: data.gamesPlayed,
-      wins: data.wins,
-    }));
+    return Object.entries(playerStats)
+      .filter(([, data]) => data.gamesPlayed >= 4)
+      .map(([id, data]) => ({
+        id: parseInt(id),
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        image: data.image,
+        gamesPlayed: data.gamesPlayed,
+        wins: data.wins,
+      }));
   }, [sessions, timeFilter]);
 
   // Sort and process players based on view type
@@ -223,11 +200,25 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       .sort((a, b) => b.value - a.value);
   }, [filteredPlayers, viewType]);
 
-  const visiblePlayers = isExpanded
-    ? sortedPlayers
-    : sortedPlayers.slice(0, DEFAULT_VISIBLE_COUNT);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+    setIsAtBottom(false);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [viewType, timeFilter]);
 
-  const hasMorePlayers = sortedPlayers.length > DEFAULT_VISIBLE_COUNT;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollHeight <= el.clientHeight) setIsAtBottom(true);
+  }, [visibleCount, sortedPlayers]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 8);
+  };
+
+  const visiblePlayers = sortedPlayers.slice(0, visibleCount);
+  const hasMore = sortedPlayers.length > visibleCount;
   const isEmpty = filteredPlayers.length === 0;
   const config = VIEW_CONFIG[viewType];
 
@@ -240,12 +231,8 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
     const styles = getPositionStyle(position);
 
     return (
-      <motion.div
+      <div
         key={player.id}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3, delay: delay + index * 0.03 }}
         className={cn(
           "flex items-center gap-3 py-2.5 px-2 rounded-lg transition-colors",
           isTopThree && "bg-muted/40",
@@ -301,7 +288,12 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
         </div>
 
         {/* Value */}
-        <div className="text-right shrink-0">
+        <div className="flex items-center gap-5 shrink-0">
+          {player.id === currentUserId && (
+            <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-primary/15 text-primary leading-none">
+              You
+            </span>
+          )}
           <p
             className={cn(
               isTopThree
@@ -314,7 +306,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             {config.valueSuffix}
           </p>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -323,6 +315,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
+      className="h-full"
     >
       <Card className="h-full">
         <CardHeader className="pb-1">
@@ -392,47 +385,32 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             </div>
           ) : (
             <>
-              {/* Player list with scroll when expanded */}
+              {/* Player list - scrollable */}
               <div
-                className={cn(
-                  "space-y-1",
-                  isExpanded && "max-h-80 overflow-y-auto pr-1",
-                )}
+                ref={scrollRef}
+                className="space-y-1 max-h-[350px] overflow-y-auto pr-1"
+                onScroll={handleScroll}
               >
-                <AnimatePresence mode="popLayout">
-                  {visiblePlayers.map((player, index) =>
-                    renderPlayerItem(player, index),
-                  )}
-                </AnimatePresence>
+                {visiblePlayers.map((player, index) =>
+                  renderPlayerItem(player, index),
+                )}
               </div>
 
-              {/* Show more/less button */}
-              {hasMorePlayers && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: delay + 0.3 }}
-                  className="mt-3 pt-3 border-t"
-                >
+              {/* Show more button — only visible once scrolled to bottom */}
+              {isAtBottom && hasMore && (
+                <div className="mt-3 pt-3 border-t">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                   >
-                    {isExpanded ? (
-                      <>
-                        Show less
-                        <ChevronUp className="w-4 h-4 ml-1" />
-                      </>
-                    ) : (
-                      <>
-                        Show {sortedPlayers.length - DEFAULT_VISIBLE_COUNT} more
-                        <ChevronDown className="w-4 h-4 ml-1" />
-                      </>
-                    )}
+                    Show{" "}
+                    {Math.min(PAGE_SIZE, sortedPlayers.length - visibleCount)}{" "}
+                    more
+                    <ChevronDown className="w-4 h-4 ml-1" />
                   </Button>
-                </motion.div>
+                </div>
               )}
             </>
           )}

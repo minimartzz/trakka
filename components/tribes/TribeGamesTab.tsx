@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { Dices, Calendar, Users, Trophy } from "lucide-react";
 import { format } from "date-fns";
-import { GameSession } from "./TribeHomeTab";
+import { type GameSession } from "@/types/tribes";
 
 interface TribeGamesTabProps {
   sessions: GameSession[];

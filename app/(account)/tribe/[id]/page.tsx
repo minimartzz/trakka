@@ -1,23 +1,24 @@
-import { groupTable, SelectGroup } from "@/db/schema/group";
-import { profileTable, SelectProfile } from "@/db/schema/profile";
-import { profileGroupTable } from "@/db/schema/profileGroup";
-import { compGameLogTable } from "@/db/schema/compGameLog";
+import { SelectGroup } from "@/db/schema/group";
+import { SelectProfile } from "@/db/schema/profile";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import TribePageClient from "@/components/tribes/TribePageClient";
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
 import {
   processGameSessions,
   processMembersWithStats,
-  TribeMemberInterface,
 } from "@/utils/tribesProcessing";
 import {
+  getDailyPlayerStats,
+  getMonthlyPlayerStats,
+  getRollingPlayerStats,
   getTribeDetails,
   getTribeGameSessions,
   getTribeMembers,
 } from "@/app/(account)/tribe/[id]/action";
 import { notFound } from "next/navigation";
+import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
+import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
 
 // Revalidate page every 60 seconds for ISR caching
 export const revalidate = 60;
@@ -37,12 +38,29 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeId = (await params).id;
 
   // Fetch user and tribe data in parallel for better performance
-  const [user, tribeMembers, tribeDetailsArray, gameLogsRaw] = await Promise.all([
-    fetchUser(),
-    getTribeMembers(tribeId),
-    getTribeDetails(tribeId),
-    getTribeGameSessions(tribeId),
-  ]);
+  const [user, tribeMembers, tribeDetailsArray, gameLogsRaw] =
+    await Promise.all([
+      fetchUser(),
+      getTribeMembers(tribeId),
+      getTribeDetails(tribeId),
+      getTribeGameSessions(tribeId),
+    ]);
+
+  const [rollingStats, dailyPlayerStats, monthlyPlayerStats] =
+    await Promise.all([
+      getRollingPlayerStats({ groupId: tribeId }),
+      getDailyPlayerStats({ groupId: tribeId }),
+      getMonthlyPlayerStats({ groupId: tribeId }),
+    ]);
+  const histStats = {
+    rollingStats,
+    dailyPlayerStats,
+    monthlyPlayerStats,
+  };
+
+  if (!user) {
+    notFound();
+  }
 
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
@@ -100,6 +118,7 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       userId={user.id}
       members={membersWithStats}
       sessions={sessions}
+      histStats={histStats}
     />
   );
 };

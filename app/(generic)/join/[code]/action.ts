@@ -2,10 +2,11 @@
 import { groupInvitesTable } from "@/db/schema/groupInvites";
 import { groupJoinRequestTable } from "@/db/schema/groupJoinRequests";
 import { profileTable } from "@/db/schema/profile";
+import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
 import { SignUpActionState, signUpFormSchema } from "@/utils/signUpSchema";
 import { createClient } from "@/utils/supabase/server";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -13,12 +14,25 @@ import { redirect } from "next/navigation";
 export async function createRequestLoggedIn(
   inviteCode: string,
   groupId: string,
-  profileId: number
+  // profileId is kept for API compatibility but identity is resolved from session
+  _profileId: number
 ) {
-  // Insert new group invite to join request
+  // Resolve caller's identity from session — never trust client-supplied profileId
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const [profile] = await db
+    .select({ id: profileTable.id })
+    .from(profileTable)
+    .where(eq(profileTable.uuid, user.id));
+
+  if (!profile) redirect("/login");
+
+  // Insert new group join request
   await db.insert(groupJoinRequestTable).values({
     groupId,
-    profileId,
+    profileId: profile.id,
   });
 
   // Remove existing invite code
@@ -38,6 +52,30 @@ export async function handleRequestAction(
   action: "accept" | "reject"
 ) {
   const supabase = await createClient();
+
+  // Verify the caller is authenticated and is an admin (roleId 1 or 2) of this group
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Unauthorized" };
+
+  const [callerProfile] = await db
+    .select({ id: profileTable.id })
+    .from(profileTable)
+    .where(eq(profileTable.uuid, user.id));
+
+  if (!callerProfile) return { success: false, message: "Unauthorized" };
+
+  const [membership] = await db
+    .select({ roleId: profileGroupTable.roleId })
+    .from(profileGroupTable)
+    .where(
+      and(
+        eq(profileGroupTable.groupId, groupId),
+        eq(profileGroupTable.profileId, callerProfile.id),
+        inArray(profileGroupTable.roleId, [1, 2]),
+      ),
+    );
+
+  if (!membership) return { success: false, message: "Unauthorized" };
 
   const { error } = await supabase.rpc("approve_join_request", {
     p_req_id: profileId,

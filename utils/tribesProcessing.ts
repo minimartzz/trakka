@@ -1,5 +1,4 @@
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
+import { type GameSession, type TribeMember } from "@/types/tribes";
 import { compGameLogTable, SelectCompGameLog } from "@/db/schema/compGameLog";
 import { SelectGame } from "@/db/schema/game";
 import { profileTable, SelectProfile } from "@/db/schema/profile";
@@ -30,6 +29,8 @@ export function processGameSessions(
         gameId: compGameLog.gameId,
         gameTitle: compGameLog.gameTitle,
         gameImageUrl: gameDetails?.imageUrl || null,
+        playingTime: gameDetails?.playingTime || null,
+        gameWeight: gameDetails?.weight || null,
         players: [],
       });
     }
@@ -87,6 +88,9 @@ export function processMembersWithStats(
       lastName: member.profile?.lastName || "",
       image: member.profile?.image || null,
       roleId: member.profileGroup.roleId,
+      joinedAt: member.profileGroup.createdAt
+        ? member.profileGroup.createdAt.toISOString()
+        : null,
       gamesPlayed,
       wins,
       winRate,

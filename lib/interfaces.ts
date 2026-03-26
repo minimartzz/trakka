@@ -16,6 +16,7 @@ export interface SessionDataInterface {
   gameId: number;
   createdAt: Date;
   numPlayers: number;
+  rowId: number;
   tribeId: string;
   tribeName: string;
   profileId: number;
@@ -35,6 +36,7 @@ export interface SessionDataInterface {
 
 // Formatted player in each session
 export interface SessionPlayer {
+  rowId: number;
   profileId: number;
   firstName: string;
   lastName: string;

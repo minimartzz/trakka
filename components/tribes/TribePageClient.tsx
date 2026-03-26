@@ -3,9 +3,9 @@
 import dynamic from "next/dynamic";
 import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
-import TribeHomeTab, { GameSession } from "./TribeHomeTab";
-import { TribeMember } from "./TribePlayersTab";
+import TribeHomeTab from "./TribeHomeTab";
 import TabSkeleton from "./TabSkeleton";
+import { type GameSession, type TribeMember, type TribeAdmin, type HistStatsInterface } from "@/types/tribes";
 
 // Lazy load tab components that aren't immediately visible
 const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
@@ -15,22 +15,6 @@ const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
 const TribeGamesTab = dynamic(() => import("./TribeGamesTab"), {
   loading: () => <TabSkeleton />,
 });
-
-interface TribeAdmin {
-  profileGroup: {
-    id: number;
-    profileId: number;
-    groupId: string;
-    roleId: number;
-  };
-  profile: {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-  } | null;
-}
 
 interface TribePageClientProps {
   tribeId: string;
@@ -47,6 +31,7 @@ interface TribePageClientProps {
   userId: number;
   members: TribeMember[];
   sessions: GameSession[];
+  histStats: HistStatsInterface;
 }
 
 /**
@@ -74,9 +59,10 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   userId,
   members,
   sessions,
+  histStats,
 }) => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen mb-20">
       {/* Tribe Header */}
       <TribeHeader
         tribeId={tribeId}
@@ -100,9 +86,18 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             sessions={sessions}
             memberCount={memberCount}
             currentUserId={userId}
+            histStats={histStats}
           />
         }
-        playersContent={<TribePlayersTab members={members} />}
+        playersContent={
+          <TribePlayersTab
+            members={members}
+            sessions={sessions}
+            histStats={histStats}
+            userId={userId}
+            groupId={tribeId}
+          />
+        }
         gamesContent={<TribeGamesTab sessions={sessions} />}
       />
     </div>

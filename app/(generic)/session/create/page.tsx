@@ -150,7 +150,11 @@ const Page = () => {
         let position: number;
         if (idx === 0) {
           position = 1;
-        } else if (player.score === array[idx - 1].score) {
+        } else if (
+          player.score === array[idx - 1].score &&
+          player.isTie &&
+          player.isTie === array[idx - 1].isTie
+        ) {
           const firstMatch = array.findIndex((p) => p.score === player.score);
           position = firstMatch + 1;
         } else {
