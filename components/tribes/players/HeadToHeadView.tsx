@@ -419,84 +419,92 @@ const WinStreakCard: React.FC<{
       >
         {/* ── FRONT ──── */}
         <div
-          className="absolute inset-0 rounded-xl overflow-hidden border-2 bg-slate-300 dark:bg-slate-900"
+          className="absolute inset-0 rounded-xl overflow-hidden border-2 bg-card flex flex-col"
           style={{
             backfaceVisibility: "hidden",
-            borderColor: `${streakColor}80`,
+            borderColor: `${streakColor}50`,
           }}
         >
-          {/* Background */}
+          {/* Ambient radial glow at top */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              background: `linear-gradient(135deg, ${streakColor}40 0%, ${streakColor}15 50%, transparent 100%)`,
+              background: `radial-gradient(ellipse 90% 55% at 50% 0%, ${streakColor}18, transparent)`,
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-          {/* Title badge */}
+          {/* Badge */}
           <div
-            className="absolute top-0 left-0 right-0 py-1.5 flex items-center justify-center gap-1.5"
-            style={{ backgroundColor: `${streakColor}CC` }}
+            className="flex items-center justify-center gap-1.5 py-1.5 shrink-0 border-b"
+            style={{
+              backgroundColor: `${streakColor}12`,
+              borderColor: `${streakColor}25`,
+            }}
           >
-            <Flame className="w-3 h-3 text-white" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-foreground">
+            <Flame className="w-3 h-3" style={{ color: streakColor }} />
+            <span
+              className="text-[10px] font-black uppercase tracking-widest"
+              style={{ color: streakColor }}
+            >
               Current Win Streak
             </span>
           </div>
 
-          {/* Player name + username — top left below badge */}
+          {/* Player identity */}
           {streakPlayer ? (
-            <div className="absolute top-9 left-3 flex items-center gap-2">
-              <Avatar className="w-9 h-9 rounded-lg shrink-0">
+            <div className="flex items-center gap-3 px-4 pt-3 shrink-0">
+              <Avatar
+                className="w-11 h-11 rounded-xl shrink-0"
+                style={{ boxShadow: `0 0 0 2px ${streakColor}55` }}
+              >
                 <AvatarImage
                   src={streakPlayer.image || ""}
                   alt={streakPlayer.username}
                   className="object-cover"
                 />
                 <AvatarFallback
-                  className="text-sm font-black rounded-lg"
+                  className="rounded-xl text-base font-black"
                   style={{
-                    backgroundColor: `${streakColor}40`,
+                    backgroundColor: `${streakColor}20`,
                     color: streakColor,
                   }}
                 >
                   {streakPlayer.firstName[0]}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="text-sm font-bold text-foreground leading-tight">
+              <div className="min-w-0">
+                <p className="font-bold text-sm text-foreground leading-tight truncate">
                   {streakPlayer.firstName} {streakPlayer.lastName}
                 </p>
-                <p className="text-[10px] text-foreground/50">
+                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
                   @{streakPlayer.username}
                 </p>
               </div>
             </div>
           ) : (
-            <div className="absolute top-9 left-3">
-              <p className="text-sm font-bold text-white/50 leading-tight">
+            <div className="px-4 pt-3 shrink-0">
+              <p className="text-sm font-bold text-muted-foreground">
                 No active streak
               </p>
             </div>
           )}
 
-          {/* Streak number — centred */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {/* Streak number — hero element */}
+          <div className="flex-1 flex flex-col items-center justify-center">
             <p
-              className="text-6xl font-black leading-none tabular-nums"
+              className="text-7xl font-black tabular-nums leading-none"
               style={{ color: streakColor }}
             >
               {streak?.streak ?? "—"}
             </p>
-            <p className="text-[10px] text-foreground/50 mt-1.5 uppercase tracking-wider">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1.5">
               win streak
             </p>
           </div>
 
           {!flipped && (
-            <div className="absolute bottom-2.5 right-2.5 text-white/30">
-              <RotateCcw className="w-3 h-3" />
+            <div className="absolute bottom-2.5 right-2.5">
+              <RotateCcw className="w-3 h-3 text-muted-foreground/30" />
             </div>
           )}
         </div>
