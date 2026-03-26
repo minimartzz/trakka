@@ -47,7 +47,7 @@ export default function Error({
         <Button
           onClick={() => {
             setIsLoading(true);
-            router.push("/dashboard");
+            router.push("/");
           }}
           className="bg-accent-5/90 hover:bg-accent-5"
         >

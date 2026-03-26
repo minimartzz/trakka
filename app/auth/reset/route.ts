@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -8,8 +7,13 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/";
+
+  // Prevent open redirect: only allow relative paths that start with / but not //
+  // (double-slash would allow protocol-relative URLs like //evil.com)
+  const safePath = /^\/(?!\/)/.test(next) ? next : "/";
+
   const redirectTo = request.nextUrl.clone();
-  redirectTo.pathname = next;
+  redirectTo.pathname = safePath;
 
   if (token_hash && type) {
     const supabase = await createClient();

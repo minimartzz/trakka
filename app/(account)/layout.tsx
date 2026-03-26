@@ -9,19 +9,15 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { SelectGroup } from "@/db/schema/group";
-import { SelectProfileGroup } from "@/db/schema/profileGroup";
+import { groupTable } from "@/db/schema/group";
+import { profileGroupTable } from "@/db/schema/profileGroup";
+import { db } from "@/utils/db";
 import fetchUser from "@/utils/fetchServerUser";
+import { eq } from "drizzle-orm";
 import { Play } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
-interface ProfileGroups {
-  profile_group: SelectProfileGroup;
-  group: SelectGroup;
-}
-const baseUrl = process.env.BASE_URL;
 
 export default async function AccountLayout({
   children,
@@ -38,18 +34,21 @@ export default async function AccountLayout({
     redirect("/login");
   }
 
-  // Get users groups
-  const response = await fetch(`${baseUrl}/api/group?profileId=${user.id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch groups: ${response.statusText}`);
-  }
-  const out = await response.json();
-  const groups = out.map((item: ProfileGroups) => {
-    return {
+  // Get user's groups directly from DB
+  const groupRows = await db
+    .select({ profile_group: profileGroupTable, group: groupTable })
+    .from(profileGroupTable)
+    .leftJoin(groupTable, eq(profileGroupTable.groupId, groupTable.id))
+    .where(eq(profileGroupTable.profileId, user.id));
+  const groups = groupRows
+    .filter((item) => item.group !== null)
+    .map((item) => ({
       ...item.profile_group,
       ...item.group,
-    };
-  });
+      id: String(item.group!.id),
+      name: item.group!.name ?? "",
+      image: item.group!.image ?? "",
+    }));
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
