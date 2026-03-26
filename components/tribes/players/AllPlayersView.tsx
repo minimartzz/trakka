@@ -16,9 +16,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
-import { HistStatsInterface } from "@/components/tribes/TribePageClient";
+import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
 import { calculateBadges, BadgeInfo } from "@/utils/playerStatsCalculations";
 import PlayerBadge from "./PlayerBadge";
 

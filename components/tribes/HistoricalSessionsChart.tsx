@@ -22,7 +22,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { GameSession } from "@/components/tribes/TribeHomeTab";
+import { type GameSession } from "@/types/tribes";
 import {
   COMPLEXITY_COLORS,
   getCssVar,

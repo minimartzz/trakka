@@ -1,21 +1,7 @@
 "use client";
 
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { HistStatsInterface } from "@/components/tribes/TribePageClient";
 import PlayerSubTabs from "@/components/tribes/players/PlayerSubTabs";
-
-export interface TribeMember {
-  profileId: number;
-  username: string;
-  firstName: string;
-  lastName: string;
-  image: string | null;
-  roleId: number;
-  joinedAt: string | null;
-  gamesPlayed: number;
-  wins: number;
-  winRate: number;
-}
+import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
 
 interface TribePlayersTabProps {
   members: TribeMember[];

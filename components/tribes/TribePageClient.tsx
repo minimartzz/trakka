@@ -3,12 +3,9 @@
 import dynamic from "next/dynamic";
 import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
-import TribeHomeTab, { GameSession } from "./TribeHomeTab";
-import { TribeMember } from "./TribePlayersTab";
+import TribeHomeTab from "./TribeHomeTab";
 import TabSkeleton from "./TabSkeleton";
-import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
-import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
-import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import { type GameSession, type TribeMember, type TribeAdmin, type HistStatsInterface } from "@/types/tribes";
 
 // Lazy load tab components that aren't immediately visible
 const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
@@ -18,28 +15,6 @@ const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
 const TribeGamesTab = dynamic(() => import("./TribeGamesTab"), {
   loading: () => <TabSkeleton />,
 });
-
-interface TribeAdmin {
-  profileGroup: {
-    id: number;
-    profileId: number;
-    groupId: string;
-    roleId: number;
-  };
-  profile: {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-  } | null;
-}
-
-export interface HistStatsInterface {
-  rollingStats: SelectRollingPlayerStats[];
-  dailyPlayerStats: SelectHistDailyPlayerStats[];
-  monthlyPlayerStats: SelectHistMonthlyPlayerStats[];
-}
 
 interface TribePageClientProps {
   tribeId: string;

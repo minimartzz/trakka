@@ -1,5 +1,4 @@
-import { GameSession } from "@/components/tribes/TribeHomeTab";
-import { TribeMember } from "@/components/tribes/TribePlayersTab";
+import { type GameSession, type TribeMember } from "@/types/tribes";
 import { compGameLogTable, SelectCompGameLog } from "@/db/schema/compGameLog";
 import { SelectGame } from "@/db/schema/game";
 import { profileTable, SelectProfile } from "@/db/schema/profile";

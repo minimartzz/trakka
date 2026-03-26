@@ -14,25 +14,9 @@ import { motion } from "motion/react";
 import { TrendingUp, ChevronDown, Calendar, Users, Trophy } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 
-export interface GameSession {
-  sessionId: string;
-  datePlayed: string;
-  gameId: number;
-  gameTitle: string;
-  gameImageUrl: string | null;
-  players: {
-    profileId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    image: string | null;
-    isWinner: boolean;
-    position: number;
-    score: number | null;
-  }[];
-}
+import { type GameSession, type TimeFilter } from "@/types/tribes";
 
-export interface LeaderboardPlayer {
+interface LeaderboardPlayer {
   id: number;
   username: string;
   firstName: string;
@@ -42,13 +26,7 @@ export interface LeaderboardPlayer {
   wins: number;
 }
 
-export type ViewType = "active" | "winners";
-export type TimeFilter =
-  | "today"
-  | "past_week"
-  | "past_month"
-  | "past_year"
-  | "all_time";
+type ViewType = "active" | "winners";
 
 interface PlayerLeaderboardProps {
   sessions: GameSession[];

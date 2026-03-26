@@ -14,13 +14,7 @@ import { Dices } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
-export interface PopularGame {
-  gameId: string;
-  gameTitle: string;
-  playCount: number;
-  lastPlayed: string;
-  imageUrl?: string | null;
-}
+import { type PopularGame } from "@/types/tribes";
 
 interface PopularGamesCarouselProps {
   games: PopularGame[];
