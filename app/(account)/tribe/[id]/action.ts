@@ -9,9 +9,22 @@ import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { db } from "@/utils/db";
+import { createClient } from "@/utils/supabase/server";
 import { and, eq } from "drizzle-orm";
 
+// Verifies the current session and returns the Supabase user. Throws if unauthenticated.
+async function requireAuth() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  return user;
+}
+
 export async function getTribeMembers(groupId: string) {
+  await requireAuth();
+
   const members = await db
     .select({
       profileGroup: profileGroupTable,
@@ -25,6 +38,8 @@ export async function getTribeMembers(groupId: string) {
 }
 
 export async function getTribeDetails(groupId: string) {
+  await requireAuth();
+
   const tribeDetails = await db
     .select()
     .from(groupTable)
@@ -35,38 +50,7 @@ export async function getTribeDetails(groupId: string) {
 }
 
 export async function getTribeGameSessions(groupId: string) {
-  // const categories = db
-  //   .select({
-  //     gameId: juncGameCategoryTable.gameId,
-  //     category: gameCategoryTable.category,
-  //   })
-  //   .from(juncGameCategoryTable)
-  //   .leftJoin(
-  //     gameCategoryTable,
-  //     eq(juncGameCategoryTable.categoryId, gameCategoryTable.id),
-  //   );
-
-  // const families = db
-  //   .select({
-  //     gameId: juncGameFamilyTable.gameId,
-  //     family: gameFamilyTable.family,
-  //   })
-  //   .from(juncGameFamilyTable)
-  //   .leftJoin(
-  //     gameFamilyTable,
-  //     eq(juncGameFamilyTable.familyId, gameFamilyTable.id),
-  //   );
-
-  // const mechanics = db
-  //   .select({
-  //     gameId: juncGameMechanicTable.gameId,
-  //     mechanic: gameMechanicTable.mechanic,
-  //   })
-  //   .from(juncGameMechanicTable)
-  //   .leftJoin(
-  //     gameMechanicTable,
-  //     eq(juncGameMechanicTable.mechanicId, gameMechanicTable.id),
-  //   );
+  await requireAuth();
 
   const sessions = await db
     .select({
@@ -89,6 +73,8 @@ export async function getRollingPlayerStats(params?: {
   groupId?: string;
   profileId?: number;
 }) {
+  await requireAuth();
+
   const conditions = [];
 
   if (params?.profileId) {
@@ -110,6 +96,8 @@ export async function getDailyPlayerStats(params?: {
   groupId?: string;
   profileId?: number;
 }) {
+  await requireAuth();
+
   const conditions = [];
 
   if (params?.profileId) {
@@ -131,6 +119,8 @@ export async function getMonthlyPlayerStats(params?: {
   groupId?: string;
   profileId?: number;
 }) {
+  await requireAuth();
+
   const conditions = [];
 
   if (params?.profileId) {
