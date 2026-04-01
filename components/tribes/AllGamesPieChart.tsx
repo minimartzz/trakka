@@ -241,7 +241,7 @@ const AllGamesPieChart: React.FC<AllGamesPieChartProps> = ({
             </div>
           ) : (
             <div className="h-[250px] w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={pieData}

@@ -244,7 +244,7 @@ const WpaChart: React.FC<WpaChartProps> = ({
 
       <CardContent className="pt-2 px-2 pb-5">
         <div className="h-[220px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart
               data={filteredData}
               margin={{ top: 10, right: 16, bottom: 0, left: 0 }}

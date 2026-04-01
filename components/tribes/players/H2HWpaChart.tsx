@@ -275,7 +275,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
 
       <CardContent className="pt-0 px-2 pb-5">
         <div className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <ComposedChart
               data={filteredData}
               margin={{ top: chartTopMargin, right: 16, bottom: 0, left: 0 }}
