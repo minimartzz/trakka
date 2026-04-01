@@ -206,12 +206,13 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                         )}
                       <span>{item.name}</span>
                     </div>
-                    {!showCollapsedView && numTribeRequests(requests, item.id) > 0 && (
-                      <span className="flex h-2.5 w-2.5 items-center justify-center">
-                        <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-destructive opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-                      </span>
-                    )}
+                    {!showCollapsedView &&
+                      numTribeRequests(requests, item.id) > 0 && (
+                        <span className="flex h-2.5 w-2.5 items-center justify-center">
+                          <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-destructive opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                        </span>
+                      )}
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
