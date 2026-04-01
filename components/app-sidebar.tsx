@@ -69,10 +69,10 @@ const items = {
 // Functions
 const numTribeRequests = (
   allRequests: TribeRequest[],
-  tribeId: string
+  tribeId: string,
 ): number => {
   const filteredRequests = allRequests.filter(
-    (req) => req.data.group_id === tribeId
+    (req) => req.data.group_id === tribeId,
   );
 
   return filteredRequests.length;
@@ -184,7 +184,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
             </SidebarGroupLabel>
             <CollapsibleContent
               className={cn(
-                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
               )}
             >
               {tribes.map((item) => (
@@ -206,6 +206,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                             alt="Group Icon"
                             fill
                             className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           />
                         </div>
                         {isCollapsed &&
