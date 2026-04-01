@@ -85,6 +85,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const showCollapsedView = isCollapsed && !sidebar.isMobile;
   const [isTribesOpen, setIsTribesOpen] = useState<boolean>(true);
   const [requests, setRequests] = useState<TribeRequest[]>([]);
+  const [tribeSearch, setTribeSearch] = useState<string>("");
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -134,8 +135,10 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search"
+                placeholder="Search Tribes"
                 className="pl-10 bg-slate-900 border-slate-600 text-slate-300 placeholder-slate-400"
+                value={tribeSearch}
+                onChange={(e) => setTribeSearch(e.target.value)}
               />
             </div>
           </div>
@@ -187,7 +190,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                 "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
               )}
             >
-              {tribes.map((item) => (
+              {tribes.filter((item) => item.name.toLowerCase().includes(tribeSearch.toLowerCase())).map((item) => (
                 <SidebarMenuItem className="pt-1" key={item.id}>
                   <SidebarMenuButton
                     className={
