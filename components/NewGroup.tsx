@@ -63,6 +63,7 @@ interface NewGroupProps {
     username: string;
   };
   className?: string;
+  label?: string;
 }
 
 const groupId = uuidv4();
@@ -192,7 +193,7 @@ const PlayerCard = ({
   );
 };
 
-const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
+const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [groupPictureUrl, setGroupPictureUrl] = useState<string | null>(null);
   const [selectablePlayers, setSelectablePlayers] = useState<
@@ -297,6 +298,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className }) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger className={`${className}`}>
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
+        {label && <span>{label}</span>}
       </DialogTrigger>
       <DialogContent className="p-4 sm:p-6 w-[95%] sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
