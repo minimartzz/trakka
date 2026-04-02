@@ -41,7 +41,10 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
         setSearch("");
       }
@@ -68,7 +71,10 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
         {selectedMember ? (
           <>
             <Avatar className="w-7 h-7">
-              <AvatarImage src={selectedMember.image || ""} alt={selectedMember.username} />
+              <AvatarImage
+                src={selectedMember.image || ""}
+                alt={selectedMember.username}
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {selectedMember.firstName[0]}
               </AvatarFallback>
@@ -80,14 +86,16 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
               className="w-4 h-4 text-muted-foreground hover:text-foreground shrink-0"
               onClick={(e) => {
                 e.stopPropagation();
-                onSelect(members[0]?.profileId ?? 0);
+                onSelect(0);
               }}
             />
           </>
         ) : (
           <>
             <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span className="flex-1 text-sm text-muted-foreground">{placeholder}</span>
+            <span className="flex-1 text-sm text-muted-foreground">
+              {placeholder}
+            </span>
             <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
           </>
         )}
@@ -133,7 +141,10 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
                   )}
                 >
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={member.image || ""} alt={member.username} />
+                    <AvatarImage
+                      src={member.image || ""}
+                      alt={member.username}
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
                       {member.firstName[0]}
                     </AvatarFallback>
@@ -142,7 +153,9 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
                     <p className="text-sm font-medium truncate">
                       {member.firstName} {member.lastName}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">@{member.username}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      @{member.username}
+                    </p>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">
                     {member.gamesPlayed} games
