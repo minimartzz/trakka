@@ -138,7 +138,16 @@ const PlayerSessionSelection = ({
 
       {/* Player Details */}
       <div className="flex flex-col gap-2 mt-3">
-        {players.map((player, idx) => (
+        {players.map((player, idx) => {
+          const selectedProfileIds = new Set(
+            players
+              .filter((p) => p.id !== player.id && p.profileId !== 0)
+              .map((p) => p.profileId),
+          );
+          const availablePlayers = selectablePlayers.filter(
+            (p) => !selectedProfileIds.has(p.profileId),
+          );
+          return (
           <Card
             key={player.id}
             className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
@@ -170,7 +179,7 @@ const PlayerSessionSelection = ({
                     Player Name
                   </Label>
                   <PlayerInput
-                    selectablePlayers={selectablePlayers}
+                    selectablePlayers={availablePlayers}
                     playerId={player.id}
                     playerSelect={handleUpdates}
                   />
@@ -227,7 +236,8 @@ const PlayerSessionSelection = ({
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add Players Button - at Bottom */}
