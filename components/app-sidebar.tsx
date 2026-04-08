@@ -196,7 +196,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       </div>
-                      {isCollapsed &&
+                      {showCollapsedView &&
                         numTribeRequests(requests, item.id) > 0 && (
                           <span className="absolute bottom-5 -right-1 flex h-2.5 w-2.5 items-center justify-center">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
@@ -205,7 +205,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                         )}
                       <span>{item.name}</span>
                     </div>
-                    {numTribeRequests(requests, item.id) > 0 && (
+                    {!showCollapsedView && numTribeRequests(requests, item.id) > 0 && (
                       <span className="flex h-2.5 w-2.5 items-center justify-center">
                         <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-destructive opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
