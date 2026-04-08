@@ -174,6 +174,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
             .filter((item) =>
               item.name.toLowerCase().includes(tribeSearch.toLowerCase()),
             )
+            .sort((a, b) => a.name.localeCompare(b.name))
             .map((item) => (
               <SidebarMenuItem className="pt-1" key={item.id}>
                 <SidebarMenuButton
