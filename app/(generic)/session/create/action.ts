@@ -159,6 +159,7 @@ export async function submitNewSession(payload: CompGameLog[]) {
       groupId: log.groupId,
       rollingScore: log.score!,
       sessionsPlayed: 1,
+      sessionsWon: log.isWinner ? 1 : 0,
       latestSession: log.datePlayed,
     }));
 
@@ -173,6 +174,7 @@ export async function submitNewSession(payload: CompGameLog[]) {
         set: {
           rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
           sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + 1`,
+          sessionsWon: sql`${rollingPlayerStatsTable.sessionsWon} + EXCLUDED.sessions_won`,
           latestSession: sql`EXCLUDED.latest_session`,
         },
       });

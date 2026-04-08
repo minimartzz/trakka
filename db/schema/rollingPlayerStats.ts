@@ -18,6 +18,7 @@ export const rollingPlayerStatsTable = pgTable(
     groupId: uuid("group_id").notNull(),
     sessionsPlayed: integer("sessions_played").notNull().default(0),
     rollingScore: real("rolling_score").notNull().default(0.0),
+    sessionsWon: integer("sessions_won").notNull().default(0),
     latestSession: date("latest_session").notNull(),
   },
   (t) => [

@@ -18,6 +18,7 @@ export const histDailyPlayerStatsTable = pgTable("hist_daily_player_stats", {
   groupId: uuid("group_id").notNull(),
   sessionsPlayed: integer("sessions_played").notNull().default(1),
   score: real("score").notNull().default(0.0),
+  winRate: real("win_rate").notNull().default(0.0),
   snapshotDate: date("snapshot_date").notNull(),
   year: smallint("year").notNull(),
   month: smallint("month").notNull(),
