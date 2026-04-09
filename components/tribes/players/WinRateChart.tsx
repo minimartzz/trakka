@@ -11,38 +11,51 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
-import { DailyWinRate } from "@/utils/playerStatsCalculations";
+import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
+import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 import { getCssVar } from "@/utils/chartHelpers";
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface WinRateChartProps {
-  data: DailyWinRate[];
+  dailyStats: SelectHistDailyPlayerStats[];
+  monthlyStats: SelectHistMonthlyPlayerStats[];
+  rollingStats: SelectRollingPlayerStats[];
+  profileId: number;
+  groupId: string;
   className?: string;
+}
+
+interface WinRatePoint {
+  date: string; // YYYY-MM-DD
+  label: string;
+  winRate: number; // percentage 0-100
+  sessionsPlayed: number;
 }
 
 type Period = "1D" | "5D" | "1M" | "3M" | "6M" | "1Y" | "ALL";
 const PERIODS: Period[] = ["1D", "5D", "1M", "3M", "6M", "1Y", "ALL"];
+const DAILY_PERIODS = new Set<Period>(["1D", "5D", "1M", "3M"]);
 
 const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Filter data to last N calendar days from the most recent data point
-function filterByDays(data: DailyWinRate[], days: number): DailyWinRate[] {
+const periodDays: Record<Period, number | null> = {
+  "1D": 1,
+  "5D": 5,
+  "1M": 30,
+  "3M": 90,
+  "6M": 180,
+  "1Y": 365,
+  ALL: null,
+};
+
+function filterByDays(data: WinRatePoint[], days: number): WinRatePoint[] {
   if (data.length === 0) return data;
   const latest = new Date(data[data.length - 1].date);
   const cutoff = new Date(latest);
@@ -51,9 +64,8 @@ function filterByDays(data: DailyWinRate[], days: number): DailyWinRate[] {
   return data.filter((d) => new Date(d.date) >= cutoff);
 }
 
-// Format date label based on how much data we're showing
 function formatLabel(dateStr: string, period: Period): string {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + "T12:00:00");
   if (period === "1D" || period === "5D") {
     return `${DAY_NAMES[d.getDay()]} ${d.getDate()}`;
   }
@@ -68,11 +80,11 @@ const CustomTooltip = ({
   payload,
 }: {
   active?: boolean;
-  payload?: Array<{ payload: DailyWinRate & { label: string } }>;
+  payload?: Array<{ payload: WinRatePoint }>;
 }) => {
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
-  const dateObj = new Date(d.date);
+  const dateObj = new Date(d.date + "T12:00:00");
   const label = dateObj.toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
@@ -84,20 +96,25 @@ const CustomTooltip = ({
       <div className="space-y-0.5 text-xs">
         <div className="flex justify-between gap-4">
           <span className="text-muted-foreground">Win Rate</span>
-          <span className="font-semibold">{d.winRate}%</span>
+          <span className="font-semibold">{d.winRate.toFixed(1)}%</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-muted-foreground">Record</span>
-          <span>
-            {d.wins}W / {d.gamesPlayed}G
-          </span>
+          <span className="text-muted-foreground">Sessions</span>
+          <span>{d.sessionsPlayed}</span>
         </div>
       </div>
     </div>
   );
 };
 
-const WinRateChart: React.FC<WinRateChartProps> = ({ data, className }) => {
+const WinRateChart: React.FC<WinRateChartProps> = ({
+  dailyStats,
+  monthlyStats,
+  rollingStats,
+  profileId,
+  groupId,
+  className,
+}) => {
   const [lineColor, setLineColor] = useState("#22c55e");
   const [period, setPeriod] = useState<Period>("1M");
 
@@ -106,29 +123,86 @@ const WinRateChart: React.FC<WinRateChartProps> = ({ data, className }) => {
     if (color) setLineColor(color);
   }, []);
 
+  // Build daily data points from histDailyPlayerStats
+  const allDailyData = useMemo((): WinRatePoint[] => {
+    return dailyStats
+      .filter(
+        (s) =>
+          s.profileId === profileId &&
+          s.groupId === groupId &&
+          s.sessionsPlayed > 0,
+      )
+      .sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate))
+      .map((s) => ({
+        date: s.snapshotDate,
+        label: "",
+        winRate: s.winRate,
+        sessionsPlayed: s.sessionsPlayed,
+      }));
+  }, [dailyStats, profileId, groupId]);
+
+  // Build monthly data points from histMonthlyPlayerStats
+  const allMonthlyData = useMemo((): WinRatePoint[] => {
+    return monthlyStats
+      .filter(
+        (s) =>
+          s.profileId === profileId &&
+          s.groupId === groupId &&
+          s.sessionsPlayed > 0,
+      )
+      .sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate))
+      .map((s) => ({
+        date: s.snapshotDate,
+        label: "",
+        winRate: s.winRate,
+        sessionsPlayed: s.sessionsPlayed,
+      }));
+  }, [monthlyStats, profileId, groupId]);
+
+  // Append today from rolling stats if not already present in the base dataset
+  const dailyWithToday = useMemo((): WinRatePoint[] => {
+    const today = new Date().toISOString().slice(0, 10);
+    const rolling = rollingStats.find(
+      (s) => s.profileId === profileId && s.groupId === groupId,
+    );
+    if (rolling && rolling.sessionsPlayed > 0) {
+      const lastDate = allDailyData[allDailyData.length - 1]?.date ?? "";
+      if (lastDate < today) {
+        return [
+          ...allDailyData,
+          {
+            date: today,
+            label: "",
+            winRate:
+              Math.round(
+                (rolling.sessionsWon / rolling.sessionsPlayed) * 1000,
+              ) / 10, // e.g. 0.667 -> 66.7
+            sessionsPlayed: rolling.sessionsPlayed,
+          },
+        ];
+      }
+    }
+    return allDailyData;
+  }, [allDailyData, rollingStats, profileId, groupId]);
+
   const filteredData = useMemo(() => {
-    const periodDays: Record<Period, number | null> = {
-      "1D": 1,
-      "5D": 5,
-      "1M": 30,
-      "3M": 90,
-      "6M": 180,
-      "1Y": 365,
-      ALL: null,
-    };
+    const useMonthly = !DAILY_PERIODS.has(period);
+    const baseData = useMonthly ? allMonthlyData : dailyWithToday;
     const days = periodDays[period];
-    const filtered = days ? filterByDays(data, days) : data;
+    const filtered = days ? filterByDays(baseData, days) : baseData;
     return filtered.map((d) => ({ ...d, label: formatLabel(d.date, period) }));
-  }, [data, period]);
+  }, [allMonthlyData, dailyWithToday, period]);
 
   const latestValue = filteredData[filteredData.length - 1]?.winRate ?? null;
   const firstValue = filteredData[0]?.winRate ?? null;
   const change =
     latestValue !== null && firstValue !== null && filteredData.length > 1
-      ? latestValue - firstValue
+      ? parseFloat((latestValue - firstValue).toFixed(1))
       : null;
 
-  if (data.length === 0) {
+  const hasData = allDailyData.length > 0 || allMonthlyData.length > 0;
+
+  if (!hasData) {
     return (
       <Card className={className}>
         <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground h-[300px]">
@@ -171,7 +245,7 @@ const WinRateChart: React.FC<WinRateChartProps> = ({ data, className }) => {
             className="px-3 py-1.5 rounded-lg border-2 font-black text-2xl tabular-nums"
             style={{ borderColor: lineColor, color: lineColor }}
           >
-            {latestValue !== null ? `${latestValue}%` : "—"}
+            {latestValue !== null ? `${latestValue.toFixed(1)}%` : "—"}
           </div>
           {change !== null && change !== 0 && (
             <div className="flex flex-col">

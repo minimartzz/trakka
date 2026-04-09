@@ -884,7 +884,13 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
           >
-            <WinRateChart data={winRateOverTime} />
+            <WinRateChart
+              dailyStats={histStats.dailyPlayerStats}
+              monthlyStats={histStats.monthlyPlayerStats}
+              rollingStats={histStats.rollingStats}
+              profileId={activePlayerId}
+              groupId={groupId}
+            />
           </motion.div>
 
           <motion.div
