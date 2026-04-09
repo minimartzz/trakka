@@ -13,10 +13,10 @@ import {
   YAxis,
   CartesianGrid,
   ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   Cell,
 } from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 
 interface GameSession {
   sessionId: string;
@@ -220,12 +220,12 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
   sessions,
   delay = 0,
 }) => {
+  const [containerRef, { width, height }] = useContainerSize();
   const [activePlayer, setActivePlayer] = useState<number | null>(null);
   const [isTouchInteraction, setIsTouchInteraction] = useState(false);
   const [playerPositions, setPlayerPositions] = useState<
     Record<number, { x: number; y: number }>
   >({});
-  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const handlePlayerHover = useCallback((profileId: number | null) => {
     // Only handle hover on non-touch devices
@@ -350,7 +350,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
             </div>
           ) : (
             <div
-              ref={chartContainerRef}
+              ref={containerRef}
               className="h-[300px] w-full touch-none relative"
               onClick={handleChartClick}
             >
@@ -423,101 +423,101 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
                     })()}
                   </div>
                 )}
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <ScatterChart
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              <ScatterChart
+                width={width}
+                height={height}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                {/* Gridlines */}
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--accent)" />
+                <XAxis
+                  type="number"
+                  dataKey="avgComplexity"
+                  domain={[0, 5]}
+                  ticks={[0, 1, 2, 2.5, 3, 4, 5]}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--foreground)",
+                  }}
+                  axisLine={{
+                    stroke: "var(--foreground)",
+                    strokeWidth: 1,
+                  }}
+                  tickLine={{ stroke: "var(--foreground)" }}
+                  label={{
+                    value: "Avg Complexity",
+                    position: "bottom",
+                    offset: 0,
+                    style: {
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fill: "var(--foreground)",
+                    },
+                  }}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="winRate"
+                  domain={[0, 100]}
+                  ticks={[0, 25, 50, 75, 100]}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--foreground)",
+                  }}
+                  axisLine={{
+                    stroke: "var(--foreground)",
+                    strokeWidth: 1,
+                  }}
+                  tickLine={{ stroke: "var(--foreground)" }}
+                  label={{
+                    value: "Win Rate %",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 10,
+                    style: {
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fill: "var(--foreground)",
+                      textAnchor: "middle",
+                    },
+                  }}
+                />
+                {/* Bold center crosshair lines */}
+                <ReferenceLine
+                  x={2.5}
+                  stroke="var(--foreground)"
+                  strokeWidth={2}
+                  strokeOpacity={0.7}
+                />
+                <ReferenceLine
+                  y={50}
+                  stroke="var(--foreground)"
+                  strokeWidth={2}
+                  strokeOpacity={0.7}
+                />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={false}
+                  wrapperStyle={{ zIndex: 100 }}
+                  active={activePlayer !== null}
+                />
+                <Scatter
+                  data={playerData}
+                  shape={(props) => (
+                    <CustomDot
+                      {...props}
+                      activePlayer={activePlayer}
+                      onPlayerClick={handlePlayerClick}
+                      onPlayerHover={handlePlayerHover}
+                      onPositionUpdate={handlePositionUpdate}
+                    />
+                  )}
                 >
-                  {/* Gridlines */}
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--accent)" />
-                  <XAxis
-                    type="number"
-                    dataKey="avgComplexity"
-                    domain={[0, 5]}
-                    ticks={[0, 1, 2, 2.5, 3, 4, 5]}
-                    tick={{
-                      fontSize: 11,
-                      fill: "var(--foreground)",
-                    }}
-                    axisLine={{
-                      stroke: "var(--foreground)",
-                      strokeWidth: 1,
-                    }}
-                    tickLine={{ stroke: "var(--foreground)" }}
-                    label={{
-                      value: "Avg Complexity",
-                      position: "bottom",
-                      offset: 0,
-                      style: {
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fill: "var(--foreground)",
-                      },
-                    }}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="winRate"
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    tick={{
-                      fontSize: 11,
-                      fill: "var(--foreground)",
-                    }}
-                    axisLine={{
-                      stroke: "var(--foreground)",
-                      strokeWidth: 1,
-                    }}
-                    tickLine={{ stroke: "var(--foreground)" }}
-                    label={{
-                      value: "Win Rate %",
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: 10,
-                      style: {
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fill: "var(--foreground)",
-                        textAnchor: "middle",
-                      },
-                    }}
-                  />
-                  {/* Bold center crosshair lines */}
-                  <ReferenceLine
-                    x={2.5}
-                    stroke="var(--foreground)"
-                    strokeWidth={2}
-                    strokeOpacity={0.7}
-                  />
-                  <ReferenceLine
-                    y={50}
-                    stroke="var(--foreground)"
-                    strokeWidth={2}
-                    strokeOpacity={0.7}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={false}
-                    wrapperStyle={{ zIndex: 100 }}
-                    active={activePlayer !== null}
-                  />
-                  <Scatter
-                    data={playerData}
-                    shape={(props) => (
-                      <CustomDot
-                        {...props}
-                        activePlayer={activePlayer}
-                        onPlayerClick={handlePlayerClick}
-                        onPlayerHover={handlePlayerHover}
-                        onPositionUpdate={handlePositionUpdate}
-                      />
-                    )}
-                  >
-                    {playerData.map((entry) => (
-                      <Cell key={entry.profileId} />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
+                  {playerData.map((entry) => (
+                    <Cell key={entry.profileId} />
+                  ))}
+                </Scatter>
+              </ScatterChart>
             </div>
           )}
         </CardContent>
