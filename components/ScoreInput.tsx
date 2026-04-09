@@ -1,5 +1,5 @@
 "use client";
-import { Player } from "@/app/(generic)/session/create/page";
+import { Player } from "@/components/SessionForm";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import React, { useState } from "react";
@@ -7,10 +7,11 @@ import React, { useState } from "react";
 interface ScoreInputProps {
   playerId: string;
   updateScore: (id: string, updates: Partial<Player>) => void;
+  initialValue?: number | null;
 }
 
-const ScoreInput = ({ playerId, updateScore }: ScoreInputProps) => {
-  const [input, setInput] = useState("");
+const ScoreInput = ({ playerId, updateScore, initialValue }: ScoreInputProps) => {
+  const [input, setInput] = useState(initialValue != null ? String(initialValue) : "");
   // const [isValid, setIsValid] = useState(true);
 
   // // Validation - null or integer

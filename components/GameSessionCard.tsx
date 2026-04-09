@@ -5,13 +5,15 @@ import { GroupedSession } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { format } from "date-fns";
-import { Medal, Trophy, User, Users, Weight } from "lucide-react";
+import { Medal, Pencil, Trophy, User, Users, Weight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 interface GameSessionsCardProps {
   userId: number;
   session: GroupedSession;
+  canEdit?: boolean;
 }
 interface VariantAndColourInterface {
   variant:
@@ -39,6 +41,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     tribe,
     rating,
   },
+  canEdit = false,
 }) => {
   const playerDetails = players.find((player) => player.profileId === userId);
   const position = playerDetails?.position;
@@ -113,7 +116,17 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
             </div>
           </div>
           <div className="flex flex-col items-end gap-5">
-            <div className="ml-4 flex-shrink-0">{getResultsBadge()}</div>
+            <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+              {canEdit && (
+                <Link
+                  href={`/session/edit/${sessionId}`}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Link>
+              )}
+              {getResultsBadge()}
+            </div>
 
             {/* Session Rating */}
             <StarRating

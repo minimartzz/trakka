@@ -26,12 +26,13 @@ type RecentUsedTribes = Awaited<ReturnType<typeof getRecentUsedTribes>>[number];
 interface GroupSearchBarProps {
   profileId: number;
   onSelect: (item: SessionTribe) => void;
+  initialTribeId?: string;
 }
 
-const GroupSearchBar = ({ profileId, onSelect }: GroupSearchBarProps) => {
+const GroupSearchBar = ({ profileId, onSelect, initialTribeId }: GroupSearchBarProps) => {
   const [tribes, setTribes] = useState<Tribes[]>([]);
   const [recentTribes, setRecentTribes] = useState<RecentUsedTribes[]>([]);
-  const [selectedTribe, setSelectedTribe] = useState("");
+  const [selectedTribe, setSelectedTribe] = useState(initialTribeId ?? "");
   const slots = [0, 1, 2];
 
   useEffect(() => {

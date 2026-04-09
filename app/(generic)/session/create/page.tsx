@@ -1,30 +1,12 @@
 "use client";
 import {
-  getSelectablePlayers,
   notifyPlayersOfSession,
   submitNewSession,
   upsertGameDetails,
 } from "@/app/(generic)/session/create/action";
 import useAuth from "@/app/hooks/useAuth";
-import BGGSearchBar from "@/components/BGGSearchBar";
-import GroupSearchBar, { SessionTribe } from "@/components/GroupSearchBar";
-import PlayerSessionSelection from "@/components/PlayerSessionSelection";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import SessionForm, { Player } from "@/components/SessionForm";
+import { SessionTribe } from "@/components/GroupSearchBar";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import {
   generateSessionId,
@@ -34,86 +16,42 @@ import {
   getWinContrib,
 } from "@/utils/sessionLog";
 import { format } from "date-fns";
-import { ArrowLeft, CalendarIcon } from "lucide-react";
-import Form from "next/form";
 import { useRouter } from "nextjs-toploader/app";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { toast } from "sonner";
 
-type selectablePlayersType = Awaited<
-  ReturnType<typeof getSelectablePlayers>
->[number];
-
-export interface Player extends selectablePlayersType {
-  id: string;
-  score: number | null;
-  isWinner: boolean;
-  isTie: boolean;
-}
+// Re-export Player type for backwards compatibility
+export type { Player } from "@/components/SessionForm";
 
 const Page = () => {
-  const firstUpdate = useRef(true);
-  // Calendar controls
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const router = useRouter();
+  const { user, authLoading } = useAuth();
 
-  // Game details
-  const [gameDetails, setGameDetails] = useState<BGGDetailsInterface | null>(
-    null,
-  );
+  if (authLoading || !user) {
+    return;
+  }
 
-  // Tribe details
-  const [tribe, setTribe] = useState<SessionTribe | null>(null);
+  const handleSubmit = async (data: {
+    date: Date;
+    gameDetails: BGGDetailsInterface;
+    tribe: SessionTribe;
+    players: Player[];
+  }) => {
+    const { date, gameDetails, tribe, players: submittingPlayers } = data;
 
-  // Player details
-  const [selectablePlayers, setSelectablePlayers] = useState<
-    selectablePlayersType[]
-  >([]);
-  const [submittingPlayers, setSubmittingPlayers] = useState<Player[]>([
-    {
-      id: "1",
-      profileId: 0,
-      firstName: "",
-      lastName: "",
-      username: "",
-      profilePic: "",
-      groupId: "",
-      score: null,
-      isWinner: false,
-      isTie: false,
-    },
-    {
-      id: "2",
-      profileId: 0,
-      firstName: "",
-      lastName: "",
-      username: "",
-      profilePic: "",
-      groupId: "",
-      score: null,
-      isWinner: false,
-      isTie: false,
-    },
-  ]);
-
-  const handleSubmit = async (formData: FormData) => {
     // Initial Checks
-    // Check 1: If no game was selected
     if (!gameDetails) {
       toast.error("No game selected.");
       return;
     }
-    // Check 2: If no date was selected
     if (!date) {
       toast.error("No date was selected.");
       return;
     }
-    // Check 3: No tribe was selected
     if (!tribe) {
       toast.error("No tribe was selected.");
       return;
     }
-    // Check 4: No player names
     const missingPlayers = submittingPlayers
       .map((player, idx) => (player.firstName === "" ? idx + 1 : null))
       .filter((idx): idx is number => idx !== null);
@@ -122,7 +60,6 @@ const Page = () => {
       toast.error(`Missing player info at position ${missingPositions}.`);
       return;
     }
-    // Check 5: Ensure at least 1 winner
     const containWinner = submittingPlayers.some((player) => player.isWinner);
     if (!containWinner) {
       toast.error("At least one winner must be selected.");
@@ -140,10 +77,9 @@ const Page = () => {
     };
     const numPlayers = submittingPlayers.length;
     const groupId = tribe.id;
-    const isVp = true; // TODO: This needs to change eventually for non-VP games
+    const isVp = true;
     const dateInfo = getDateInfo(date);
 
-    // Create the payload
     let payload = null;
     try {
       const promises = submittingPlayers.map(async (player, idx, array) => {
@@ -182,7 +118,7 @@ const Page = () => {
           position: position,
           winContrib: getWinContrib(numPlayers, player.isWinner),
           score: score,
-          highScore: false, // TODO: Need to think of a new way to handle this
+          highScore: false,
           ...dateInfo,
           isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
@@ -200,7 +136,6 @@ const Page = () => {
 
     if (payload) {
       try {
-        // Upsert game details and submit session in parallel
         const [gameUpsertResponse, sessionResponse] = await Promise.all([
           upsertGameDetails(gameDetails),
           submitNewSession(payload),
@@ -215,7 +150,6 @@ const Page = () => {
             "Failed to submit new session. Please check fields and try again.",
           );
         } else {
-          // After: Notify players of new session
           try {
             const sessionNotification = payload.map((player) => ({
               type: "new_session",
@@ -246,122 +180,14 @@ const Page = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchPlayerDetails = async (tribeId: string) => {
-      try {
-        const response = await getSelectablePlayers(tribeId);
-        setSelectablePlayers(response);
-      } catch (error) {
-        console.error("Failed to retrieve selectable players:", error);
-      }
-    };
-
-    // Prevents running function on mount
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-      return;
-    }
-
-    if (tribe?.id) {
-      fetchPlayerDetails(tribe.id);
-    } else {
-      setSelectablePlayers([]);
-    }
-  }, [tribe]);
-
-  const router = useRouter();
-
-  // Get current user details
-  const { user, authLoading } = useAuth();
-  if (authLoading || !user) {
-    return;
-  }
-
-  const handleCalendarSelect = (selectedDate: Date | undefined) => {
-    setDate(selectedDate);
-    if (selectedDate) {
-      setIsCalendarOpen(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header bar */}
-      <header className="flex flex-row items-center w-full gap-4 p-5 border-b">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">New Game Session</h1>
-      </header>
-      <div className="container mx-auto px-4 py-20">
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl">Record Game Session</CardTitle>
-            <CardDescription>Track a new board game session</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form action={handleSubmit} className="space-y-6">
-              {/* Calendar Date Selection */}
-              <div className="space-y-2">
-                <Label className="pb-1">Date Played</Label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : "Please select a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="bg-background rounded-2xl border w-auto p-2 mt-2 z-10"
-                    align="start"
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={handleCalendarSelect}
-                      className="rounded-md bg-background"
-                      captionLayout="dropdown"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Game Selection */}
-              <div className="space-y-2">
-                <Label>Game Title</Label>
-                <BGGSearchBar onSelect={setGameDetails} />
-              </div>
-
-              {/* Tribe Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="tribe">Tribe</Label>
-                <GroupSearchBar profileId={user.id} onSelect={setTribe} />
-              </div>
-
-              {/* Player Selection */}
-              <div className="space-y-2">
-                <Label>Players</Label>
-                <div className="text-xs text-muted-foreground">
-                  Select player from the dropdown if they have an account.
-                  Position follows order.
-                </div>
-                <PlayerSessionSelection
-                  selectablePlayers={selectablePlayers}
-                  players={submittingPlayers}
-                  setPlayers={setSubmittingPlayers}
-                />
-              </div>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <SessionForm
+      userId={user.id}
+      title="New Game Session"
+      cardTitle="Record Game Session"
+      cardDescription="Track a new board game session"
+      onSubmit={handleSubmit}
+    />
   );
 };
 
