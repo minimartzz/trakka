@@ -1,41 +1,21 @@
 "use client";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import React, { useEffect, useMemo, useState } from "react";
-import DateRangePicker from "./DateRangePicker";
 import { DateRange } from "react-day-picker";
+import { endOfDay, isWithinInterval, subMonths, subYears } from "date-fns";
+import { motion } from "motion/react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import MeepleIcon from "../icons/MeepleIcon";
-import { Trophy, Users } from "lucide-react";
-import { topGames, topOpponents } from "@/utils/dashboardProcessing";
+  TrendingUp,
+  Trophy,
+  Users,
+  Dices,
+  Gamepad2,
+  Swords,
+  Library,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
-import {
-  format,
-  isWithinInterval,
-  endOfDay,
-  subMonths,
-  subYears,
-} from "date-fns";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -44,131 +24,52 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
+import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
+import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+import StatCard from "@/components/tribes/StatCard";
+import MeepleIcon from "@/components/icons/MeepleIcon";
 import DotsIcon from "@/components/icons/DotsIcon";
+import DateRangePicker from "./DateRangePicker";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TimeFilteredPerformanceProps {
   userId: number;
   recentActivity: GroupedSession[];
   sessions: SessionDataInterface[];
+  rollingStats: SelectRollingPlayerStats[];
 }
 
-interface MetricCardProps {
-  title: string;
-  Icon: React.ComponentType<any>;
-  value: string;
-}
+type Timeframe =
+  | "1month"
+  | "3months"
+  | "6months"
+  | "1year"
+  | "3years"
+  | "all"
+  | "custom";
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, Icon, value }) => {
-  return (
-    <Card className="w-full">
-      <CardHeader className="flex justify-between items-center">
-        <CardTitle>{title}</CardTitle>
-        <Icon className="w-6 h-6 stroke-black dark:stroke-white" />
-      </CardHeader>
-      <CardContent className="text-3xl font-bold">{value}</CardContent>
-    </Card>
-  );
+const TIMEFRAME_LABELS: Record<Exclude<Timeframe, "custom">, string> = {
+  "1month": "1M",
+  "3months": "3M",
+  "6months": "6M",
+  "1year": "1Y",
+  "3years": "3Y",
+  all: "ALL",
 };
 
-interface RecentActivityCardProps {
-  title: string;
-  userId: number;
-  players: {
-    username: string;
-    profilePic: string;
-    isWinner: boolean | null;
-    profileId: number;
-    position: number | null;
-  }[];
-  date: string;
-  isWinner: boolean;
-  isLoser: boolean;
-  isTied: boolean;
-}
-const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
-  title,
-  userId,
-  players,
-  date,
-  isWinner,
-  isTied,
-  isLoser,
-}) => {
-  const dateObject = new Date(date);
-  const formattedDate = format(dateObject, "dd MMM yyyy");
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-  // Get players position
-  const playerDetails = players.find((player) => player.profileId === userId);
-  const position = playerDetails?.position;
-  const positionWithSuffix = positionOrdinalSuffix(position!);
-
-  return (
-    <div className="flex justify-between items-center mb-4">
-      <div className="flex-col">
-        <h4 className="text-md font-semibold">{title}</h4>
-        <div className="flex -space-x-1 mt-2">
-          {players.map((player) => (
-            <Tooltip key={player.username}>
-              <TooltipTrigger asChild>
-                <Avatar
-                  className={cn(
-                    "w-6 h-6",
-                    player.isWinner &&
-                      "ring-2 ring-offset-2 ring-chart-2 transition-all duration-300",
-                  )}
-                >
-                  <AvatarImage
-                    src={player.profilePic}
-                    className={cn(
-                      "object-cover w-full h-full",
-                      !player.isWinner && "grayscale",
-                    )}
-                  />
-                  <AvatarFallback>P</AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent>{player.username}</TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">{formattedDate}</p>
-      </div>
-      <div className="flex items-center gap-x-3">
-        {isTied && (
-          <span className="flex items-center text-base leading-none">🤝</span>
-        )}
-        {isWinner ? (
-          <Badge
-            variant="default"
-            className="bg-green-600 font-bold text-white"
-          >
-            <DotsIcon value={players.length} />
-            {positionWithSuffix}
-          </Badge>
-        ) : isLoser ? (
-          <Badge variant="destructive" className="font-bold">
-            <DotsIcon value={players.length} />
-            {positionWithSuffix}
-          </Badge>
-        ) : (
-          <Badge
-            variant="default"
-            className="bg-orange-400 font-bold text-white"
-          >
-            <DotsIcon value={players.length} />
-            {positionWithSuffix}
-          </Badge>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Helper functions
 const calculateStartDate = (timeframe: string): Date => {
   const today = endOfDay(new Date());
-
   switch (timeframe) {
     case "1month":
       return subMonths(today, 1);
@@ -181,27 +82,61 @@ const calculateStartDate = (timeframe: string): Date => {
     case "3years":
       return subYears(today, 3);
     default:
-      return subYears(today, 1); // Default to 1 year
+      return subYears(today, 1);
   }
 };
+
+const formatRelativeDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+// ─── Section Header (matches TribeHomeTab pattern) ────────────────────────────
+
+const SectionHeader: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  delay?: number;
+}> = ({ icon, title, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay }}
+    className="flex items-center gap-2 mb-4"
+  >
+    {icon}
+    <h2 className="text-lg font-semibold">{title}</h2>
+  </motion.div>
+);
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
   userId,
   recentActivity,
   sessions,
+  rollingStats,
 }) => {
-  const [timeframe, setTimeframe] = useState<string>("1year");
+  const [timeframe, setTimeframe] = useState<Timeframe>("1year");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
 
-  // Prevents the timeframe from being active when date range is selected
   useEffect(() => {
     if (dateRange?.from && dateRange.to) {
       setTimeframe("custom");
     }
   }, [dateRange]);
+
+  // ── Filtered activities ───────────────────────────────────────────────────
 
   const filteredActivities = useMemo(() => {
     const activitiesWithDates = recentActivity.map((activity) => ({
@@ -212,14 +147,10 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     let finalFromDate: Date | undefined;
     let finalToDate: Date | undefined;
 
-    // Date Range priority 1
     if (dateRange?.from && dateRange.to) {
       finalFromDate = dateRange.from;
       finalToDate = endOfDay(dateRange.to);
-    }
-
-    // Timeframe priority 2
-    else if (timeframe !== "custom" && timeframe !== "all") {
+    } else if (timeframe !== "custom" && timeframe !== "all") {
       finalFromDate = calculateStartDate(timeframe);
       finalToDate = endOfDay(new Date());
     } else {
@@ -235,54 +166,78 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       );
     }
 
-    const activitiesWithDatesTop = activitiesWithDates.slice(0, 5);
-
-    return activitiesWithDatesTop;
+    return activitiesWithDates;
   }, [recentActivity, timeframe, dateRange]);
 
+  // ── Derived stats ─────────────────────────────────────────────────────────
+
   const { top5Players, topGamesStats } = useMemo(() => {
-    const sessionsWithDates = sessions.map((session) => ({
-      ...session,
-      parsedDate: new Date(session.datePlayed),
+    const sessionsWithDates = sessions.map((s) => ({
+      ...s,
+      parsedDate: new Date(s.datePlayed),
     }));
 
     let finalFromDate: Date | undefined;
     let finalToDate: Date | undefined;
 
-    // Date Range priority 1
     if (dateRange?.from && dateRange.to) {
       finalFromDate = dateRange.from;
       finalToDate = endOfDay(dateRange.to);
-    }
-
-    // Timeframe priority 2
-    else if (timeframe !== "custom" && timeframe !== "all") {
+    } else if (timeframe !== "custom" && timeframe !== "all") {
       finalFromDate = calculateStartDate(timeframe);
       finalToDate = endOfDay(new Date());
     } else {
       const topPlayers = topOpponents(userId, sessionsWithDates);
-      const topGamesStats = topGames(userId, sessionsWithDates);
-      const top5Players = topPlayers.slice(0, 5);
-      return { top5Players, topGamesStats };
+      const tg = topGames(userId, sessionsWithDates);
+      return { top5Players: topPlayers.slice(0, 5), topGamesStats: tg };
     }
 
-    const filteredSessions = sessionsWithDates.filter((session) =>
-      isWithinInterval(session.parsedDate, {
+    const filtered = sessionsWithDates.filter((s) =>
+      isWithinInterval(s.parsedDate, {
         start: finalFromDate!,
         end: finalToDate!,
       }),
     );
+    const topPlayers = topOpponents(userId, filtered);
+    const tg = topGames(userId, filtered);
+    return { top5Players: topPlayers.slice(0, 5), topGamesStats: tg };
+  }, [sessions, userId, timeframe, dateRange]);
 
-    const topPlayers = topOpponents(userId, filteredSessions);
-    const topGamesStats = topGames(userId, filteredSessions);
-    const top5Players = topPlayers.slice(0, 5);
+  // ── Metric calculations ───────────────────────────────────────────────────
 
-    return { top5Players, topGamesStats };
-  }, [sessions, timeframe, dateRange]);
+  const gamesPlayed = filteredActivities.length;
+  const uniqueGames = new Set(filteredActivities.map((a) => a.gameId)).size;
 
-  const handleTimeframeChange = (value: string) => {
+  // Rolling stats aggregated across all groups
+  const totalSessionsPlayed = rollingStats.reduce(
+    (sum, s) => sum + s.sessionsPlayed,
+    0,
+  );
+  const totalSessionsWon = rollingStats.reduce(
+    (sum, s) => sum + s.sessionsWon,
+    0,
+  );
+  const totalRollingScore = rollingStats.reduce(
+    (sum, s) => sum + s.rollingScore,
+    0,
+  );
+
+  // Win Rate: total sessionsWon / total sessionsPlayed, rounded to nearest whole number
+  const winRate =
+    totalSessionsPlayed > 0
+      ? Math.round((totalSessionsWon / totalSessionsPlayed) * 100)
+      : 0;
+
+  // WPA: total rollingScore / total sessionsPlayed, rounded to 2 decimal places
+  const wpa =
+    totalSessionsPlayed > 0
+      ? Math.round((totalRollingScore / totalSessionsPlayed) * 100) / 100
+      : 0;
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleTimeframeChange = (value: Timeframe) => {
     setTimeframe(value);
-
     if (value !== "custom") {
       setDateRange({ from: undefined, to: undefined });
     }
@@ -290,156 +245,415 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
-
     if (range?.from && range?.to) {
       setTimeframe("custom");
     }
   };
 
-  return (
-    <div>
-      {/* Timeframe selection */}
-      <div className="flex flex-col sm:flex-row gap-y-3 sm:gap-x-3 items-start sm:items-center justify-start text-muted-foreground">
-        <div className="flex items-center gap-x-3">
-          <p>Timeframe:</p>
-          <Select value={timeframe} onValueChange={handleTimeframeChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="1month">1 month</SelectItem>
-                <SelectItem value="3months">3 months</SelectItem>
-                <SelectItem value="6months">6 months</SelectItem>
-                <SelectItem value="1year">1 year</SelectItem>
-                <SelectItem value="3years">3 years</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+  // ── Empty state ───────────────────────────────────────────────────────────
+
+  if (sessions.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="text-center py-20"
+      >
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+          <Dices className="w-8 h-8 text-muted-foreground" />
         </div>
-        <div className="flex items-center gap-x-3 mt-3 sm:pl-0 sm:mt-0">
-          <span>or</span>
+        <h3 className="text-lg font-medium mb-2">No Games Recorded Yet</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto">
+          Start logging game sessions to see your performance statistics.
+        </p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* ── Timeframe filter bar ─────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex flex-col sm:flex-row sm:items-center gap-3"
+      >
+        <div className="flex items-center gap-0.5 rounded-lg border bg-muted/30 p-1">
+          {(
+            Object.entries(TIMEFRAME_LABELS) as [
+              Exclude<Timeframe, "custom">,
+              string,
+            ][]
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => handleTimeframeChange(key)}
+              className={cn(
+                "text-sm font-semibold px-2.5 py-1 rounded-md transition-colors",
+                timeframe === key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">or</span>
           <DateRangePicker date={dateRange} setDate={handleDateRangeChange} />
         </div>
-      </div>
+      </motion.div>
 
-      {/* General Metrics */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:gap-x-4 gap-y-5 my-8">
-        <MetricCard
-          title="Games Played"
-          Icon={MeepleIcon}
-          value={String(filteredActivities.length)}
+      {/* ── Section: Key Stats ───────────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          icon={<TrendingUp className="w-5 h-5 text-primary" />}
+          title="Overview"
+          delay={0.05}
         />
-        <MetricCard title="Win Rate" Icon={Trophy} value="-" />
-        <Card className="w-full">
-          <CardHeader className="flex justify-between items-center">
-            <CardTitle>Top 5 Opponents</CardTitle>
-            <Users className="w-6 h-6 stroke-black dark:stroke-white" />
-          </CardHeader>
-          <CardContent>
-            <ul>
-              {top5Players ? (
-                top5Players.map((user, idx) => (
-                  <li
-                    key={user.player.id}
-                    className="flex justify-between items-center mb-1"
-                  >
-                    <p className="text-sm">
-                      {`${idx + 1}. ${user.player.firstName}`}{" "}
-                      <span className="text-muted-foreground text-sm">{`(${user.player.username})`}</span>
-                    </p>
-                    <p className="text-sm">{`${user.count} games`}</p>
-                  </li>
-                ))
-              ) : (
-                <p>No games found</p>
-              )}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Games Played"
+            value={gamesPlayed}
+            icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            color="bg-linear-to-br from-accent-3 to-accent-1"
+            delay={0.1}
+          />
+          <StatCard
+            title="Unique Games"
+            value={uniqueGames}
+            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            color="bg-linear-to-bl from-accent-4 to-accent-2"
+            delay={0.15}
+          />
+          <StatCard
+            title="Win Rate"
+            value={gamesPlayed > 0 ? winRate : "-"}
+            suffix={gamesPlayed > 0 ? "%" : ""}
+            icon={<Trophy className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            color="bg-linear-to-bl from-accent-1 to-accent-3"
+            delay={0.2}
+          />
+          <StatCard
+            title="WPA"
+            value={gamesPlayed > 0 ? wpa : "-"}
+            suffix=""
+            icon={<Swords className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            color="bg-linear-to-br from-accent-2 to-accent-4"
+            delay={0.25}
+          />
+        </div>
+      </section>
 
-      {/* Recent Activity & Game Performance */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch my-8 sm:gap-x-4 gap-y-5">
-        <Card className="w-full mb-3">
-          <CardHeader>
-            <CardTitle className="text-2xl">Recent Activity</CardTitle>
-            <CardDescription>Your last 5 gaming sessions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {filteredActivities.slice(0, 5).map((session) => (
-              <RecentActivityCard
-                userId={userId}
-                key={session.sessionId}
-                title={session.gameTitle}
-                players={session.players}
-                date={session.datePlayed}
-                isTied={session.isTied}
-                isWinner={session.isWinner}
-                isLoser={session.isLoser}
-              />
-            ))}
-          </CardContent>
-        </Card>
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-2xl">Game Performance</CardTitle>
-            <CardDescription>
-              Performance of your top 10 most played games
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-full min-w-[120px]">Game</TableHead>
-                  <TableHead className="text-center w-[100px] sm:w-[150px] sm:pr-10">
-                    No. of Plays
-                  </TableHead>
-                  <TableHead className="text-right w-[80px]">Win %</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topGamesStats.slice(0, 10).map((game) => (
-                  <TableRow key={game.game.gameId}>
-                    <TableCell className="max-w-[120px] sm:max-w-none">
-                      <div className="overflow-x-auto whitespace-nowarp no-scrollbar font-medium">
-                        {game.game.gameTitle}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="hidden sm:flex h-2 w-full overflow-hidden rounded-full bg-red-500 shadow-inner">
-                        <div
-                          className="bg-green-600 transition-all duration-500 ease-out"
-                          style={{ width: `${game.winRate}%` }}
-                          title={`Wins: ${game.wins}`}
-                        ></div>
-                      </div>
-                      <div className="hidden sm:flex justify-between text-xs pt-1 text-muted-foreground">
-                        <span className="text-[10px]">Wins: {game.wins}</span>
-                        <span className="text-[10px]">
-                          Losses: {game.count - game.wins}
+      {/* ── Section: Recent Activity + Top Opponents ─────────────────────── */}
+      <section>
+        <SectionHeader
+          icon={<Dices className="w-5 h-5 text-primary" />}
+          title="Recent Activity"
+          delay={0.25}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Recent sessions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="lg:col-span-2"
+          >
+            <Card className="h-full">
+              <CardContent className="p-0">
+                {filteredActivities.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <Dices className="w-10 h-10 mb-2 opacity-50" />
+                    <p className="text-sm">No sessions in this period</p>
+                  </div>
+                ) : (
+                  <div className="max-h-[420px] overflow-y-auto overflow-x-auto no-scrollbar">
+                    <Table>
+                      <TableHeader className="sticky top-0 z-10 bg-card">
+                        <TableRow>
+                          <TableHead className="w-[80px]">Date</TableHead>
+                          <TableHead>Game</TableHead>
+                          <TableHead>Tribe</TableHead>
+                          <TableHead className="hidden sm:table-cell text-center">
+                            Players
+                          </TableHead>
+                          <TableHead className="text-right">Result</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredActivities.slice(0, 15).map((session) => {
+                          const playerDetails = session.players.find(
+                            (p) => p.profileId === userId,
+                          );
+                          const position = playerDetails?.position;
+                          const posText = position
+                            ? positionOrdinalSuffix(position)
+                            : "—";
+
+                          return (
+                            <TableRow
+                              key={session.sessionId}
+                              className="hover:bg-muted/50 transition-colors"
+                            >
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                {formatRelativeDate(session.datePlayed)}
+                              </TableCell>
+                              <TableCell>
+                                <span
+                                  className="font-medium truncate max-w-[140px] block"
+                                  title={session.gameTitle}
+                                >
+                                  {session.gameTitle}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm text-muted-foreground truncate max-w-[80px] sm:max-w-none block">
+                                  {session.tribe}
+                                </span>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell text-center">
+                                <div className="flex justify-center -space-x-1.5">
+                                  {session.players.slice(0, 4).map((p) => (
+                                    <Tooltip key={p.profileId}>
+                                      <TooltipTrigger asChild>
+                                        <Avatar
+                                          className={cn(
+                                            "w-6 h-6 ring-2 ring-background",
+                                            p.isWinner && "ring-accent-1",
+                                          )}
+                                        >
+                                          <AvatarImage
+                                            src={p.profilePic}
+                                            className={cn(
+                                              "object-cover",
+                                              !p.isWinner && "grayscale",
+                                            )}
+                                          />
+                                          <AvatarFallback className="text-[10px] bg-muted">
+                                            {p.firstName[0]}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {p.firstName} {p.isWinner && "👑"}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  ))}
+                                  {session.players.length > 4 && (
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-[10px] font-medium ring-2 ring-background">
+                                      +{session.players.length - 4}
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {session.isTied && (
+                                    <span className="text-xs">🤝</span>
+                                  )}
+                                  {session.isWinner ? (
+                                    <Badge className="bg-accent-1/15 text-accent-1 border-accent-1/30 hover:bg-accent-1/20">
+                                      <DotsIcon
+                                        value={session.players.length}
+                                        className="[&_[data-dot]]:bg-current"
+                                      />
+                                      {posText}
+                                    </Badge>
+                                  ) : session.isLoser ? (
+                                    <Badge
+                                      variant="destructive"
+                                      className="font-semibold"
+                                    >
+                                      <DotsIcon
+                                        value={session.players.length}
+                                      />
+                                      {posText}
+                                    </Badge>
+                                  ) : session.isPlayer ? (
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                                    >
+                                      <DotsIcon
+                                        value={session.players.length}
+                                        className="[&_[data-dot]]:bg-current"
+                                      />
+                                      {posText}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      —
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Top Opponents */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.35 }}
+            className="lg:col-span-1"
+          >
+            <Card className="h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                    <Users className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Top Opponents</h3>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {top5Players.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    No games found
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {top5Players.map((opponent, idx) => (
+                      <li
+                        key={opponent.player.id}
+                        className="flex items-center gap-3"
+                      >
+                        <span className="text-sm font-semibold text-muted-foreground w-5 text-center font-display">
+                          {idx + 1}
                         </span>
-                      </div>
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage
+                            src={opponent.player.profilePic}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {opponent.player.firstName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {opponent.player.firstName}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            @{opponent.player.username}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="font-semibold shrink-0"
+                        >
+                          {opponent.count}{" "}
+                          {opponent.count === 1 ? "game" : "games"}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
 
-                      {/* On Mobile: Show only number */}
-                      <div className="sm:hidden text-sm font-medium">
-                        {game.count}
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        "text-right font-semibold",
-                        game.winRate <= 50 ? "text-red-500" : "text-green-600",
-                      )}
-                    >{`${game.winRate}%`}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+      {/* ── Section: Game Performance ────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          icon={<Gamepad2 className="w-5 h-5 text-primary" />}
+          title="Game Performance"
+          delay={0.35}
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Card>
+            <CardContent className="p-0">
+              {topGamesStats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Gamepad2 className="w-10 h-10 mb-2 opacity-50" />
+                  <p className="text-sm">No games in this period</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10 text-center">#</TableHead>
+                        <TableHead>Game</TableHead>
+                        <TableHead className="text-center w-[100px]">
+                          Played
+                        </TableHead>
+                        <TableHead className="hidden sm:table-cell w-[200px]">
+                          W / L
+                        </TableHead>
+                        <TableHead className="text-right w-[80px]">
+                          Win %
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topGamesStats.slice(0, 10).map((game, idx) => (
+                        <TableRow key={game.game.gameId}>
+                          <TableCell className="text-center text-sm text-muted-foreground font-display font-semibold">
+                            {idx + 1}
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium truncate max-w-[180px] block">
+                              {game.game.gameTitle}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center font-semibold">
+                            {game.count}
+                          </TableCell>
+                          {/* Win/Loss bar — desktop only */}
+                          <TableCell className="hidden sm:table-cell">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2 rounded-full bg-destructive/20 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-accent-1 transition-all duration-500"
+                                  style={{ width: `${game.winRate}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap w-16 text-right">
+                                {game.wins}W / {game.count - game.wins}L
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell
+                            className={cn(
+                              "text-right font-bold",
+                              game.winRate >= 50
+                                ? "text-accent-1"
+                                : "text-destructive",
+                            )}
+                          >
+                            {game.winRate}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </section>
     </div>
   );
 };
