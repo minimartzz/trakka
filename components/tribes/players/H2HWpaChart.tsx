@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
@@ -249,7 +248,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-1 pt-4 px-5">
+      <CardHeader className="pb-1 pt-3 px-5">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest pt-0.5">
             WPA Over Time
@@ -271,9 +270,20 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
             ))}
           </div>
         </div>
+        {/* Legend — HTML so WPA value boxes can never overlap it */}
+        <div className="flex items-center gap-4 pt-1">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p1Color }} />
+            {p1Name}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p2Color }} />
+            {p2Name}
+          </span>
+        </div>
       </CardHeader>
 
-      <CardContent className="pt-0 px-2 pb-5">
+      <CardContent className="pt-0 px-2 pb-2">
         <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <ComposedChart
@@ -366,16 +376,6 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
                   strokeDasharray: "3 3",
                 }}
               />
-              <Legend
-                verticalAlign="top"
-                height={28}
-                iconType="circle"
-                iconSize={8}
-                formatter={(value: string) => (
-                  <span className="text-xs text-muted-foreground">{value}</span>
-                )}
-              />
-
               <Area
                 name={p1Name}
                 type="monotone"
