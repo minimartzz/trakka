@@ -106,7 +106,17 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
         {/* Header */}
         <div className="flex item-start justify-between mb-4">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold truncate mb-1">{gameTitle}</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg font-bold truncate">{gameTitle}</h3>
+              {canEdit && (
+                <Link
+                  href={`/session/edit/${sessionId}`}
+                  className="inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-colors flex-shrink-0"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </div>
             <div className="flex items-center gap-x-2 mb-1 text-muted-foreground">
               <Users className="w-4" />
               <p className="text-sm">{tribe}</p>
@@ -117,14 +127,6 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
           </div>
           <div className="flex flex-col items-end gap-5">
             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-              {canEdit && (
-                <Link
-                  href={`/session/edit/${sessionId}`}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Link>
-              )}
               {getResultsBadge()}
             </div>
 
