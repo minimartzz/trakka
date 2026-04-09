@@ -204,8 +204,8 @@ export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
   try {
     const gameId = parseInt(selectedGame.id);
 
-    // 1. Upsert the game record
-    await db
+    // 1. Upsert the game record — returns rows only if a new game was inserted
+    const inserted = await db
       .insert(gameTable)
       .values({
         id: gameId,
@@ -223,78 +223,84 @@ export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
         maxPlayingTime: parseInt(selectedGame.maxPlayingTime) || null,
         minAge: parseInt(selectedGame.minAge) || null,
       })
-      .onConflictDoNothing({ target: gameTable.id });
+      .onConflictDoNothing({ target: gameTable.id })
+      .returning({ id: gameTable.id });
 
-    // 2. Batch upsert categories
-    if (selectedGame.categories.length > 0) {
-      const categoryValues = selectedGame.categories.map((cat) => ({
-        id: parseInt(cat.id),
-        category: cat.name,
-      }));
-      await db
-        .insert(gameCategoryTable)
-        .values(categoryValues)
-        .onConflictDoNothing({ target: gameCategoryTable.id });
-    }
+    const isNewGame = inserted.length > 0;
 
-    // 3. Batch upsert families
-    if (selectedGame.families.length > 0) {
-      const familyValues = selectedGame.families.map((fam) => ({
-        id: parseInt(fam.id),
-        family: fam.name,
-      }));
-      await db
-        .insert(gameFamilyTable)
-        .values(familyValues)
-        .onConflictDoNothing({ target: gameFamilyTable.id });
-    }
+    // Only insert metadata and junction entries for new games
+    if (isNewGame) {
+      // 2. Batch upsert categories
+      if (selectedGame.categories.length > 0) {
+        const categoryValues = selectedGame.categories.map((cat) => ({
+          id: parseInt(cat.id),
+          category: cat.name,
+        }));
+        await db
+          .insert(gameCategoryTable)
+          .values(categoryValues)
+          .onConflictDoNothing({ target: gameCategoryTable.id });
+      }
 
-    // 4. Batch upsert mechanics
-    if (selectedGame.mechanics.length > 0) {
-      const mechanicValues = selectedGame.mechanics.map((mech) => ({
-        id: parseInt(mech.id),
-        mechanic: mech.name,
-      }));
-      await db
-        .insert(gameMechanicTable)
-        .values(mechanicValues)
-        .onConflictDoNothing({ target: gameMechanicTable.id });
-    }
+      // 3. Batch upsert families
+      if (selectedGame.families.length > 0) {
+        const familyValues = selectedGame.families.map((fam) => ({
+          id: parseInt(fam.id),
+          family: fam.name,
+        }));
+        await db
+          .insert(gameFamilyTable)
+          .values(familyValues)
+          .onConflictDoNothing({ target: gameFamilyTable.id });
+      }
 
-    // 5. Batch upsert junction table: game <-> categories
-    if (selectedGame.categories.length > 0) {
-      const juncCategoryValues = selectedGame.categories.map((cat) => ({
-        gameId: gameId,
-        categoryId: parseInt(cat.id),
-      }));
-      await db
-        .insert(juncGameCategoryTable)
-        .values(juncCategoryValues)
-        .onConflictDoNothing();
-    }
+      // 4. Batch upsert mechanics
+      if (selectedGame.mechanics.length > 0) {
+        const mechanicValues = selectedGame.mechanics.map((mech) => ({
+          id: parseInt(mech.id),
+          mechanic: mech.name,
+        }));
+        await db
+          .insert(gameMechanicTable)
+          .values(mechanicValues)
+          .onConflictDoNothing({ target: gameMechanicTable.id });
+      }
 
-    // 6. Batch upsert junction table: game <-> families
-    if (selectedGame.families.length > 0) {
-      const juncFamilyValues = selectedGame.families.map((fam) => ({
-        gameId: gameId,
-        familyId: parseInt(fam.id),
-      }));
-      await db
-        .insert(juncGameFamilyTable)
-        .values(juncFamilyValues)
-        .onConflictDoNothing();
-    }
+      // 5. Batch insert junction table: game <-> categories
+      if (selectedGame.categories.length > 0) {
+        const juncCategoryValues = selectedGame.categories.map((cat) => ({
+          gameId: gameId,
+          categoryId: parseInt(cat.id),
+        }));
+        await db
+          .insert(juncGameCategoryTable)
+          .values(juncCategoryValues)
+          .onConflictDoNothing();
+      }
 
-    // 7. Batch upsert junction table: game <-> mechanics
-    if (selectedGame.mechanics.length > 0) {
-      const juncMechanicValues = selectedGame.mechanics.map((mech) => ({
-        gameId: gameId,
-        mechanicId: parseInt(mech.id),
-      }));
-      await db
-        .insert(juncGameMechanicTable)
-        .values(juncMechanicValues)
-        .onConflictDoNothing();
+      // 6. Batch insert junction table: game <-> families
+      if (selectedGame.families.length > 0) {
+        const juncFamilyValues = selectedGame.families.map((fam) => ({
+          gameId: gameId,
+          familyId: parseInt(fam.id),
+        }));
+        await db
+          .insert(juncGameFamilyTable)
+          .values(juncFamilyValues)
+          .onConflictDoNothing();
+      }
+
+      // 7. Batch insert junction table: game <-> mechanics
+      if (selectedGame.mechanics.length > 0) {
+        const juncMechanicValues = selectedGame.mechanics.map((mech) => ({
+          gameId: gameId,
+          mechanicId: parseInt(mech.id),
+        }));
+        await db
+          .insert(juncGameMechanicTable)
+          .values(juncMechanicValues)
+          .onConflictDoNothing();
+      }
     }
 
     return { success: true };
