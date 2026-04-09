@@ -42,7 +42,7 @@ const DotsIcon = ({ value, className }: DiceIconProps) => {
           {[...Array(9)].map((_, i) => (
             <div key={i} className="flex items-center justify-center">
               {dotMapping[value]?.includes(i) && (
-                <div className="h-full w-full max-h-[5px] max-w-[5px] rounded-full bg-white" />
+                <div data-dot className="h-full w-full max-h-[5px] max-w-[5px] rounded-full bg-white" />
               )}
             </div>
           ))}
