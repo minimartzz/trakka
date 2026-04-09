@@ -22,6 +22,7 @@ export const filterSessionData = (
         createdAt: new Date(record.createdAt),
         numPlayers: record.numPlayers,
         tribe: record.tribeName,
+        tribeId: record.tribeId,
         players: [],
         isVp: record.isVp,
         isPlayer: false,

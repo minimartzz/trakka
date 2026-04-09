@@ -1,6 +1,6 @@
 "use client";
 
-import { Player } from "@/app/(generic)/session/create/page";
+import { Player } from "@/components/SessionForm";
 import { Input } from "@/components/ui/input";
 import {
   Popover,

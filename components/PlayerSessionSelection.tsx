@@ -1,6 +1,6 @@
 "use client";
 import { getSelectablePlayers } from "@/app/(generic)/session/create/action";
-import { Player } from "@/app/(generic)/session/create/page";
+import { Player } from "@/components/SessionForm";
 import PlayerInput from "@/components/PlayerInput";
 import ScoreInput from "@/components/ScoreInput";
 import { Button } from "@/components/ui/button";
@@ -182,6 +182,7 @@ const PlayerSessionSelection = ({
                     selectablePlayers={availablePlayers}
                     playerId={player.id}
                     playerSelect={handleUpdates}
+                    playerDetails={player.profileId !== 0 ? player : undefined}
                   />
                 </div>
 
@@ -192,6 +193,7 @@ const PlayerSessionSelection = ({
                     <ScoreInput
                       playerId={player.id}
                       updateScore={handleUpdates}
+                      initialValue={player.score}
                     />
                   </div>
 

@@ -59,6 +59,7 @@ export interface GroupedSession {
   createdAt: Date;
   numPlayers: number;
   tribe: string;
+  tribeId: string;
   players: SessionPlayer[];
   isVp: boolean;
   // Calculated fields
