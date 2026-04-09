@@ -73,7 +73,7 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
     userFirstName,
   }: HeaderContentProps) => {
     return userFirstName ? (
-      <h2 className="text-2xl sm:text-3xl font-lora font-semibold">
+      <h2 className="text-2xl sm:text-3xl font-heading font-semibold">
         {`Hi, ${userFirstName}`}
         <br />
         <span className="text-primary font-semibold">{inviteeFirstName}</span>
@@ -81,7 +81,7 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
         <span className="text-primary font-semibold">{inviteeGroupName}</span>
       </h2>
     ) : (
-      <h2 className="text-2xl sm:text-3xl font-lora font-semibold">
+      <h2 className="text-2xl sm:text-3xl font-heading font-semibold">
         Hello!
         <br />
         <span className="text-primary font-semibold">{inviteeFirstName}</span>

@@ -23,13 +23,11 @@ const Index = async () => {
       <section className="container mx-auto px-4 pt-42 pb-42">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tight text-foreground">
-              Game intelligence for
+            <h1 className="font-display text-5xl lg:text-7xl font-bold tracking-tight leading-tight text-foreground">
+              Game intelligence for{" "}
+              <span className="text-primary">board game enthusiasts</span>
             </h1>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tightpb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent pb-5">
-              board game enthusiasts
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mt-6">
               Professional board game tracking software that helps you make
               strategic decisions, backed by comprehensive analytics and powered
               by intelligent insights.
