@@ -100,7 +100,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           <SidebarMenuButton size="lg" className="ml-2" asChild>
             <a href={"/dashboard"}>
               <Image src={Logo} alt="logo" width={30} />
-              <span className="font-asimovian text-2xl">TRAKKA</span>
+              <span className="font-brand text-2xl">TRAKKA</span>
               <div>
                 <ActivityLog profileId={user.id} />
               </div>
@@ -111,7 +111,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
             <div className="flex items-center justify-between hover:bg-transparent">
               <a href={"/dashboard"} className="flex items-center gap-x-2">
                 <Image src={Logo} alt="logo" height={35} />
-                <span className="font-asimovian text-2xl">TRAKKA</span>
+                <span className="font-brand text-2xl">TRAKKA</span>
               </a>
               <div>
                 <ActivityLog profileId={user.id} />
