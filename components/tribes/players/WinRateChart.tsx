@@ -7,10 +7,10 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   ReferenceLine,
 } from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
 import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
@@ -40,8 +40,18 @@ const PERIODS: Period[] = ["1D", "5D", "1M", "3M", "6M", "1Y", "ALL"];
 const DAILY_PERIODS = new Set<Period>(["1D", "5D", "1M", "3M"]);
 
 const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -115,6 +125,7 @@ const WinRateChart: React.FC<WinRateChartProps> = ({
   groupId,
   className,
 }) => {
+  const [containerRef, { width, height }] = useContainerSize();
   const [lineColor, setLineColor] = useState("#22c55e");
   const [period, setPeriod] = useState<Period>("1M");
 
@@ -267,81 +278,75 @@ const WinRateChart: React.FC<WinRateChartProps> = ({
       </CardHeader>
 
       <CardContent className="pt-2 px-2 pb-5">
-        <div className="h-[220px] w-full">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <AreaChart
-              data={filteredData}
-              margin={{ top: 10, right: 16, bottom: 0, left: 0 }}
-            >
-              <defs>
-                <linearGradient
-                  id="winRateGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="5%" stopColor={lineColor} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                vertical={false}
-                strokeOpacity={0.6}
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-                padding={{ left: 12, right: 12 }}
-              />
-              <YAxis
-                domain={[
-                  (dataMin: number) => Math.max(0, Math.floor(dataMin - 10)),
-                  (dataMax: number) => Math.min(100, Math.ceil(dataMax + 10)),
-                ]}
-                tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${v}%`}
-                width={46}
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{
-                  stroke: lineColor,
-                  strokeWidth: 1,
-                  strokeDasharray: "3 3",
-                }}
-              />
-              {latestValue !== null && (
-                <ReferenceLine
-                  y={latestValue}
-                  stroke={lineColor}
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.4}
-                />
-              )}
-              <Area
-                type="monotone"
-                dataKey="winRate"
+        <div ref={containerRef} className="h-[220px] w-full">
+          <AreaChart
+            width={width}
+            height={height}
+            data={filteredData}
+            margin={{ top: 10, right: 16, bottom: 0, left: 0 }}
+          >
+            <defs>
+              <linearGradient id="winRateGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={lineColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--border)"
+              vertical={false}
+              strokeOpacity={0.6}
+            />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              padding={{ left: 12, right: 12 }}
+            />
+            <YAxis
+              domain={[
+                (dataMin: number) => Math.max(0, Math.floor(dataMin - 10)),
+                (dataMax: number) => Math.min(100, Math.ceil(dataMax + 10)),
+              ]}
+              tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `${v}%`}
+              width={46}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: lineColor,
+                strokeWidth: 1,
+                strokeDasharray: "3 3",
+              }}
+            />
+            {latestValue !== null && (
+              <ReferenceLine
+                y={latestValue}
                 stroke={lineColor}
-                strokeWidth={2.5}
-                fill="url(#winRateGradient)"
-                dot={false}
-                activeDot={{
-                  r: 5,
-                  stroke: lineColor,
-                  strokeWidth: 2,
-                  fill: "var(--background)",
-                }}
+                strokeDasharray="4 4"
+                strokeOpacity={0.4}
               />
-            </AreaChart>
-          </ResponsiveContainer>
+            )}
+            <Area
+              type="monotone"
+              dataKey="winRate"
+              stroke={lineColor}
+              strokeWidth={2.5}
+              fill="url(#winRateGradient)"
+              dot={false}
+              activeDot={{
+                r: 5,
+                stroke: lineColor,
+                strokeWidth: 2,
+                fill: "var(--background)",
+              }}
+            />
+          </AreaChart>
         </div>
       </CardContent>
     </Card>

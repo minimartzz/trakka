@@ -11,7 +11,14 @@ import {
 import { motion } from "motion/react";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, type PieLabelRenderProps } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  type PieLabelRenderProps,
+} from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { type GameSession } from "@/types/tribes";
 import {
   COMPLEXITY_COLORS,
@@ -45,7 +52,9 @@ const renderCustomizedLabel = ({
   name,
 }: PieLabelRenderProps) => {
   const RADIAN = Math.PI / 180;
-  const radius = (innerRadius as number) + ((outerRadius as number) - (innerRadius as number)) * 0.5;
+  const radius =
+    (innerRadius as number) +
+    ((outerRadius as number) - (innerRadius as number)) * 0.5;
   const x = (cx as number) + radius * Math.cos(-(midAngle as number) * RADIAN);
   const y = (cy as number) + radius * Math.sin(-(midAngle as number) * RADIAN);
 
@@ -98,6 +107,7 @@ const AllGamesPieChart: React.FC<AllGamesPieChartProps> = ({
   sessions,
   delay = 0,
 }) => {
+  const [containerRef, { width, height }] = useContainerSize();
   const [viewType, setViewType] = useState<ViewType>("complexity");
 
   // Get computed accent colors for player count view
@@ -240,28 +250,26 @@ const AllGamesPieChart: React.FC<AllGamesPieChartProps> = ({
               <p className="text-sm">No game data available</p>
             </div>
           ) : (
-            <div className="h-[250px] w-full relative">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={80}
-                    innerRadius={40}
-                    dataKey="value"
-                    strokeWidth={2}
-                    stroke="var(--background)"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div ref={containerRef} className="h-[250px] w-full relative">
+              <PieChart width={width} height={height}>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  outerRadius={80}
+                  innerRadius={40}
+                  dataKey="value"
+                  strokeWidth={2}
+                  stroke="var(--background)"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
 
               {/* Center label showing total */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
