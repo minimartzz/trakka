@@ -57,6 +57,11 @@ const StatCard: React.FC<StatCardProps> = ({
   const Icon = isPositive ? MoveUp : isNegative ? MoveDown : CircleSlash;
 
   // Animated counter effect for numeric values
+  const decimals =
+    typeof value === "number" && value % 1 !== 0
+      ? (String(value).split(".")[1]?.length ?? 0)
+      : 0;
+
   useEffect(() => {
     if (!animate || typeof value !== "number") {
       setDisplayValue(value);
@@ -66,13 +71,12 @@ const StatCard: React.FC<StatCardProps> = ({
     const duration = 1000;
     const steps = 30;
     const increment = value / steps;
-    let current = 0;
     let step = 0;
 
     const timer = setInterval(() => {
       step++;
-      current = Math.min(Math.round(increment * step), value);
-      setDisplayValue(current);
+      const raw = Math.min(increment * step, value);
+      setDisplayValue(parseFloat(raw.toFixed(decimals)));
 
       if (step >= steps) {
         clearInterval(timer);
@@ -81,7 +85,7 @@ const StatCard: React.FC<StatCardProps> = ({
     }, duration / steps);
 
     return () => clearInterval(timer);
-  }, [value, animate]);
+  }, [value, animate, decimals]);
 
   return (
     <motion.div
@@ -106,7 +110,9 @@ const StatCard: React.FC<StatCardProps> = ({
                 {title}
               </div>
               <p className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                {displayValue}
+                {typeof displayValue === "number" && decimals > 0
+                  ? displayValue.toFixed(decimals)
+                  : displayValue}
                 {suffix && (
                   <span className="text-lg sm:text-xl font-medium text-white ml-1">
                     {suffix}
