@@ -1,4 +1,3 @@
-import StarRating from "@/components/StarRating";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { GroupedSession } from "@/lib/interfaces";
@@ -36,10 +35,8 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     isPlayer,
     isWinner,
     isLoser,
-    isTied,
     players,
     tribe,
-    rating,
   },
   canEdit = false,
 }) => {
@@ -129,14 +126,6 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
               {getResultsBadge()}
             </div>
-
-            {/* Session Rating */}
-            <StarRating
-              profileId={userId}
-              sessionId={sessionId}
-              initialRating={rating || 0}
-              starSize={20}
-            />
           </div>
         </div>
 
