@@ -84,3 +84,29 @@ export interface PopularGame {
   lastPlayed: string;
   imageUrl?: string | null;
 }
+
+// ─── Game details (for Games tab) ─────────────────────────────────────────────
+
+export interface GameListItem {
+  gameId: number;
+  gameTitle: string;
+  playCount: number;
+  imageUrl: string | null;
+}
+
+export interface LeadingPlayer {
+  profileId: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  image: string | null;
+  count: number;
+  avgVp: number | null;
+  recentGames: {
+    sessionId: string;
+    datePlayed: string;
+    position: number;
+    victoryPoints: number | null;
+    isWinner: boolean;
+  }[];
+}

@@ -2,6 +2,10 @@
 
 import { compGameLogTable } from "@/db/schema/compGameLog";
 import { gameTable } from "@/db/schema/game";
+import { gameCategoryTable } from "@/db/schema/gameCategory";
+import { gameMechanicTable } from "@/db/schema/gameMechanic";
+import { juncGameCategoryTable } from "@/db/schema/juncGameCategory";
+import { juncGameMechanicTable } from "@/db/schema/juncGameMechanic";
 import { groupTable } from "@/db/schema/group";
 import { histDailyPlayerStatsTable } from "@/db/schema/histDailyPlayerStats";
 import { histMonthlyPlayerStatsTable } from "@/db/schema/histMonthlyPlayerStats";
@@ -138,4 +142,41 @@ export async function getMonthlyPlayerStats(params?: {
     .where(conditions.length > 0 ? and(...conditions) : undefined);
 
   return monthlyPlayerStats;
+}
+
+// ========================================
+// GAME DETAILS WITH CATEGORIES & MECHANICS
+// ========================================
+export async function getGameDetailsWithMeta(gameId: number) {
+  await requireAuth();
+
+  const [gameRows, categoryRows, mechanicRows] = await Promise.all([
+    db.select().from(gameTable).where(eq(gameTable.id, gameId)),
+    db
+      .select({ category: gameCategoryTable.category })
+      .from(juncGameCategoryTable)
+      .leftJoin(
+        gameCategoryTable,
+        eq(juncGameCategoryTable.categoryId, gameCategoryTable.id),
+      )
+      .where(eq(juncGameCategoryTable.gameId, gameId)),
+    db
+      .select({ mechanic: gameMechanicTable.mechanic })
+      .from(juncGameMechanicTable)
+      .leftJoin(
+        gameMechanicTable,
+        eq(juncGameMechanicTable.mechanicId, gameMechanicTable.id),
+      )
+      .where(eq(juncGameMechanicTable.gameId, gameId)),
+  ]);
+
+  const game = gameRows[0] ?? null;
+  const categories = categoryRows
+    .map((r) => r.category)
+    .filter((c): c is string => c !== null);
+  const mechanics = mechanicRows
+    .map((r) => r.mechanic)
+    .filter((m): m is string => m !== null);
+
+  return { game, categories, mechanics };
 }
