@@ -157,7 +157,7 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
                       @{member.username}
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground shrink-0">
+                  <span className="hidden sm:block text-xs text-muted-foreground shrink-0">
                     {member.gamesPlayed} games
                   </span>
                 </button>
