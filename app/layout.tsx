@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Barlow_Condensed, Barlow, Figtree, Geist_Mono } from "next/font/google";
+import {
+  Barlow_Condensed,
+  Barlow,
+  Figtree,
+  Geist_Mono,
+} from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";

@@ -98,7 +98,14 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             groupId={tribeId}
           />
         }
-        gamesContent={<TribeGamesTab sessions={sessions} />}
+        gamesContent={
+          <TribeGamesTab
+            sessions={sessions}
+            members={members}
+            groupId={tribeId}
+            currentUserId={userId}
+          />
+        }
       />
     </div>
   );
