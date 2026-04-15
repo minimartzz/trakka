@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Minus, Plus, X } from "lucide-react";
 import React from "react";
 import { useFormStatus } from "react-dom";
+import { usePathname, useRouter } from "next/navigation";
 
 interface PlayerControllerProps {
   players: Player[];
@@ -81,6 +82,9 @@ const PlayerSessionSelection = ({
   setPlayers,
 }: PlayerSessionSelectionProps) => {
   const { pending } = useFormStatus();
+  const pathname = usePathname();
+  const router = useRouter();
+  const isEdit = pathname.includes("/edit/");
 
   // Functions
   const handleAddPlayer = () => {
@@ -118,22 +122,38 @@ const PlayerSessionSelection = ({
       {/* Control Section */}
       <div className="flex justify-between items-center">
         <PlayerController players={players} setPlayers={setPlayers} />
-        <Button
-          type="submit"
-          variant="outline"
-          size="sm"
-          className="font-semibold text-white bg-accent-5 hover:bg-accent-5/80 focus-visible:ring-accent-5/20bg-accent-5 dark:bg-accent-5 dark:hover:bg-accent-5/80 hover:cursor-pointer"
-          disabled={pending}
-        >
-          {pending ? (
-            <div className="flex items-center">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              <span>Saving ...</span>
-            </div>
-          ) : (
-            "Save"
+        <div className="flex items-center gap-2">
+          {isEdit && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="font-semibold hover:cursor-pointer text-destructive border-destructive hover:bg-red-200 hover:text-red-600"
+              onClick={() => router.back()}
+              disabled={pending}
+            >
+              Cancel
+            </Button>
           )}
-        </Button>
+          <Button
+            type="submit"
+            variant="outline"
+            size="sm"
+            className="font-semibold text-white bg-accent-5 hover:bg-accent-5/80 focus-visible:ring-accent-5/20bg-accent-5 dark:bg-accent-5 dark:hover:bg-accent-5/80 hover:cursor-pointer"
+            disabled={pending}
+          >
+            {pending ? (
+              <div className="flex items-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span>{isEdit ? "Updating..." : "Saving..."}</span>
+              </div>
+            ) : isEdit ? (
+              "Update"
+            ) : (
+              "Save"
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Player Details */}
@@ -148,96 +168,100 @@ const PlayerSessionSelection = ({
             (p) => !selectedProfileIds.has(p.profileId),
           );
           return (
-          <Card
-            key={player.id}
-            className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
-          >
-            {/* Player Position */}
-            <div
-              className="pointer-events-none absolute left-2 top-1 z-0 select-none text-4xl leading-none text-muted-foreground/30"
-              aria-hidden="true"
+            <Card
+              key={player.id}
+              className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
             >
-              {idx + 1}
-            </div>
-
-            {/* Remove Player */}
-            <Button
-              variant="ghost"
-              type="button"
-              size="icon"
-              className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => handleReducePlayer(player.id)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-
-            {/* Card Body */}
-            <CardContent className="relative z-10 py-0 px-10">
-              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                <div className="w-full md:max-w-lg md:flex-1 md:pr-0">
-                  <Label className="text-muted-foreground mb-2">
-                    Player Name
-                  </Label>
-                  <PlayerInput
-                    selectablePlayers={availablePlayers}
-                    playerId={player.id}
-                    playerSelect={handleUpdates}
-                    playerDetails={player.profileId !== 0 ? player : undefined}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-4 mr-4">
-                  {/* Score Input */}
-                  <div className="w-20 -left-1">
-                    <Label className="text-muted-foreground mb-2">Score</Label>
-                    <ScoreInput
-                      playerId={player.id}
-                      updateScore={handleUpdates}
-                      initialValue={player.score}
-                    />
-                  </div>
-
-                  {/* Winner and Tie checkboxes */}
-                  <div className="flex flex-col items-center">
-                    <Label
-                      htmlFor={`winner-${idx}`}
-                      className="text-muted-foreground mb-2"
-                    >
-                      Winner
-                    </Label>
-                    <Checkbox
-                      id={`winner-${idx}`}
-                      className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
-                      checked={player.isWinner}
-                      onCheckedChange={(checked) =>
-                        handleUpdates(player.id, {
-                          isWinner: checked as boolean,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Label
-                      htmlFor={`tied-${idx}`}
-                      className="text-muted-foreground mb-2"
-                    >
-                      Tied
-                    </Label>
-                    <Checkbox
-                      id={`tied-${idx}`}
-                      className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
-                      checked={player.isTie}
-                      onCheckedChange={(checked) =>
-                        handleUpdates(player.id, {
-                          isTie: checked as boolean,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
+              {/* Player Position */}
+              <div
+                className="pointer-events-none absolute left-2 top-1 z-0 select-none text-4xl leading-none text-muted-foreground/30"
+                aria-hidden="true"
+              >
+                {idx + 1}
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Remove Player */}
+              <Button
+                variant="ghost"
+                type="button"
+                size="icon"
+                className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => handleReducePlayer(player.id)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+
+              {/* Card Body */}
+              <CardContent className="relative z-10 py-0 px-10">
+                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                  <div className="w-full md:max-w-lg md:flex-1 md:pr-0">
+                    <Label className="text-muted-foreground mb-2">
+                      Player Name
+                    </Label>
+                    <PlayerInput
+                      selectablePlayers={availablePlayers}
+                      playerId={player.id}
+                      playerSelect={handleUpdates}
+                      playerDetails={
+                        player.profileId !== 0 ? player : undefined
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-4 mr-4">
+                    {/* Score Input */}
+                    <div className="w-20 -left-1">
+                      <Label className="text-muted-foreground mb-2">
+                        Score
+                      </Label>
+                      <ScoreInput
+                        playerId={player.id}
+                        updateScore={handleUpdates}
+                        initialValue={player.score}
+                      />
+                    </div>
+
+                    {/* Winner and Tie checkboxes */}
+                    <div className="flex flex-col items-center">
+                      <Label
+                        htmlFor={`winner-${idx}`}
+                        className="text-muted-foreground mb-2"
+                      >
+                        Winner
+                      </Label>
+                      <Checkbox
+                        id={`winner-${idx}`}
+                        className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
+                        checked={player.isWinner}
+                        onCheckedChange={(checked) =>
+                          handleUpdates(player.id, {
+                            isWinner: checked as boolean,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <Label
+                        htmlFor={`tied-${idx}`}
+                        className="text-muted-foreground mb-2"
+                      >
+                        Tied
+                      </Label>
+                      <Checkbox
+                        id={`tied-${idx}`}
+                        className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
+                        checked={player.isTie}
+                        onCheckedChange={(checked) =>
+                          handleUpdates(player.id, {
+                            isTie: checked as boolean,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
