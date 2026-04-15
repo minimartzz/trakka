@@ -416,37 +416,56 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                                   {session.tribe}
                                 </span>
                               </TableCell>
-                              <TableCell className="hidden sm:table-cell text-center">
-                                <div className="flex justify-center -space-x-1.5">
-                                  {session.players.slice(0, 4).map((p) => (
-                                    <Tooltip key={p.profileId}>
-                                      <TooltipTrigger asChild>
-                                        <Avatar
-                                          className={cn(
-                                            "w-6 h-6 ring-2 ring-background",
-                                            p.isWinner && "ring-accent-1",
-                                          )}
-                                        >
-                                          <AvatarImage
-                                            src={p.profilePic}
-                                            className={cn(
-                                              "object-cover",
-                                              !p.isWinner && "grayscale",
+                              <TableCell className="hidden sm:table-cell">
+                                <div className="flex items-center justify-center gap-2">
+                                  {session.players.slice(0, 5).map((p) => {
+                                    const isCurrentUser =
+                                      p.profileId === userId;
+                                    const isWinner = p.isWinner;
+                                    return (
+                                      <Tooltip key={p.profileId}>
+                                        <TooltipTrigger asChild>
+                                          <div className="relative shrink-0">
+                                            <Avatar
+                                              className={cn(
+                                                "w-7 h-7 ring-2 transition-opacity",
+                                                isWinner
+                                                  ? "ring-amber-400"
+                                                  : isCurrentUser
+                                                    ? "ring-primary"
+                                                    : "ring-background opacity-50",
+                                              )}
+                                            >
+                                              <AvatarImage
+                                                src={p.profilePic}
+                                                className="object-cover"
+                                              />
+                                              <AvatarFallback className="text-[10px] bg-muted">
+                                                {p.firstName[0]}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            {/* Winner crown badge */}
+                                            {isWinner && (
+                                              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] leading-none select-none pointer-events-none">
+                                                👑
+                                              </span>
                                             )}
-                                          />
-                                          <AvatarFallback className="text-[10px] bg-muted">
-                                            {p.firstName[0]}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {p.firstName} {p.isWinner && "👑"}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ))}
-                                  {session.players.length > 4 && (
-                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-[10px] font-medium ring-2 ring-background">
-                                      +{session.players.length - 4}
+                                            {/* Current-user dot (when not winner) */}
+                                            {isCurrentUser && !isWinner && (
+                                              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-1 ring-background" />
+                                            )}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          {isCurrentUser ? "You" : p.firstName}
+                                          {isWinner && " 👑"}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    );
+                                  })}
+                                  {session.players.length > 5 && (
+                                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-[10px] font-medium ring-2 ring-background shrink-0">
+                                      +{session.players.length - 5}
                                     </span>
                                   )}
                                 </div>
@@ -457,7 +476,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                                     <span className="text-xs">🤝</span>
                                   )}
                                   {session.isWinner ? (
-                                    <Badge className="bg-accent-1/15 text-accent-1 border-accent-1/30 hover:bg-accent-1/20">
+                                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
                                       <DotsIcon
                                         value={session.players.length}
                                         className="[&_[data-dot]]:bg-current"
@@ -625,7 +644,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-2 rounded-full bg-destructive/20 overflow-hidden">
                                 <div
-                                  className="h-full rounded-full bg-accent-1 transition-all duration-500"
+                                  className="h-full rounded-full bg-emerald-600 transition-all duration-500"
                                   style={{ width: `${game.winRate}%` }}
                                 />
                               </div>
@@ -638,7 +657,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                             className={cn(
                               "text-right font-bold",
                               game.winRate >= 50
-                                ? "text-accent-1"
+                                ? "text-emerald-700 dark:text-emerald-400"
                                 : "text-destructive",
                             )}
                           >
