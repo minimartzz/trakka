@@ -51,6 +51,22 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
     notFound();
   }
 
+  const [rollingStats, dailyPlayerStats, monthlyPlayerStats] =
+    await Promise.all([
+      getRollingPlayerStats({ groupId: tribeId }),
+      getDailyPlayerStats({ groupId: tribeId }),
+      getMonthlyPlayerStats({ groupId: tribeId }),
+    ]);
+  const histStats = {
+    rollingStats,
+    dailyPlayerStats,
+    monthlyPlayerStats,
+  };
+
+  if (!user) {
+    notFound();
+  }
+
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {
     notFound();
