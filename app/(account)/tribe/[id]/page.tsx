@@ -42,21 +42,6 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       getTribeDetails(tribeId),
       getTribeGameSessions(tribeId),
     ]);
-<<<<<<< HEAD
-=======
-
-  const [rollingStats, dailyPlayerStats, monthlyPlayerStats] =
-    await Promise.all([
-      getRollingPlayerStats({ groupId: tribeId }),
-      getDailyPlayerStats({ groupId: tribeId }),
-      getMonthlyPlayerStats({ groupId: tribeId }),
-    ]);
-  const histStats = {
-    rollingStats,
-    dailyPlayerStats,
-    monthlyPlayerStats,
-  };
->>>>>>> a389d3e ([Update] WPA implemented)
 
   if (!user) {
     notFound();
