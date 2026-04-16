@@ -123,14 +123,38 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   const uniqueGamesTrendDir: "positive" | "negative" | "none" =
     newGamesThisWeek > 0 ? "positive" : "none";
 
-  // TODO: Calculate WPA (Wins Per Attempt) - Average win rate across all players
-  // TODO: Calculate Change since last week
-  const calculateWPA = (): number => {
-    if (sessions.length === 0) return 0;
-    const allPlayers = sessions.flatMap((s) => s.players);
-    const totalWins = allPlayers.filter((p) => p.isWinner).length;
-    const totalPlays = allPlayers.length;
-    return totalPlays > 0 ? Math.round((totalWins / totalPlays) * 100) : 0;
+  // Calculate average WPA from daily snapshot 7 days ago for players with >= 3 sessions
+  const calculateLastWeekAverageWPA = (): number => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoDate = weekAgo.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+    const weekAgoSnapshots = histStats.dailyPlayerStats.filter(
+      (stat) => stat.snapshotDate === weekAgoDate && stat.sessionsPlayed >= 3,
+    );
+
+    if (weekAgoSnapshots.length === 0) return 0;
+
+    const average =
+      weekAgoSnapshots.reduce((acc, stat) => acc + stat.score, 0) /
+      weekAgoSnapshots.length;
+
+    return isNaN(average) ? 0 : parseFloat(average.toFixed(2));
+  };
+
+  const calculateAverageWPA = (): number => {
+    if (histStats.rollingStats.length === 0) return 0;
+
+    // Remove players who have <=3 sessions played
+    const validPlayers = histStats.rollingStats.filter(
+      (player) => player.sessionsPlayed > 3,
+    );
+    const averageWPA =
+      validPlayers.reduce((acc, stat) => {
+        return acc + stat.rollingScore / stat.sessionsPlayed;
+      }, 0) / validPlayers.length;
+
+    return isNaN(averageWPA) ? 0 : parseFloat(averageWPA.toFixed(2));
   };
 
   // TODO: Choose another stat
