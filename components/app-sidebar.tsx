@@ -15,19 +15,12 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { BarChart3, ChevronDown, Crown, Search } from "lucide-react";
+import { BarChart3, Crown, Search } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/public/trakka_logo.png";
 import { Input } from "@/components/ui/input";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { useEffect, useState } from "react";
-import { Button } from "./ui/button";
-import { cn } from "@/lib/utils";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
 import ActivityLog from "@/components/ActivityLog";
@@ -69,10 +62,10 @@ const items = {
 // Functions
 const numTribeRequests = (
   allRequests: TribeRequest[],
-  tribeId: string
+  tribeId: string,
 ): number => {
   const filteredRequests = allRequests.filter(
-    (req) => req.data.group_id === tribeId
+    (req) => req.data.group_id === tribeId,
   );
 
   return filteredRequests.length;
@@ -83,8 +76,8 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
   const showCollapsedView = isCollapsed && !sidebar.isMobile;
-  const [isTribesOpen, setIsTribesOpen] = useState<boolean>(true);
   const [requests, setRequests] = useState<TribeRequest[]>([]);
+  const [tribeSearch, setTribeSearch] = useState<string>("");
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -107,7 +100,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           <SidebarMenuButton size="lg" className="ml-2" asChild>
             <a href={"/dashboard"}>
               <Image src={Logo} alt="logo" width={30} />
-              <span className="font-asimovian text-2xl">TRAKKA</span>
+              <span className="font-brand text-2xl">TRAKKA</span>
               <div>
                 <ActivityLog profileId={user.id} />
               </div>
@@ -118,7 +111,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
             <div className="flex items-center justify-between hover:bg-transparent">
               <a href={"/dashboard"} className="flex items-center gap-x-2">
                 <Image src={Logo} alt="logo" height={35} />
-                <span className="font-asimovian text-2xl">TRAKKA</span>
+                <span className="font-brand text-2xl">TRAKKA</span>
               </a>
               <div>
                 <ActivityLog profileId={user.id} />
@@ -127,19 +120,6 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           </SidebarMenuButton>
         )}
         <SidebarSeparator className="bg-sidebar-accent mx-0" />
-
-        {/* Search Bar */}
-        {!showCollapsedView && (
-          <div className="p-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search"
-                className="pl-10 bg-slate-900 border-slate-600 text-slate-300 placeholder-slate-400"
-              />
-            </div>
-          </div>
-        )}
 
         {/* Performance */}
         <SidebarGroup>
@@ -165,80 +145,88 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
 
         {/* Tribes */}
         <SidebarGroup>
-          <Collapsible open={isTribesOpen} onOpenChange={setIsTribesOpen}>
-            <SidebarGroupLabel className="hover:text-slate-300 cursor-pointer flex items-center justify-between py-2">
-              <span className="text-xs font-medium uppercase tracking-wide">
-                TRIBES
-              </span>
-              <div className="flex items-center gap-1">
-                <NewGroup user={user} className="hover:bg-slate-700" />
-                {/* </Button> */}
-                <CollapsibleTrigger asChild>
-                  <ChevronDown
-                    className={`h-3 w-3 transition-transform ${
-                      isTribesOpen ? "rotate-0" : "-rotate-90"
-                    }`}
-                  />
-                </CollapsibleTrigger>
+          <SidebarGroupLabel className="flex items-center justify-between py-2">
+            <span className="text-xs font-medium uppercase tracking-wide">
+              TRIBES
+            </span>
+            <NewGroup
+              user={user}
+              className="flex items-center justify-center h-6 w-6 rounded-md border border-primary text-primary text-sm font-medium py-2 hover:bg-primary/10 transition-colors cursor-pointer"
+            />
+          </SidebarGroupLabel>
+
+          {/* Search */}
+          {!showCollapsedView && (
+            <div className="px-2 pb-2 mt-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search Tribes"
+                  className="pl-10 bg-slate-900 border-slate-600 text-slate-300 placeholder-slate-400"
+                  value={tribeSearch}
+                  onChange={(e) => setTribeSearch(e.target.value)}
+                />
               </div>
-            </SidebarGroupLabel>
-            <CollapsibleContent
-              className={cn(
-                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
-              )}
-            >
-              {tribes.map((item) => (
-                <SidebarMenuItem className="pt-1" key={item.id}>
-                  <SidebarMenuButton
-                    className={
-                      pathname === `/tribe/${item.id}` ? "bg-slate-700" : ""
-                    }
-                    asChild
+            </div>
+          )}
+
+          {tribes
+            .filter((item) =>
+              item.name.toLowerCase().includes(tribeSearch.toLowerCase()),
+            )
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((item) => (
+              <SidebarMenuItem className="pt-1" key={item.id}>
+                <SidebarMenuButton
+                  className={
+                    pathname === `/tribe/${item.id}` ? "bg-slate-700" : ""
+                  }
+                  asChild
+                >
+                  <a
+                    href={`/tribe/${item.id}`}
+                    className="flex justify-between items-center"
                   >
-                    <a
-                      href={`/tribe/${item.id}`}
-                      className="flex justify-between items-center"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
-                          <Image
-                            src={item.image}
-                            alt="Group Icon"
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        {isCollapsed &&
-                          numTribeRequests(requests, item.id) > 0 && (
-                            <span className="absolute bottom-5 -right-1 flex h-2.5 w-2.5 items-center justify-center">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-                            </span>
-                          )}
-                        <span>{item.name}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
+                        <Image
+                          src={item.image}
+                          alt="Group Icon"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                       </div>
-                      {numTribeRequests(requests, item.id) > 0 && (
+                      {showCollapsedView &&
+                        numTribeRequests(requests, item.id) > 0 && (
+                          <span className="absolute bottom-5 -right-1 flex h-2.5 w-2.5 items-center justify-center">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                          </span>
+                        )}
+                      <span>{item.name}</span>
+                    </div>
+                    {!showCollapsedView &&
+                      numTribeRequests(requests, item.id) > 0 && (
                         <span className="flex h-2.5 w-2.5 items-center justify-center">
                           <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-destructive opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
                         </span>
                       )}
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
 
-          {/* Add tribes button when sidebar closed */}
-          {showCollapsedView && (
-            <Button
-              className="flex mt-3 w-8 h-8 p-0 rounded-full justify-center bg-sidebar-accent border-sidebar"
-              variant="outline"
-              asChild
-            >
-              <NewGroup user={user} />
-            </Button>
+          {/* Create Tribe button at bottom */}
+          {!showCollapsedView && (
+            <div className="px-2 pt-2">
+              <NewGroup
+                user={user}
+                label="Create Tribe"
+                className="w-full flex items-center justify-center gap-2 rounded-md border border-primary text-primary text-sm font-medium py-2 hover:bg-primary/10 transition-colors cursor-pointer"
+              />
+            </div>
           )}
         </SidebarGroup>
       </SidebarContent>

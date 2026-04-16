@@ -16,9 +16,6 @@ import {
   getTribeMembers,
 } from "@/app/(account)/tribe/[id]/action";
 import { notFound } from "next/navigation";
-import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
-import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
-import { SelectHistMonthlyPlayerStats } from "@/db/schema/histMonthlyPlayerStats";
 
 // Revalidate page every 60 seconds for ISR caching
 export const revalidate = 60;
@@ -45,6 +42,14 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       getTribeDetails(tribeId),
       getTribeGameSessions(tribeId),
     ]);
+
+  if (!user) {
+    notFound();
+  }
+
+  if (!user) {
+    notFound();
+  }
 
   const [rollingStats, dailyPlayerStats, monthlyPlayerStats] =
     await Promise.all([

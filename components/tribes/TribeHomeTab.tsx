@@ -26,7 +26,11 @@ import HistoricalSessionsChart from "./HistoricalSessionsChart";
 import AllGamesPieChart from "./AllGamesPieChart";
 import MeepleIcon from "@/components/icons/MeepleIcon";
 import { motion } from "motion/react";
-import { type GameSession, type HistStatsInterface, type PopularGame } from "@/types/tribes";
+import {
+  type GameSession,
+  type HistStatsInterface,
+  type PopularGame,
+} from "@/types/tribes";
 
 interface TribeHomeTabProps {
   sessions: GameSession[];

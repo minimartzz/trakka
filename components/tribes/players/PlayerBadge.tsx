@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { BadgeInfo } from "@/utils/playerStatsCalculations";
 import { cn } from "@/lib/utils";
@@ -23,10 +23,26 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
   className,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isTouchRef = useRef(false);
   const sizeConfig = SIZES[size];
 
+  useEffect(() => {
+    if (!showTooltip) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setShowTooltip(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showTooltip]);
+
   return (
-    <div className={cn("relative inline-block", className)}>
+    <div ref={containerRef} className={cn("relative inline-block", className)}>
       <button
         type="button"
         className={cn(
@@ -35,9 +51,19 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
           "hover:scale-110 active:scale-95 transition-transform cursor-pointer",
           "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1",
         )}
-        onClick={() => setShowTooltip(!showTooltip)}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
+        onMouseEnter={() => {
+          if (!isTouchRef.current) setShowTooltip(true);
+        }}
+        onMouseLeave={() => {
+          if (!isTouchRef.current) setShowTooltip(false);
+        }}
+        onTouchStart={() => {
+          isTouchRef.current = true;
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          setShowTooltip((v) => !v);
+        }}
         aria-label={`${badge.label} badge: ${badge.description}`}
       >
         <Image
@@ -49,24 +75,26 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
         />
       </button>
 
-      {/* Tooltip */}
+      {/* Popover — to the left */}
       {showTooltip && (
         <div
           className={cn(
-            "absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2",
+            "absolute z-50 right-full top-1/2 -translate-y-1/2 mr-2",
             "bg-popover border rounded-lg shadow-lg px-3 py-2",
-            "whitespace-nowrap pointer-events-none",
+            "whitespace-nowrap",
             "animate-in fade-in-0 zoom-in-95 duration-150",
           )}
         >
           <p className="text-sm font-semibold">{badge.label}</p>
           <p className="text-xs text-muted-foreground">{badge.description}</p>
           {badge.value && (
-            <p className="text-xs text-primary font-medium mt-0.5">{badge.value}</p>
+            <p className="text-xs text-primary font-medium mt-0.5">
+              {badge.value}
+            </p>
           )}
-          {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-            <div className="w-2 h-2 bg-popover border-r border-b rotate-45 -translate-y-1" />
+          {/* Arrow pointing right */}
+          <div className="absolute left-full top-1/2 -translate-y-1/2 -ml-px">
+            <div className="w-2 h-2 bg-popover border-t border-r rotate-45 translate-x-[-5px]" />
           </div>
         </div>
       )}

@@ -88,6 +88,7 @@ const TribeHeader: React.FC<TribeHeaderProps> = ({
                   src={tribeImage}
                   alt={`${tribeName} tribe picture`}
                   className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   fill
                   priority
                 />

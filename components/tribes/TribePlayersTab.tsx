@@ -1,7 +1,11 @@
 "use client";
 
 import PlayerSubTabs from "@/components/tribes/players/PlayerSubTabs";
-import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type HistStatsInterface,
+} from "@/types/tribes";
 
 interface TribePlayersTabProps {
   members: TribeMember[];

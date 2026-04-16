@@ -13,10 +13,10 @@ import {
   YAxis,
   CartesianGrid,
   ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   Cell,
 } from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 
 interface GameSession {
   sessionId: string;
@@ -220,12 +220,12 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
   sessions,
   delay = 0,
 }) => {
+  const [containerRef, { width, height }] = useContainerSize();
   const [activePlayer, setActivePlayer] = useState<number | null>(null);
   const [isTouchInteraction, setIsTouchInteraction] = useState(false);
   const [playerPositions, setPlayerPositions] = useState<
     Record<number, { x: number; y: number }>
   >({});
-  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const handlePlayerHover = useCallback((profileId: number | null) => {
     // Only handle hover on non-touch devices
@@ -233,10 +233,13 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
     setActivePlayer(profileId);
   }, []);
 
-  const handlePlayerClick = useCallback((profileId: number | null, isTouch: boolean) => {
-    setIsTouchInteraction(isTouch);
-    setActivePlayer(profileId);
-  }, []);
+  const handlePlayerClick = useCallback(
+    (profileId: number | null, isTouch: boolean) => {
+      setIsTouchInteraction(isTouch);
+      setActivePlayer(profileId);
+    },
+    [],
+  );
 
   // Handle clicking outside to deselect on mobile
   const handleChartClick = useCallback(() => {
@@ -301,7 +304,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
     });
 
     return Object.entries(playerStats)
-      .filter(([, data]) => data.weightCount > 0 && data.gamesPlayed >= 4)
+      .filter(([, data]) => data.weightCount >= 4)
       .map(
         ([id, data]): PlayerDataPoint => ({
           profileId: parseInt(id),
@@ -347,172 +350,174 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
             </div>
           ) : (
             <div
-              ref={chartContainerRef}
+              ref={containerRef}
               className="h-[300px] w-full touch-none relative"
               onClick={handleChartClick}
             >
               {/* Custom mobile tooltip overlay - only show for touch interactions */}
-              {isTouchInteraction && activePlayer !== null && playerPositions[activePlayer] && (
-                <div
-                  className="absolute z-50 pointer-events-none"
-                  style={{
-                    left: playerPositions[activePlayer].x,
-                    top: playerPositions[activePlayer].y - 10,
-                    transform: "translate(-50%, -100%)",
-                  }}
-                >
-                  {(() => {
-                    const player = playerData.find(
-                      (p) => p.profileId === activePlayer,
-                    );
-                    if (!player) return null;
-                    return (
-                      <div className="bg-popover border rounded-lg shadow-lg p-3 min-w-[180px]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage
-                              src={player.image || ""}
-                              alt={player.username}
-                            />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {player.firstName[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold text-sm">
-                              {player.firstName} {player.lastName}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              @{player.username}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="space-y-1 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Win Rate:
-                            </span>
-                            <span className="font-medium">
-                              {player.winRate}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Avg Complexity:
-                            </span>
-                            <span className="font-medium">
-                              {player.avgComplexity.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Games Played:
-                            </span>
-                            <span className="font-medium">
-                              {player.gamesPlayed}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                >
-                  {/* Gridlines */}
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--accent)" />
-                  <XAxis
-                    type="number"
-                    dataKey="avgComplexity"
-                    domain={[0, 5]}
-                    ticks={[0, 1, 2, 2.5, 3, 4, 5]}
-                    tick={{
-                      fontSize: 11,
-                      fill: "var(--foreground)",
+              {isTouchInteraction &&
+                activePlayer !== null &&
+                playerPositions[activePlayer] && (
+                  <div
+                    className="absolute z-50 pointer-events-none"
+                    style={{
+                      left: playerPositions[activePlayer].x,
+                      top: playerPositions[activePlayer].y - 10,
+                      transform: "translate(-50%, -100%)",
                     }}
-                    axisLine={{
-                      stroke: "var(--foreground)",
-                      strokeWidth: 1,
-                    }}
-                    tickLine={{ stroke: "var(--foreground)" }}
-                    label={{
-                      value: "Avg Complexity",
-                      position: "bottom",
-                      offset: 0,
-                      style: {
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fill: "var(--foreground)",
-                      },
-                    }}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="winRate"
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    tick={{
-                      fontSize: 11,
-                      fill: "var(--foreground)",
-                    }}
-                    axisLine={{
-                      stroke: "var(--foreground)",
-                      strokeWidth: 1,
-                    }}
-                    tickLine={{ stroke: "var(--foreground)" }}
-                    label={{
-                      value: "Win Rate %",
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: 10,
-                      style: {
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fill: "var(--foreground)",
-                        textAnchor: "middle",
-                      },
-                    }}
-                  />
-                  {/* Bold center crosshair lines */}
-                  <ReferenceLine
-                    x={2.5}
-                    stroke="var(--foreground)"
-                    strokeWidth={2}
-                    strokeOpacity={0.7}
-                  />
-                  <ReferenceLine
-                    y={50}
-                    stroke="var(--foreground)"
-                    strokeWidth={2}
-                    strokeOpacity={0.7}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={false}
-                    wrapperStyle={{ zIndex: 100 }}
-                    active={activePlayer !== null}
-                  />
-                  <Scatter
-                    data={playerData}
-                    shape={(props) => (
-                      <CustomDot
-                        {...props}
-                        activePlayer={activePlayer}
-                        onPlayerClick={handlePlayerClick}
-                        onPlayerHover={handlePlayerHover}
-                        onPositionUpdate={handlePositionUpdate}
-                      />
-                    )}
                   >
-                    {playerData.map((entry) => (
-                      <Cell key={entry.profileId} />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
+                    {(() => {
+                      const player = playerData.find(
+                        (p) => p.profileId === activePlayer,
+                      );
+                      if (!player) return null;
+                      return (
+                        <div className="bg-popover border rounded-lg shadow-lg p-3 min-w-[180px]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage
+                                src={player.image || ""}
+                                alt={player.username}
+                              />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {player.firstName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {player.firstName} {player.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                @{player.username}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Win Rate:
+                              </span>
+                              <span className="font-medium">
+                                {player.winRate}%
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Avg Complexity:
+                              </span>
+                              <span className="font-medium">
+                                {player.avgComplexity.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                Games Played:
+                              </span>
+                              <span className="font-medium">
+                                {player.gamesPlayed}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              <ScatterChart
+                width={width}
+                height={height}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                {/* Gridlines */}
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--accent)" />
+                <XAxis
+                  type="number"
+                  dataKey="avgComplexity"
+                  domain={[0, 5]}
+                  ticks={[0, 1, 2, 2.5, 3, 4, 5]}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--foreground)",
+                  }}
+                  axisLine={{
+                    stroke: "var(--foreground)",
+                    strokeWidth: 1,
+                  }}
+                  tickLine={{ stroke: "var(--foreground)" }}
+                  label={{
+                    value: "Avg Complexity",
+                    position: "bottom",
+                    offset: 0,
+                    style: {
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fill: "var(--foreground)",
+                    },
+                  }}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="winRate"
+                  domain={[0, 100]}
+                  ticks={[0, 25, 50, 75, 100]}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--foreground)",
+                  }}
+                  axisLine={{
+                    stroke: "var(--foreground)",
+                    strokeWidth: 1,
+                  }}
+                  tickLine={{ stroke: "var(--foreground)" }}
+                  label={{
+                    value: "Win Rate %",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 10,
+                    style: {
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fill: "var(--foreground)",
+                      textAnchor: "middle",
+                    },
+                  }}
+                />
+                {/* Bold center crosshair lines */}
+                <ReferenceLine
+                  x={2.5}
+                  stroke="var(--foreground)"
+                  strokeWidth={2}
+                  strokeOpacity={0.7}
+                />
+                <ReferenceLine
+                  y={50}
+                  stroke="var(--foreground)"
+                  strokeWidth={2}
+                  strokeOpacity={0.7}
+                />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={false}
+                  wrapperStyle={{ zIndex: 100 }}
+                  active={activePlayer !== null}
+                />
+                <Scatter
+                  data={playerData}
+                  shape={(props) => (
+                    <CustomDot
+                      {...props}
+                      activePlayer={activePlayer}
+                      onPlayerClick={handlePlayerClick}
+                      onPlayerHover={handlePlayerHover}
+                      onPositionUpdate={handlePositionUpdate}
+                    />
+                  )}
+                >
+                  {playerData.map((entry) => (
+                    <Cell key={entry.profileId} />
+                  ))}
+                </Scatter>
+              </ScatterChart>
             </div>
           )}
         </CardContent>

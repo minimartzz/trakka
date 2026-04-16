@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/pagination";
 import useAuth from "@/app/hooks/useAuth";
 import { fetchSessions } from "@/app/(account)/recent-games/action";
+import { getUserTribeRoles } from "@/app/(generic)/session/edit/[sessionId]/action";
 import { toast } from "sonner";
 
 interface GameFilter {
@@ -73,6 +74,9 @@ const Page = () => {
     numPlayed: 0,
     numTied: 0,
   });
+  const [editableTribeIds, setEditableTribeIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -102,17 +106,26 @@ const Page = () => {
     }
 
     const getData = async () => {
-      const sessionData: SessionDataInterface[] = await fetchSessionsByProfile(
-        user.id,
-      );
+      const [sessionData, tribeRoles] = await Promise.all([
+        fetchSessionsByProfile(user.id),
+        getUserTribeRoles(user.id),
+      ]);
       const groupedSessions = filterSessionData(user.id, sessionData);
       const filteredCounts = getFilteredCounts(groupedSessions);
       const uniqueGames = getAvailableGames(groupedSessions);
+
+      // Build set of tribe IDs where user is SuperAdmin (1) or Admin (2)
+      const editableIds = new Set(
+        tribeRoles
+          .filter((r) => r.roleId === 1 || r.roleId === 2)
+          .map((r) => r.groupId),
+      );
 
       setGameSessions(groupedSessions);
       setFilteredSessions(groupedSessions);
       setFilterCounts(filteredCounts);
       setAvailableGames(uniqueGames);
+      setEditableTribeIds(editableIds);
 
       setLoading(false);
     };
@@ -309,6 +322,7 @@ const Page = () => {
               key={session.sessionId}
               session={session}
               userId={user!.id as number}
+              canEdit={editableTribeIds.has(session.tribeId)}
             />
           ))}
         </div>

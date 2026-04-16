@@ -33,15 +33,17 @@ const RatingBadge = ({ rating }: { rating: string }) => {
 
 const BGGSearchBar = ({
   onSelect,
+  initialGame,
 }: {
   onSelect: (item: BGGDetailsInterface) => void;
+  initialGame?: BGGDetailsInterface | null;
 }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialGame?.title ?? "");
   const [exactMatch, setExactMatch] = useState(false);
   const [allResults, setAllResults] = useState<BGGDetailsInterface[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
   const [selectedGame, setSelectedGame] = useState<BGGDetailsInterface | null>(
-    null,
+    initialGame ?? null,
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -11,17 +11,17 @@ import {
 } from "@/components/ui/select";
 import { motion } from "motion/react";
 import { BarChart3 } from "lucide-react";
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   Legend,
 } from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { type GameSession } from "@/types/tribes";
 import {
   COMPLEXITY_COLORS,
@@ -302,7 +302,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
   const [viewType, setViewType] = useState<ViewType>("complexity");
   const [activeBar, setActiveBar] = useState<TooltipData | null>(null);
   const [isTouchInteraction, setIsTouchInteraction] = useState(false);
-  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [chartContainerRef, { width, height }] = useContainerSize();
 
   // Get computed accent colors for player count view
   const [playerCountColors, setPlayerCountColors] = useState({
@@ -602,10 +602,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
       <div
         className="absolute z-50 pointer-events-none"
         style={{
-          left: Math.min(
-            Math.max(x, 110),
-            (chartContainerRef.current?.clientWidth ?? 300) - 110,
-          ),
+          left: Math.min(Math.max(x, 110), (width || 300) - 110),
           top: Math.max(y - 10, 20),
           transform: "translate(-50%, -100%)",
         }}
@@ -752,116 +749,115 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
               {/* Mobile tooltip overlay */}
               {renderMobileTooltip()}
 
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                  onMouseDown={(e) => {
-                    // Detect touch interaction
-                    if (e && "nativeEvent" in e) {
-                      const nativeEvent = (
-                        e as unknown as { nativeEvent: Event }
-                      ).nativeEvent;
-                      if (nativeEvent instanceof TouchEvent) {
-                        setIsTouchInteraction(true);
-                      }
+              <BarChart
+                width={width}
+                height={height}
+                data={chartData}
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                onMouseDown={(e) => {
+                  // Detect touch interaction
+                  if (e && "nativeEvent" in e) {
+                    const nativeEvent = (e as unknown as { nativeEvent: Event })
+                      .nativeEvent;
+                    if (nativeEvent instanceof TouchEvent) {
+                      setIsTouchInteraction(true);
                     }
-                  }}
-                  onClick={(state: unknown) => {
-                    const chartState = state as {
-                      activePayload?: Array<{ payload: BarDataPoint }>;
-                      chartX?: number;
-                      chartY?: number;
-                    } | null;
-                    if (
-                      chartState &&
-                      chartState.activePayload &&
-                      chartState.activePayload[0] &&
-                      isTouchInteraction
-                    ) {
-                      const payload = chartState.activePayload[0].payload;
+                  }
+                }}
+                onClick={(state: unknown) => {
+                  const chartState = state as {
+                    activePayload?: Array<{ payload: BarDataPoint }>;
+                    chartX?: number;
+                    chartY?: number;
+                  } | null;
+                  if (
+                    chartState &&
+                    chartState.activePayload &&
+                    chartState.activePayload[0] &&
+                    isTouchInteraction
+                  ) {
+                    const payload = chartState.activePayload[0].payload;
 
-                      // Get all sessions for this time period
-                      const allSessions =
-                        viewType === "complexity"
-                          ? [
-                              ...payload.lightSessions,
-                              ...payload.mediumSessions,
-                              ...payload.heavySessions,
-                            ]
-                          : [
-                              ...payload.p1Sessions,
-                              ...payload.p2Sessions,
-                              ...payload.p3Sessions,
-                              ...payload.p4Sessions,
-                              ...payload.p5plusSessions,
-                            ];
+                    // Get all sessions for this time period
+                    const allSessions =
+                      viewType === "complexity"
+                        ? [
+                            ...payload.lightSessions,
+                            ...payload.mediumSessions,
+                            ...payload.heavySessions,
+                          ]
+                        : [
+                            ...payload.p1Sessions,
+                            ...payload.p2Sessions,
+                            ...payload.p3Sessions,
+                            ...payload.p4Sessions,
+                            ...payload.p5plusSessions,
+                          ];
 
-                      if (allSessions.length > 0) {
-                        setActiveBar({
-                          label: payload.label,
-                          category: "",
-                          categoryKey: "",
-                          count: allSessions.length,
-                          sessions: allSessions,
-                          color: "",
-                          x: chartState.chartX ?? 150,
-                          y: chartState.chartY ?? 100,
-                        });
-                      }
+                    if (allSessions.length > 0) {
+                      setActiveBar({
+                        label: payload.label,
+                        category: "",
+                        categoryKey: "",
+                        count: allSessions.length,
+                        sessions: allSessions,
+                        color: "",
+                        x: chartState.chartX ?? 150,
+                        y: chartState.chartY ?? 100,
+                      });
                     }
+                  }
+                }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--accent)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10, fill: "var(--foreground)" }}
+                  axisLine={{ stroke: "var(--foreground)", strokeWidth: 1 }}
+                  tickLine={{ stroke: "var(--foreground)" }}
+                  interval="preserveStartEnd"
+                  angle={timeframe === "daily" ? -35 : 0}
+                  textAnchor={timeframe === "daily" ? "end" : "middle"}
+                  height={timeframe === "daily" ? 80 : 30}
+                  dy={timeframe === "daily" ? 15 : 0}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "var(--foreground)" }}
+                  axisLine={{ stroke: "var(--foreground)", strokeWidth: 1 }}
+                  tickLine={{ stroke: "var(--foreground)" }}
+                  allowDecimals={false}
+                  label={{
+                    value: "Sessions",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 10,
+                    style: {
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fill: "var(--foreground)",
+                      textAnchor: "middle",
+                    },
                   }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--accent)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 10, fill: "var(--foreground)" }}
-                    axisLine={{ stroke: "var(--foreground)", strokeWidth: 1 }}
-                    tickLine={{ stroke: "var(--foreground)" }}
-                    interval="preserveStartEnd"
-                    angle={timeframe === "daily" ? -35 : 0}
-                    textAnchor={timeframe === "daily" ? "end" : "middle"}
-                    height={timeframe === "daily" ? 80 : 30}
-                    dy={timeframe === "daily" ? 15 : 0}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: "var(--foreground)" }}
-                    axisLine={{ stroke: "var(--foreground)", strokeWidth: 1 }}
-                    tickLine={{ stroke: "var(--foreground)" }}
-                    allowDecimals={false}
-                    label={{
-                      value: "Sessions",
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: 10,
-                      style: {
-                        fontSize: 11,
-                        fontWeight: 600,
-                        fill: "var(--foreground)",
-                        textAnchor: "middle",
-                      },
-                    }}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip viewType={viewType} />}
-                    cursor={{ fill: "var(--accent)", opacity: 0.3 }}
-                    wrapperStyle={{ zIndex: 100 }}
-                  />
-                  <Legend
-                    wrapperStyle={{ paddingTop: 10 }}
-                    iconType="square"
-                    iconSize={10}
-                    formatter={(value) => (
-                      <span className="text-xs text-foreground">{value}</span>
-                    )}
-                  />
-                  {getBars()}
-                </BarChart>
-              </ResponsiveContainer>
+                />
+                <Tooltip
+                  content={<CustomTooltip viewType={viewType} />}
+                  cursor={{ fill: "var(--accent)", opacity: 0.3 }}
+                  wrapperStyle={{ zIndex: 100 }}
+                />
+                <Legend
+                  wrapperStyle={{ paddingTop: 10 }}
+                  iconType="square"
+                  iconSize={10}
+                  formatter={(value) => (
+                    <span className="text-xs text-foreground">{value}</span>
+                  )}
+                />
+                {getBars()}
+              </BarChart>
             </div>
           )}
         </CardContent>

@@ -7,10 +7,9 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 import { getCssVar } from "@/utils/chartHelpers";
@@ -173,6 +172,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
   groupId,
   className,
 }) => {
+  const [containerRef, { width, height }] = useContainerSize();
   const [p1Color, setP1Color] = useState("#22c55e");
   const [p2Color, setP2Color] = useState("#8b5cf6");
   const [period, setPeriod] = useState<Period>("1M");
@@ -249,7 +249,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-1 pt-4 px-5">
+      <CardHeader className="pb-1 pt-3 px-5">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest pt-0.5">
             WPA Over Time
@@ -271,164 +271,167 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
             ))}
           </div>
         </div>
+        {/* Legend — HTML so WPA value boxes can never overlap it */}
+        <div className="flex items-center gap-4 pt-1">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: p1Color }}
+            />
+            {p1Name}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: p2Color }}
+            />
+            {p2Name}
+          </span>
+        </div>
       </CardHeader>
 
-      <CardContent className="pt-0 px-2 pb-5">
-        <div className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={filteredData}
-              margin={{ top: chartTopMargin, right: 16, bottom: 0, left: 0 }}
-            >
-              <defs>
-                <linearGradient id="h2hP1Gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={p1Color} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={p1Color} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="h2hP2Gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={p2Color} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={p2Color} stopOpacity={0} />
-                </linearGradient>
-              </defs>
+      <CardContent className="pt-0 px-2 pb-2">
+        <div ref={containerRef} className="h-[280px] w-full">
+          <ComposedChart
+            width={width}
+            height={height}
+            data={filteredData}
+            margin={{ top: chartTopMargin, right: 16, bottom: 0, left: 0 }}
+          >
+            <defs>
+              <linearGradient id="h2hP1Gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={p1Color} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={p1Color} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="h2hP2Gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={p2Color} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={p2Color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
 
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                vertical={false}
-                strokeOpacity={0.6}
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-                padding={{ left: 12, right: 12 }}
-              />
-              <YAxis
-                domain={["auto", "auto"]}
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => v.toFixed(1)}
-                width={40}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const point = payload[0]?.payload as DualWpaPoint;
-                  const dateLabel = new Date(
-                    point.date + "T12:00:00",
-                  ).toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  });
-                  return (
-                    <div className="bg-popover border rounded-lg shadow-lg p-2.5 min-w-[140px]">
-                      <p className="font-medium text-sm mb-1.5">{dateLabel}</p>
-                      <div className="space-y-1 text-xs">
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full"
-                              style={{ backgroundColor: p1Color }}
-                            />
-                            {p1Name}
-                          </span>
-                          <span className="font-semibold tabular-nums">
-                            {point.p1Wpa !== null
-                              ? point.p1Wpa.toFixed(2)
-                              : "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full"
-                              style={{ backgroundColor: p2Color }}
-                            />
-                            {p2Name}
-                          </span>
-                          <span className="font-semibold tabular-nums">
-                            {point.p2Wpa !== null
-                              ? point.p2Wpa.toFixed(2)
-                              : "—"}
-                          </span>
-                        </div>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--border)"
+              vertical={false}
+              strokeOpacity={0.6}
+            />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              padding={{ left: 12, right: 12 }}
+            />
+            <YAxis
+              domain={["auto", "auto"]}
+              tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => v.toFixed(1)}
+              width={40}
+            />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const point = payload[0]?.payload as DualWpaPoint;
+                const dateLabel = new Date(
+                  point.date + "T12:00:00",
+                ).toLocaleDateString("en-US", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                });
+                return (
+                  <div className="bg-popover border rounded-lg shadow-lg p-2.5 min-w-[140px]">
+                    <p className="font-medium text-sm mb-1.5">{dateLabel}</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: p1Color }}
+                          />
+                          {p1Name}
+                        </span>
+                        <span className="font-semibold tabular-nums">
+                          {point.p1Wpa !== null ? point.p1Wpa.toFixed(2) : "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: p2Color }}
+                          />
+                          {p2Name}
+                        </span>
+                        <span className="font-semibold tabular-nums">
+                          {point.p2Wpa !== null ? point.p2Wpa.toFixed(2) : "—"}
+                        </span>
                       </div>
                     </div>
-                  );
-                }}
-                cursor={{
-                  stroke: "var(--muted-foreground)",
-                  strokeWidth: 1,
-                  strokeDasharray: "3 3",
-                }}
-              />
-              <Legend
-                verticalAlign="top"
-                height={28}
-                iconType="circle"
-                iconSize={8}
-                formatter={(value: string) => (
-                  <span className="text-xs text-muted-foreground">{value}</span>
-                )}
-              />
+                  </div>
+                );
+              }}
+              cursor={{
+                stroke: "var(--muted-foreground)",
+                strokeWidth: 1,
+                strokeDasharray: "3 3",
+              }}
+            />
+            <Area
+              name={p1Name}
+              type="monotone"
+              dataKey="p1Wpa"
+              stroke={p1Color}
+              strokeWidth={2.5}
+              fill="url(#h2hP1Gradient)"
+              connectNulls
+              dot={(dotProps) => (
+                <DotWithLabel
+                  key={`p1-${dotProps.cx}-${dotProps.cy}`}
+                  cx={dotProps.cx}
+                  cy={dotProps.cy}
+                  wpaValue={dotProps.payload?.p1Wpa ?? null}
+                  color={p1Color}
+                  showLabels={showLabels}
+                />
+              )}
+              activeDot={{
+                r: 5,
+                stroke: p1Color,
+                strokeWidth: 2,
+                fill: "var(--background)",
+              }}
+            />
 
-              <Area
-                name={p1Name}
-                type="monotone"
-                dataKey="p1Wpa"
-                stroke={p1Color}
-                strokeWidth={2.5}
-                fill="url(#h2hP1Gradient)"
-                connectNulls
-                dot={(dotProps) => (
-                  <DotWithLabel
-                    key={`p1-${dotProps.cx}-${dotProps.cy}`}
-                    cx={dotProps.cx}
-                    cy={dotProps.cy}
-                    wpaValue={dotProps.payload?.p1Wpa ?? null}
-                    color={p1Color}
-                    showLabels={showLabels}
-                  />
-                )}
-                activeDot={{
-                  r: 5,
-                  stroke: p1Color,
-                  strokeWidth: 2,
-                  fill: "var(--background)",
-                }}
-              />
-
-              <Area
-                name={p2Name}
-                type="monotone"
-                dataKey="p2Wpa"
-                stroke={p2Color}
-                strokeWidth={2.5}
-                fill="url(#h2hP2Gradient)"
-                connectNulls
-                dot={(dotProps) => (
-                  <DotWithLabel
-                    key={`p2-${dotProps.cx}-${dotProps.cy}`}
-                    cx={dotProps.cx}
-                    cy={dotProps.cy}
-                    wpaValue={dotProps.payload?.p2Wpa ?? null}
-                    color={p2Color}
-                    showLabels={showLabels}
-                  />
-                )}
-                activeDot={{
-                  r: 5,
-                  stroke: p2Color,
-                  strokeWidth: 2,
-                  fill: "var(--background)",
-                }}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+            <Area
+              name={p2Name}
+              type="monotone"
+              dataKey="p2Wpa"
+              stroke={p2Color}
+              strokeWidth={2.5}
+              fill="url(#h2hP2Gradient)"
+              connectNulls
+              dot={(dotProps) => (
+                <DotWithLabel
+                  key={`p2-${dotProps.cx}-${dotProps.cy}`}
+                  cx={dotProps.cx}
+                  cy={dotProps.cy}
+                  wpaValue={dotProps.payload?.p2Wpa ?? null}
+                  color={p2Color}
+                  showLabels={showLabels}
+                />
+              )}
+              activeDot={{
+                r: 5,
+                stroke: p2Color,
+                strokeWidth: 2,
+                fill: "var(--background)",
+              }}
+            />
+          </ComposedChart>
         </div>
       </CardContent>
     </Card>

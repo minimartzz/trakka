@@ -7,7 +7,11 @@ import { Swords, Flame, RotateCcw, Gamepad2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { type GameSession, type TribeMember, type HistStatsInterface } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type HistStatsInterface,
+} from "@/types/tribes";
 import {
   calculateHeadToHead,
   calculateBgaWinRate,
@@ -591,7 +595,7 @@ const EmptyState: React.FC = () => (
     className="flex flex-col items-center justify-center py-16 text-center"
   >
     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-accent-2/10 flex items-center justify-center mb-5">
-      <Swords className="w-10 h-10 text-primary/60" />
+      <Swords className="w-10 h-10 text-primary" />
     </div>
     <h3 className="text-lg font-semibold mb-1">Select two players</h3>
     <p className="text-muted-foreground text-sm max-w-xs">

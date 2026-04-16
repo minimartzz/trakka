@@ -5,7 +5,12 @@ import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
 import TribeHomeTab from "./TribeHomeTab";
 import TabSkeleton from "./TabSkeleton";
-import { type GameSession, type TribeMember, type TribeAdmin, type HistStatsInterface } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type TribeAdmin,
+  type HistStatsInterface,
+} from "@/types/tribes";
 
 // Lazy load tab components that aren't immediately visible
 const TribePlayersTab = dynamic(() => import("./TribePlayersTab"), {
@@ -98,7 +103,14 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             groupId={tribeId}
           />
         }
-        gamesContent={<TribeGamesTab sessions={sessions} />}
+        gamesContent={
+          <TribeGamesTab
+            sessions={sessions}
+            members={members}
+            groupId={tribeId}
+            currentUserId={userId}
+          />
+        }
       />
     </div>
   );

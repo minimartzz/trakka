@@ -22,6 +22,7 @@ export const filterSessionData = (
         createdAt: new Date(record.createdAt),
         numPlayers: record.numPlayers,
         tribe: record.tribeName,
+        tribeId: record.tribeId,
         players: [],
         isVp: record.isVp,
         isPlayer: false,
@@ -61,7 +62,9 @@ export const filterSessionData = (
     .map((session) => {
       // Sort players by position, using DB insertion order (rowId) as tiebreaker
       session.players.sort((a, b) =>
-        a.position !== b.position ? a.position! - b.position! : a.rowId - b.rowId,
+        a.position !== b.position
+          ? a.position! - b.position!
+          : a.rowId - b.rowId,
       );
 
       // Find the player records

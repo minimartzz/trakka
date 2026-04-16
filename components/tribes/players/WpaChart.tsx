@@ -7,10 +7,10 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   ReferenceLine,
 } from "recharts";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 import { getCssVar } from "@/utils/chartHelpers";
@@ -111,6 +111,7 @@ const WpaChart: React.FC<WpaChartProps> = ({
   groupId,
   className,
 }) => {
+  const [containerRef, { width, height }] = useContainerSize();
   const [lineColor, setLineColor] = useState("#8b5cf6");
   const [period, setPeriod] = useState<Period>("1M");
 
@@ -243,72 +244,72 @@ const WpaChart: React.FC<WpaChartProps> = ({
       </CardHeader>
 
       <CardContent className="pt-2 px-2 pb-5">
-        <div className="h-[220px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={filteredData}
-              margin={{ top: 10, right: 16, bottom: 0, left: 0 }}
-            >
-              <defs>
-                <linearGradient id="wpaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={lineColor} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--border)"
-                vertical={false}
-                strokeOpacity={0.6}
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-                padding={{ left: 12, right: 12 }}
-              />
-              <YAxis
-                domain={["auto", "auto"]}
-                tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => v.toFixed(1)}
-                width={40}
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{
-                  stroke: lineColor,
-                  strokeWidth: 1,
-                  strokeDasharray: "3 3",
-                }}
-              />
-              {latestValue !== null && (
-                <ReferenceLine
-                  y={latestValue}
-                  stroke={lineColor}
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.4}
-                />
-              )}
-              <Area
-                type="monotone"
-                dataKey="wpa"
+        <div ref={containerRef} className="h-[220px] w-full">
+          <AreaChart
+            width={width}
+            height={height}
+            data={filteredData}
+            margin={{ top: 10, right: 16, bottom: 0, left: 0 }}
+          >
+            <defs>
+              <linearGradient id="wpaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={lineColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--border)"
+              vertical={false}
+              strokeOpacity={0.6}
+            />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              padding={{ left: 12, right: 12 }}
+            />
+            <YAxis
+              domain={["auto", "auto"]}
+              tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => v.toFixed(1)}
+              width={40}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: lineColor,
+                strokeWidth: 1,
+                strokeDasharray: "3 3",
+              }}
+            />
+            {latestValue !== null && (
+              <ReferenceLine
+                y={latestValue}
                 stroke={lineColor}
-                strokeWidth={2.5}
-                fill="url(#wpaGradient)"
-                dot={false}
-                activeDot={{
-                  r: 5,
-                  stroke: lineColor,
-                  strokeWidth: 2,
-                  fill: "var(--background)",
-                }}
+                strokeDasharray="4 4"
+                strokeOpacity={0.4}
               />
-            </AreaChart>
-          </ResponsiveContainer>
+            )}
+            <Area
+              type="monotone"
+              dataKey="wpa"
+              stroke={lineColor}
+              strokeWidth={2.5}
+              fill="url(#wpaGradient)"
+              dot={false}
+              activeDot={{
+                r: 5,
+                stroke: lineColor,
+                strokeWidth: 2,
+                fill: "var(--background)",
+              }}
+            />
+          </AreaChart>
         </div>
       </CardContent>
     </Card>

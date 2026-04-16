@@ -459,10 +459,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                     onClick={() => setVisibleCount((c) => c + pageSize)}
                   >
                     Show{" "}
-                    {Math.min(
-                      pageSize,
-                      filteredSessions.length - visibleCount,
-                    )}{" "}
+                    {Math.min(pageSize, filteredSessions.length - visibleCount)}{" "}
                     more
                     <ChevronDown className="w-4 h-4 ml-1" />
                   </Button>
