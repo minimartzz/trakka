@@ -143,7 +143,7 @@ export function GameInfoSection({
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-medium",
+                        "hidden sm:inline text-xs font-medium",
                         getWeightColor(gameDetails.weight),
                       )}
                     >

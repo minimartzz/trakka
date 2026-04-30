@@ -108,7 +108,6 @@ function PlayerDropdown({
           <>
             <Search className="w-4 h-4 text-muted-foreground shrink-0" />
             <Input
-              autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search players..."
