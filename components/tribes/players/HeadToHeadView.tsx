@@ -728,7 +728,7 @@ const HeadToHeadView: React.FC<HeadToHeadViewProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="grid grid-cols-2 gap-3 sm:gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
       >
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 block">

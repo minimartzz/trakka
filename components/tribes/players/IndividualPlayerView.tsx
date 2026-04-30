@@ -229,7 +229,7 @@ const FlipWinRateCard: React.FC<{
               </div>
               <div className="flex items-center gap-1 text-white/40 text-[10px]">
                 <RotateCcw className="w-3 h-3" />
-                Standard
+                STD
               </div>
             </div>
 
@@ -240,7 +240,7 @@ const FlipWinRateCard: React.FC<{
             </p>
 
             {/* Formula note */}
-            <p className="text-xs text-white/50 mb-3">
+            <p className="hidden sm:block text-xs text-white/50">
               Weighted by player count
             </p>
 
@@ -254,13 +254,6 @@ const FlipWinRateCard: React.FC<{
           </div>
         </div>
       </div>
-
-      {/* Tap hint — fades after first flip */}
-      {!flipped && (
-        <p className="absolute bottom-1.5 right-2.5 text-[10px] text-white/30 pointer-events-none">
-          tap to flip
-        </p>
-      )}
     </div>
   );
 };
@@ -635,9 +628,6 @@ const ComparativeCard: React.FC<{
               <div className="flex items-center justify-between pt-1 border-t">
                 <span className="text-[10px] text-muted-foreground">
                   {stat.wins}W · {stat.losses}L · {stat.gamesPlayed} together
-                </span>
-                <span className="text-[10px] text-muted-foreground/50">
-                  tap to flip
                 </span>
               </div>
             </CardContent>

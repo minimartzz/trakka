@@ -58,10 +58,7 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => {
-          setOpen(!open);
-          if (!open) setTimeout(() => inputRef.current?.focus(), 50);
-        }}
+        onClick={() => setOpen(!open)}
         className={cn(
           "flex items-center gap-2 w-full px-3 py-2 rounded-lg border bg-background",
           "hover:bg-muted/50 transition-colors text-left",
@@ -70,7 +67,7 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
       >
         {selectedMember ? (
           <>
-            <Avatar className="w-7 h-7">
+            <Avatar className="w-8 h-8 shrink-0">
               <AvatarImage
                 src={selectedMember.image || ""}
                 alt={selectedMember.username}
@@ -79,9 +76,14 @@ const PlayerSearchSelect: React.FC<PlayerSearchSelectProps> = ({
                 {selectedMember.firstName[0]}
               </AvatarFallback>
             </Avatar>
-            <span className="flex-1 text-sm font-medium truncate">
-              {selectedMember.firstName} {selectedMember.lastName}
-            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {selectedMember.firstName} {selectedMember.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                @{selectedMember.username}
+              </p>
+            </div>
             <X
               className="w-4 h-4 text-muted-foreground hover:text-foreground shrink-0"
               onClick={(e) => {
