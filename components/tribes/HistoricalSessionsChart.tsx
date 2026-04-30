@@ -359,64 +359,94 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
       groupedData[key][playerCountBin]++;
     });
 
-    // Convert to array and sort by date
-    const dataPoints: BarDataPoint[] = Object.entries(groupedData)
-      .map(([sortKey, group]) => {
-        const lightSessions = group.sessions.filter(
-          (s) => getComplexityBin(s.gameWeight) === "light",
-        );
-        const mediumSessions = group.sessions.filter(
-          (s) => getComplexityBin(s.gameWeight) === "medium",
-        );
-        const heavySessions = group.sessions.filter(
-          (s) => getComplexityBin(s.gameWeight) === "heavy",
-        );
-        const p1Sessions = group.sessions.filter(
-          (s) => getPlayerCountBin(s.players.length) === "p1",
-        );
-        const p2Sessions = group.sessions.filter(
-          (s) => getPlayerCountBin(s.players.length) === "p2",
-        );
-        const p3Sessions = group.sessions.filter(
-          (s) => getPlayerCountBin(s.players.length) === "p3",
-        );
-        const p4Sessions = group.sessions.filter(
-          (s) => getPlayerCountBin(s.players.length) === "p4",
-        );
-        const p5plusSessions = group.sessions.filter(
-          (s) => getPlayerCountBin(s.players.length) === "p5plus",
-        );
+    const toDataPoint = (
+      sortKey: string,
+      label: string,
+      group: SessionGroup,
+    ): BarDataPoint => ({
+      label,
+      sortKey,
+      light: group.light,
+      medium: group.medium,
+      heavy: group.heavy,
+      p1: group.p1,
+      p2: group.p2,
+      p3: group.p3,
+      p4: group.p4,
+      p5plus: group.p5plus,
+      lightSessions: group.sessions.filter(
+        (s) => getComplexityBin(s.gameWeight) === "light",
+      ),
+      mediumSessions: group.sessions.filter(
+        (s) => getComplexityBin(s.gameWeight) === "medium",
+      ),
+      heavySessions: group.sessions.filter(
+        (s) => getComplexityBin(s.gameWeight) === "heavy",
+      ),
+      p1Sessions: group.sessions.filter(
+        (s) => getPlayerCountBin(s.players.length) === "p1",
+      ),
+      p2Sessions: group.sessions.filter(
+        (s) => getPlayerCountBin(s.players.length) === "p2",
+      ),
+      p3Sessions: group.sessions.filter(
+        (s) => getPlayerCountBin(s.players.length) === "p3",
+      ),
+      p4Sessions: group.sessions.filter(
+        (s) => getPlayerCountBin(s.players.length) === "p4",
+      ),
+      p5plusSessions: group.sessions.filter(
+        (s) => getPlayerCountBin(s.players.length) === "p5plus",
+      ),
+    });
 
-        return {
-          label: formatDateLabel(
-            new Date(group.sessions[0].datePlayed),
-            timeframe,
+    // Daily: last 14 days with sessions only (no gap filling)
+    if (timeframe === "daily") {
+      return Object.entries(groupedData)
+        .map(([sortKey, group]) =>
+          toDataPoint(
+            sortKey,
+            formatDateLabel(new Date(group.sessions[0].datePlayed), "daily"),
+            group,
           ),
-          sortKey,
-          light: group.light,
-          medium: group.medium,
-          heavy: group.heavy,
-          p1: group.p1,
-          p2: group.p2,
-          p3: group.p3,
-          p4: group.p4,
-          p5plus: group.p5plus,
-          lightSessions,
-          mediumSessions,
-          heavySessions,
-          p1Sessions,
-          p2Sessions,
-          p3Sessions,
-          p4Sessions,
-          p5plusSessions,
-        };
-      })
-      .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+        )
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+        .slice(-14);
+    }
 
-    // Limit to reasonable number of data points based on timeframe
-    const maxPoints =
-      timeframe === "daily" ? 14 : timeframe === "monthly" ? 12 : 8;
-    return dataPoints.slice(-maxPoints);
+    // Monthly / Quarterly / Yearly: last 5 periods, gap-filled with zeros
+    const emptyGroup: SessionGroup = {
+      sessions: [],
+      light: 0,
+      medium: 0,
+      heavy: 0,
+      p1: 0,
+      p2: 0,
+      p3: 0,
+      p4: 0,
+      p5plus: 0,
+    };
+    const refDate = new Date();
+    refDate.setDate(1);
+
+    return Array.from({ length: 5 }, (_, idx) => {
+      const back = 4 - idx;
+      const d = new Date(refDate);
+      if (timeframe === "monthly") {
+        d.setMonth(refDate.getMonth() - back);
+      } else if (timeframe === "quarterly") {
+        d.setMonth(Math.floor(refDate.getMonth() / 3) * 3 - back * 3);
+      } else {
+        d.setFullYear(refDate.getFullYear() - back);
+        d.setMonth(0);
+      }
+      const sortKey = getDateKey(d, timeframe);
+      return toDataPoint(
+        sortKey,
+        formatDateLabel(d, timeframe),
+        groupedData[sortKey] ?? emptyGroup,
+      );
+    });
   }, [sessions, timeframe]);
 
   const handleChartClick = useCallback(() => {
@@ -424,7 +454,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
     setIsTouchInteraction(false);
   }, []);
 
-  const isEmpty = chartData.length === 0;
+  const isEmpty = sessions.length === 0;
   const isNarrow = (width || 0) < 640;
 
   // Get bars based on view type
