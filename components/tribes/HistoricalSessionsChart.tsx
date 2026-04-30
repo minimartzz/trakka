@@ -425,6 +425,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
   }, []);
 
   const isEmpty = chartData.length === 0;
+  const isNarrow = (width || 0) < 640;
 
   // Get bars based on view type
   const getBars = () => {
@@ -753,7 +754,12 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
                 width={width}
                 height={height}
                 data={chartData}
-                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                margin={{
+                  top: 20,
+                  right: 20,
+                  bottom: 20,
+                  left: isNarrow ? 5 : 20,
+                }}
                 onMouseDown={(e) => {
                   // Detect touch interaction
                   if (e && "nativeEvent" in e) {
@@ -834,7 +840,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
                     value: "Sessions",
                     angle: -90,
                     position: "insideLeft",
-                    offset: 10,
+                    offset: isNarrow ? 20 : 10,
                     style: {
                       fontSize: 11,
                       fontWeight: 600,
@@ -849,12 +855,61 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
                   wrapperStyle={{ zIndex: 100 }}
                 />
                 <Legend
+                  align="center"
                   wrapperStyle={{ paddingTop: 10 }}
                   iconType="square"
                   iconSize={10}
-                  formatter={(value) => (
-                    <span className="text-xs text-foreground">{value}</span>
-                  )}
+                  content={(props) => {
+                    const items =
+                      viewType === "complexity"
+                        ? [
+                            { value: "Light", color: COMPLEXITY_COLORS.light },
+                            {
+                              value: "Medium",
+                              color: COMPLEXITY_COLORS.medium,
+                            },
+                            { value: "Heavy", color: COMPLEXITY_COLORS.heavy },
+                          ]
+                        : ((props.payload as Array<{
+                            value: string;
+                            color: string;
+                          }>) ?? []);
+                    return (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: 12,
+                          paddingTop: 10,
+                        }}
+                      >
+                        {items.map((item) => (
+                          <span
+                            key={item.value}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              fontSize: 12,
+                              color: "var(--foreground)",
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: 10,
+                                height: 10,
+                                backgroundColor: item.color,
+                                borderRadius: 2,
+                                flexShrink: 0,
+                              }}
+                            />
+                            {item.value}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  }}
                 />
                 {getBars()}
               </BarChart>

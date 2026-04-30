@@ -15,7 +15,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Tooltip,
   type PieLabelRenderProps,
 } from "recharts";
 import { useContainerSize } from "@/hooks/useContainerSize";
@@ -33,13 +32,6 @@ interface AllGamesPieChartProps {
 }
 
 type ViewType = "complexity" | "playerCount";
-
-interface PieDataPoint {
-  name: string;
-  value: number;
-  color: string;
-  percentage: number;
-}
 
 // Custom label renderer for pie slices
 const renderCustomizedLabel = ({
@@ -75,33 +67,6 @@ const renderCustomizedLabel = ({
   );
 };
 
-// Custom tooltip
-const CustomTooltip = ({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: Array<{ payload: PieDataPoint }>;
-}) => {
-  if (!active || !payload || !payload[0]) return null;
-
-  const data = payload[0].payload;
-
-  return (
-    <div className="bg-popover border rounded-lg shadow-lg p-2 min-w-[120px]">
-      <div className="flex items-center gap-2 mb-1">
-        <div
-          className="w-3 h-3 rounded-sm"
-          style={{ backgroundColor: data.color }}
-        />
-        <span className="font-medium text-sm">{data.name}</span>
-      </div>
-      <div className="text-xs text-muted-foreground">
-        {data.value} games ({data.percentage.toFixed(1)}%)
-      </div>
-    </div>
-  );
-};
 
 const AllGamesPieChart: React.FC<AllGamesPieChartProps> = ({
   sessions,
@@ -268,7 +233,6 @@ const AllGamesPieChart: React.FC<AllGamesPieChartProps> = ({
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
               </PieChart>
 
               {/* Center label showing total */}

@@ -35,37 +35,33 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const tribeId = (await params).id;
 
   // Fetch user and tribe data in parallel for better performance
-  const [user, tribeMembers, tribeDetailsArray, gameLogsRaw] =
-    await Promise.all([
-      fetchUser(),
-      getTribeMembers(tribeId),
-      getTribeDetails(tribeId),
-      getTribeGameSessions(tribeId),
-    ]);
+  const [
+    user,
+    tribeMembers,
+    tribeDetailsArray,
+    gameLogsRaw,
+    rollingStats,
+    dailyPlayerStats,
+    monthlyPlayerStats,
+  ] = await Promise.all([
+    fetchUser(),
+    getTribeMembers(tribeId),
+    getTribeDetails(tribeId),
+    getTribeGameSessions(tribeId),
+    getRollingPlayerStats({ groupId: tribeId }),
+    getDailyPlayerStats({ groupId: tribeId }),
+    getMonthlyPlayerStats({ groupId: tribeId }),
+  ]);
 
   if (!user) {
     notFound();
   }
 
-  if (!user) {
-    notFound();
-  }
-
-  const [rollingStats, dailyPlayerStats, monthlyPlayerStats] =
-    await Promise.all([
-      getRollingPlayerStats({ groupId: tribeId }),
-      getDailyPlayerStats({ groupId: tribeId }),
-      getMonthlyPlayerStats({ groupId: tribeId }),
-    ]);
   const histStats = {
     rollingStats,
     dailyPlayerStats,
     monthlyPlayerStats,
   };
-
-  if (!user) {
-    notFound();
-  }
 
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
   if (!tribeDetails) {

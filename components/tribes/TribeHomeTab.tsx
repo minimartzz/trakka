@@ -161,11 +161,6 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
     return isNaN(averageWPA) ? 0 : parseFloat(averageWPA.toFixed(2));
   };
 
-  // TODO: Choose another stat
-  const calculateOverallWinPercentage = (): number => {
-    return calculateAverageWPA();
-  };
-
   // Get most popular games
   const getPopularGames = (): PopularGame[] => {
     const gameCounts: Record<
@@ -212,7 +207,6 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
     lastWeekWpa === 0 ? 0 : parseFloat((wpa - lastWeekWpa).toFixed(2));
   const wpaChangeDir =
     wpaChange > 0 ? "positive" : wpaChange < 0 ? "negative" : "none";
-  const overallWinPct = calculateOverallWinPercentage();
   const popularGames = getPopularGames();
 
   return (
@@ -305,7 +299,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
                 <Info className="w-4 h-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-[220px] text-center">
+            <TooltipContent side="right" className="max-w-[180px]">
               Only players with a minimum of 4 games are included in the
               Leaderboard
             </TooltipContent>

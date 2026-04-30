@@ -188,7 +188,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
       transition={{ duration: 0.4, delay }}
     >
       <Card className="h-full">
-        <CardHeader className="pb-3">
+        <CardHeader>
           {showFilters ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
               {/* Filters - User Toggle and Time Filter side by side */}
@@ -264,7 +264,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
           )}
         </CardHeader>
 
-        <CardContent className="pt-0">
+        <CardContent>
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Dices className="w-10 h-10 mb-2 opacity-50" />
