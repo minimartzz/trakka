@@ -94,14 +94,6 @@ const PlayerSubTabs: React.FC<PlayerSubTabsProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
-        {activeView === "all" && (
-          <AllPlayersView
-            members={members}
-            sessions={sessions}
-            histStats={histStats}
-            onPlayerSelect={handlePlayerSelect}
-          />
-        )}
         {activeView === "individual" && (
           <IndividualPlayerView
             members={members}
@@ -120,6 +112,14 @@ const PlayerSubTabs: React.FC<PlayerSubTabsProps> = ({
             histStats={histStats}
             userId={userId}
             groupId={groupId}
+          />
+        )}
+        {activeView === "all" && (
+          <AllPlayersView
+            members={members}
+            sessions={sessions}
+            histStats={histStats}
+            onPlayerSelect={handlePlayerSelect}
           />
         )}
       </motion.div>

@@ -37,7 +37,7 @@ interface WinRatePoint {
 
 type Period = "1D" | "5D" | "1M" | "3M" | "6M" | "1Y" | "ALL";
 const PERIODS: Period[] = ["1D", "5D", "1M", "3M", "6M", "1Y", "ALL"];
-const DAILY_PERIODS = new Set<Period>(["1D", "5D", "1M", "3M"]);
+const DAILY_PERIODS = new Set<Period>(["1D", "5D", "1M", "3M", "6M", "1Y", "ALL"]);
 
 const MONTH_NAMES = [
   "Jan",
@@ -82,6 +82,15 @@ function formatLabel(dateStr: string, period: Period): string {
   if (period === "1M" || period === "3M") {
     return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
   }
+  return `${MONTH_NAMES[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
+}
+
+function formatAxisLabel(dateStr: string, p: Period): string {
+  const d = new Date(dateStr + "T12:00:00");
+  if (p === "1D") return `${DAY_NAMES[d.getDay()]} ${d.getDate()}`;
+  if (p === "5D")
+    return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}, ${DAY_NAMES[d.getDay()]}`;
+  if (p === "1M") return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
   return `${MONTH_NAMES[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
 }
 
@@ -211,6 +220,23 @@ const WinRateChart: React.FC<WinRateChartProps> = ({
       ? parseFloat((latestValue - firstValue).toFixed(1))
       : null;
 
+  const isNarrow = (width || 0) < 640;
+
+  const computedTicks = useMemo(() => {
+    if (period === "1D" || period === "5D") {
+      return filteredData.map((d) => d.date);
+    }
+    if (period === "1M") {
+      return filteredData
+        .filter((d) => new Date(d.date + "T12:00:00").getDate() % 2 === 1)
+        .map((d) => d.date);
+    }
+    // 3M, 6M, 1Y, ALL — daily data, show month starts only
+    return filteredData
+      .filter((d) => new Date(d.date + "T12:00:00").getDate() === 1)
+      .map((d) => d.date);
+  }, [filteredData, period]);
+
   const hasData = allDailyData.length > 0 || allMonthlyData.length > 0;
 
   if (!hasData) {
@@ -232,7 +258,7 @@ const WinRateChart: React.FC<WinRateChartProps> = ({
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest pt-0.5">
             Win Rate Over Time
           </p>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="hidden sm:flex items-center gap-0.5 shrink-0">
             {PERIODS.map((p) => (
               <button
                 key={p}
@@ -298,12 +324,14 @@ const WinRateChart: React.FC<WinRateChartProps> = ({
               strokeOpacity={0.6}
             />
             <XAxis
-              dataKey="label"
+              dataKey="date"
+              ticks={computedTicks}
+              tickFormatter={(dateStr) => formatAxisLabel(dateStr, period)}
               tick={{ fontSize: 13, fill: "var(--muted-foreground)" }}
               axisLine={false}
               tickLine={false}
-              interval="preserveStartEnd"
               padding={{ left: 12, right: 12 }}
+              hide={isNarrow}
             />
             <YAxis
               domain={[
@@ -347,6 +375,24 @@ const WinRateChart: React.FC<WinRateChartProps> = ({
               }}
             />
           </AreaChart>
+        </div>
+
+        {/* Mobile period filters — below chart, evenly spread */}
+        <div className="flex sm:hidden justify-between w-full mt-3 px-1">
+          {PERIODS.map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={cn(
+                "flex-1 text-center text-[13px] font-semibold py-1 rounded transition-colors",
+                period === p
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {p}
+            </button>
+          ))}
         </div>
       </CardContent>
     </Card>
