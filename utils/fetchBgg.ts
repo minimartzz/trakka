@@ -99,9 +99,7 @@ const extractRank = (item: any): number => {
     const ranks = item?.statistics?.ratings?.ranks?.rank;
     if (!ranks) return 999999;
     const rankArray = Array.isArray(ranks) ? ranks : [ranks];
-    const overall = rankArray.find(
-      (r: any) => r?.["$"]?.name === "boardgame",
-    );
+    const overall = rankArray.find((r: any) => r?.["$"]?.name === "boardgame");
     const val = overall?.["$"]?.value;
     if (!val || val === "Not Ranked") return 999999;
     const parsed = parseInt(val, 10);
@@ -124,7 +122,7 @@ export const fetchBGGIds = async (
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_BGG_TOKEN}`,
+        Authorization: `Bearer ${process.env.BGG_TOKEN}`,
         "User-Agent": "Trakka/1.0",
       },
       next: { revalidate: 36000 },
@@ -175,7 +173,7 @@ export const fetchBGGDetails = async (
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_BGG_TOKEN}`,
+        Authorization: `Bearer ${process.env.BGG_TOKEN}`,
         "User-Agent": "Trakka/1.0",
       },
       next: { revalidate: 36000 },
