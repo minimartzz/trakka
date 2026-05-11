@@ -11,7 +11,6 @@ import {
   Shield,
   Heart,
   CalendarDays,
-  Award,
   Dices,
   RotateCcw,
   Trophy,
@@ -174,7 +173,7 @@ const FlipWinRateCard: React.FC<{
           className="relative rounded-xl overflow-hidden h-full"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div className="bg-gradient-to-br from-primary to-primary/70 p-4 sm:p-5 h-full">
+          <div className="bg-linear-to-br from-primary to-primary/70 p-4 sm:p-5 h-full">
             {/* Header row */}
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -218,7 +217,7 @@ const FlipWinRateCard: React.FC<{
             transform: "rotateY(180deg)",
           }}
         >
-          <div className="bg-gradient-to-br from-violet-700 to-violet-500 p-4 sm:p-5 h-full">
+          <div className="bg-linear-to-br from-violet-700 to-violet-500 p-4 sm:p-5 h-full">
             {/* Header row */}
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -266,7 +265,7 @@ const WpaStatCard: React.FC<{
   delta: { current: number; delta: number | null };
   sparkline: number[];
 }> = ({ wpa, gamesPlayed, delta, sparkline }) => (
-  <div className="rounded-xl overflow-hidden bg-gradient-to-br from-accent-2 to-accent-2/70 h-full">
+  <div className="rounded-xl overflow-hidden bg-linear-to-br from-accent-2 to-accent-2/70 h-full">
     <div className="p-4 sm:p-5 h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
@@ -361,7 +360,7 @@ const PlayerBanner: React.FC<{
 
           {/* Badges cluster — top right */}
           {badges.length > 0 && (
-            <div className="flex flex-wrap justify-end gap-1.5 shrink-0 max-w-[88px] sm:max-w-none">
+            <div className="flex flex-wrap justify-end gap-1.5 shrink-0 max-w-22 sm:max-w-none">
               {badges.map((badge) => (
                 <PlayerBadge key={badge.type} badge={badge} size="sm" />
               ))}
@@ -441,7 +440,7 @@ const ComparativeCard: React.FC<{
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay }}
-        className="h-[175px]"
+        className="h-43.75"
       >
         <Card className="h-full">
           <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
@@ -475,7 +474,7 @@ const ComparativeCard: React.FC<{
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
-      className="h-[175px]"
+      className="h-43.75"
       style={{ perspective: "1000px" }}
     >
       {/* Flip container */}
@@ -610,7 +609,7 @@ const ComparativeCard: React.FC<{
                         <div className="flex flex-col items-end shrink-0">
                           <div className="flex items-center gap-0.5">
                             <Trophy className="w-2.5 h-2.5 text-amber-400" />
-                            <span className="text-[10px] font-semibold text-amber-500 truncate max-w-[48px]">
+                            <span className="text-[10px] font-semibold text-amber-500 truncate max-w-12">
                               {winner?.firstName ?? "—"}
                             </span>
                           </div>
@@ -870,6 +869,7 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
             currentUserId={activePlayerId}
             showFilters={false}
             pageSize={5}
+            initialTimeFilter="all_time"
           />
         </motion.div>
       </section>

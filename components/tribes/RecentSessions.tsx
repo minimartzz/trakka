@@ -36,6 +36,7 @@ interface RecentSessionsProps {
   showFilters?: boolean;
   pageSize?: number;
   title?: string;
+  initialTimeFilter?: TimeFilter;
 }
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
@@ -122,8 +123,9 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   showFilters = true,
   pageSize = PAGE_SIZE,
   title,
+  initialTimeFilter = "past_month",
 }) => {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("past_month");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>(initialTimeFilter);
   const [showOnlyMe, setShowOnlyMe] = useState(false);
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -275,13 +277,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
               {/* Sessions table - scrollable */}
               <div
                 ref={scrollRef}
-                className="max-h-[430px] overflow-y-auto overflow-x-auto"
+                className="max-h-107.5 overflow-y-auto overflow-x-auto"
                 onScroll={handleScroll}
               >
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                      <TableHead className="w-[80px]">Date</TableHead>
+                      <TableHead className="w-20">Date</TableHead>
                       <TableHead>Game</TableHead>
                       <TableHead>Winner</TableHead>
                       {currentUserId && <TableHead>You</TableHead>}
@@ -319,7 +321,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 gameTitle={session.gameTitle}
                               />
                               <span
-                                className="font-medium truncate max-w-[120px]"
+                                className="font-medium truncate max-w-30"
                                 title={session.gameTitle}
                               >
                                 {session.gameTitle}
@@ -345,7 +347,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                   <Trophy className="w-3 h-3 text-amber-500" />
                                   <span
                                     className={cn(
-                                      "text-sm font-medium truncate max-w-[80px]",
+                                      "text-sm font-medium truncate max-w-20",
                                       winner.profileId === currentUserId &&
                                         "text-primary",
                                     )}

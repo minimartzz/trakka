@@ -299,7 +299,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
                 <Info className="w-4 h-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-[180px]">
+            <TooltipContent side="right" className="max-w-45">
               Only players with a minimum of 4 games are included in the
               Leaderboard
             </TooltipContent>
