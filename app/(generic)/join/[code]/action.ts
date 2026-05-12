@@ -12,14 +12,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function createRequestLoggedIn(
-  inviteCode: string,
+  _inviteCode: string,
   groupId: string,
-  // profileId is kept for API compatibility but identity is resolved from session
-  _profileId: number
+  _profileId: number,
 ) {
-  // Resolve caller's identity from session — never trust client-supplied profileId
+  // Check if user exists from session
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const [profile] = await db
@@ -29,16 +30,37 @@ export async function createRequestLoggedIn(
 
   if (!profile) redirect("/login");
 
-  // Insert new group join request
-  await db.insert(groupJoinRequestTable).values({
-    groupId,
-    profileId: profile.id,
-  });
+  // Spam guard: If user is already a member or already has a pending request
+  // skip the insert
+  const [existingMembership] = await db
+    .select({ profileId: profileGroupTable.profileId })
+    .from(profileGroupTable)
+    .where(
+      and(
+        eq(profileGroupTable.groupId, groupId),
+        eq(profileGroupTable.profileId, profile.id),
+      ),
+    );
 
-  // Remove existing invite code
-  await db
-    .delete(groupInvitesTable)
-    .where(eq(groupInvitesTable.code, inviteCode));
+  if (!existingMembership) {
+    const [existingRequest] = await db
+      .select({ id: groupJoinRequestTable.id })
+      .from(groupJoinRequestTable)
+      .where(
+        and(
+          eq(groupJoinRequestTable.groupId, groupId),
+          eq(groupJoinRequestTable.profileId, profile.id),
+          eq(groupJoinRequestTable.status, "pending"),
+        ),
+      );
+
+    if (!existingRequest) {
+      await db.insert(groupJoinRequestTable).values({
+        groupId,
+        profileId: profile.id,
+      });
+    }
+  }
 
   revalidatePath("/dashboard");
 
@@ -49,12 +71,14 @@ export async function createRequestLoggedIn(
 export async function handleRequestAction(
   groupId: string,
   profileId: number,
-  action: "accept" | "reject"
+  action: "accept" | "reject",
 ) {
   const supabase = await createClient();
 
   // Verify the caller is authenticated and is an admin (roleId 1 or 2) of this group
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { success: false, message: "Unauthorized" };
 
   const [callerProfile] = await db
@@ -128,27 +152,48 @@ export async function inviteLogin(formData: FormData) {
 
   if (inviteCode && authData.user) {
     try {
-      const invite = await db
+      const [invite] = await db
         .select({
           groupId: groupInvitesTable.groupId,
         })
         .from(groupInvitesTable)
         .where(eq(groupInvitesTable.code, inviteCode));
 
-      // Invite code exists: Insert into "groupJoin" table
-      if (invite) {
-        await db.insert(groupJoinRequestTable).values({
-          groupId: invite[0].groupId,
-          profileId: profile[0].id,
-        });
+      // Prevent Duplicate Requests: Checks if the user is already a
+      // member of the tribe or if they already have a pending request
+      if (invite && profile[0]) {
+        const [existingMembership] = await db
+          .select({ profileId: profileGroupTable.profileId })
+          .from(profileGroupTable)
+          .where(
+            and(
+              eq(profileGroupTable.groupId, invite.groupId),
+              eq(profileGroupTable.profileId, profile[0].id),
+            ),
+          );
 
-        // Remove existing invite code
-        await db
-          .delete(groupInvitesTable)
-          .where(eq(groupInvitesTable.code, inviteCode));
+        if (!existingMembership) {
+          const [existingRequest] = await db
+            .select({ id: groupJoinRequestTable.id })
+            .from(groupJoinRequestTable)
+            .where(
+              and(
+                eq(groupJoinRequestTable.groupId, invite.groupId),
+                eq(groupJoinRequestTable.profileId, profile[0].id),
+                eq(groupJoinRequestTable.status, "pending"),
+              ),
+            );
+
+          if (!existingRequest) {
+            await db.insert(groupJoinRequestTable).values({
+              groupId: invite.groupId,
+              profileId: profile[0].id,
+            });
+          }
+        }
       }
 
-      // Delete the invite code
+      // Clear the pending-invite cookie;
       cookieStore.delete("pending_invite_code");
     } catch (error) {
       console.error("Failed to process auto join:", error);
@@ -162,7 +207,7 @@ export async function inviteLogin(formData: FormData) {
 // Form action to trigger Login
 export async function inviteSignUp(
   _prev: SignUpActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<SignUpActionState> {
   const supabase = await createClient();
   const cookieStore = await cookies();
