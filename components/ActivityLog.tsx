@@ -554,7 +554,7 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[340px] sm:w-[380px] p-0" align="start">
+      <PopoverContent className="w-85 sm:w-95 p-0" align="start">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
           <span className="font-semibold text-sm">Activity Log</span>
@@ -590,7 +590,7 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
         {/* Notifications List with Infinite Scroll */}
         <div
           ref={scrollContainerRef}
-          className="max-h-[400px] overflow-y-auto overscroll-contain"
+          className="max-h-100 overflow-y-auto overscroll-contain"
           onWheel={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
         >

@@ -20,12 +20,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/public/trakka_logo.png";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
 import ActivityLog from "@/components/ActivityLog";
 import { getAllTribeRequests } from "@/components/actions/tribeRequests";
 import { TribeRequest } from "@/lib/interfaces";
+import createSupabaseClient from "@/utils/supabase/client";
 
 interface AppSidebarProps {
   user: {
@@ -78,18 +79,42 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const showCollapsedView = isCollapsed && !sidebar.isMobile;
   const [requests, setRequests] = useState<TribeRequest[]>([]);
   const [tribeSearch, setTribeSearch] = useState<string>("");
+  const supabase = useMemo(() => createSupabaseClient(), []);
+
+  const fetchRequests = useCallback(async () => {
+    const results = await getAllTribeRequests(user.id);
+    if (results) setRequests(results as unknown as TribeRequest[]);
+  }, [user.id]);
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      const results = await getAllTribeRequests(user.id);
-
-      if (results) {
-        setRequests(results as unknown as TribeRequest[]);
-      }
-    };
-
     fetchRequests();
-  }, []);
+
+    const channel = supabase
+      .channel(`sidebar-notifs-${user.id}-${crypto.randomUUID()}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `profile_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            fetchRequests();
+            return;
+          }
+          const row = payload.new as { type?: string };
+          if (row?.type !== "join_request") return;
+          fetchRequests();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, user.id, fetchRequests]);
 
   return (
     <Sidebar collapsible="icon">

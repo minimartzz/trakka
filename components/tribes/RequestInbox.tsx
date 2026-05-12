@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getTribeRequestsByGroupId,
   updateTribeRequests,
@@ -14,6 +14,7 @@ import { Check, Inbox, User, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { TribeRequest } from "@/lib/interfaces";
+import createSupabaseClient from "@/utils/supabase/client";
 
 const RequestInbox = ({
   tribeId,
@@ -25,6 +26,12 @@ const RequestInbox = ({
   tribeImageUrl: string;
 }) => {
   const [requests, setRequests] = useState<TribeRequest[]>([]);
+  const supabase = useMemo(() => createSupabaseClient(), []);
+
+  const fetchRequests = useCallback(async () => {
+    const results = await getTribeRequestsByGroupId(profileId, tribeId);
+    if (results) setRequests(results as unknown as TribeRequest[]);
+  }, [profileId, tribeId]);
 
   const handleAction = async (
     tribeId: string,
@@ -58,16 +65,38 @@ const RequestInbox = ({
   };
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      const results = await getTribeRequestsByGroupId(profileId, tribeId);
-
-      if (results) {
-        setRequests(results as unknown as TribeRequest[]);
-      }
-    };
-
     fetchRequests();
-  }, []);
+
+    const channel = supabase
+      .channel(`tribe-inbox-${profileId}-${tribeId}-${crypto.randomUUID()}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `profile_id=eq.${profileId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            fetchRequests();
+            return;
+          }
+          const row = payload.new as {
+            type?: string;
+            data?: { group_id?: string };
+          };
+          if (row?.type !== "join_request") return;
+          if (row.data?.group_id !== tribeId) return;
+          fetchRequests();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, profileId, tribeId, fetchRequests]);
 
   return (
     <Popover>
@@ -76,7 +105,7 @@ const RequestInbox = ({
           variant="ghost"
           className="relative h-9 w-9 sm:w-fit sm:px-4 sm:rounded-md rounded-full p-0 bg-accent-2/80 hover:bg-accent-2 dark:hover:bg-accent-2/60 hover:cursor-pointer"
         >
-          <Inbox className="!h-4 !w-4" />
+          <Inbox className="h-4! w-4!" />
           <span className="hidden sm:block">Inbox</span>
           {requests.length > 0 && (
             <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[12px] text-white font-semibold">
@@ -134,7 +163,7 @@ const RequestInbox = ({
                   <Button
                     size="icon"
                     variant="default"
-                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-green-600 border-1 hover:bg-green-600 hover:text-white cursor-pointer z-10"
+                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-green-600 border hover:bg-green-600 hover:text-white cursor-pointer z-10"
                     onClick={() =>
                       handleAction(
                         req.data.group_id,
@@ -150,7 +179,7 @@ const RequestInbox = ({
                   <Button
                     size="icon"
                     variant="default"
-                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-destructive border-1 hover:bg-destructive hover:text-white cursor-pointer z-10"
+                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-destructive border hover:bg-destructive hover:text-white cursor-pointer z-10"
                     onClick={() =>
                       handleAction(
                         req.data.group_id,
