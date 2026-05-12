@@ -14,6 +14,8 @@ import { redirect } from "next/navigation";
 const Index = async () => {
   const user = await fetchUser();
 
+  if (user) redirect("/dashboard");
+
   return (
     <div
       className="min-h-screen"
@@ -26,7 +28,7 @@ const Index = async () => {
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tight text-foreground">
               Game intelligence for
             </h1>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tightpb-2 bg-gradient-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent pb-5">
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight leading-tightpb-2 bg-linear-to-r from-primary via-chart-2 to-ring bg-clip-text text-transparent pb-5">
               board game enthusiasts
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -37,24 +39,12 @@ const Index = async () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {user ? (
-              // <Button asChild size="lg" className="text-base px-8 py-6">
-              //   <Link href="/dashboard">
-              //     Go to Dashboard
-              //     <ArrowRight className="ml-2 h-4 w-4" />
-              //   </Link>
-              // </Button>
-              redirect("/dashboard")
-            ) : (
-              <>
-                <Button asChild size="lg" className="text-base px-8 py-6">
-                  <Link href="/login?tab=sign-up">
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
-            )}
+            <Button asChild size="lg" className="text-base px-8 py-6">
+              <Link href="/login?tab=sign-up">
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -147,14 +137,12 @@ const Index = async () => {
               Join thousands of players who are already tracking their games and
               improving their strategies.
             </p>
-            {!user && (
-              <Button asChild size="lg" className="text-base px-8 py-6">
-                <Link href="/login?tab=sign-up">
-                  Start tracking today
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            )}
+            <Button asChild size="lg" className="text-base px-8 py-6">
+              <Link href="/login?tab=sign-up">
+                Start tracking today
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

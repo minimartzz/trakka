@@ -8,8 +8,10 @@ import { Loader2 } from "lucide-react";
 
 export default function Error({
   error,
+  reset,
 }: {
   error: Error & { digest?: string };
+  reset: () => void;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -47,6 +49,7 @@ export default function Error({
         <Button
           onClick={() => {
             setIsLoading(true);
+            reset();
             router.push("/");
           }}
           className="bg-accent-5/90 hover:bg-accent-5"
