@@ -1,63 +1,10 @@
 "use server";
-import { groupJoinRequestTable } from "@/db/schema/groupJoinRequests";
 import { notificationsTable } from "@/db/schema/notifications";
+import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
-import { and, eq, sql } from "drizzle-orm";
-
-export async function getAllTribeRequests(profileId: number) {
-  try {
-    const result = await db
-      .select({
-        id: notificationsTable.id,
-        profileId: notificationsTable.profileId,
-        type: notificationsTable.type,
-        data: notificationsTable.data,
-        isRead: notificationsTable.isRead,
-      })
-      .from(notificationsTable)
-      .where(
-        and(
-          eq(notificationsTable.profileId, profileId),
-          eq(notificationsTable.type, "join_request"),
-          eq(notificationsTable.isRead, false),
-        ),
-      );
-
-    return result;
-  } catch (error) {
-    console.error("Failed to retrieve tribe requests: ", error);
-  }
-}
-
-export async function getTribeRequestsByGroupId(
-  profileId: number,
-  groupId: string,
-) {
-  try {
-    const result = await db
-      .select({
-        id: notificationsTable.id,
-        profileId: notificationsTable.profileId,
-        type: notificationsTable.type,
-        data: notificationsTable.data,
-        isRead: notificationsTable.isRead,
-      })
-      .from(notificationsTable)
-      .where(
-        and(
-          eq(notificationsTable.profileId, profileId),
-          eq(notificationsTable.type, "join_request"),
-          eq(notificationsTable.isRead, false),
-          sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
-        ),
-      );
-
-    return result;
-  } catch (error) {
-    console.error("Failed to retrieve tribe requests: ", error);
-  }
-}
+import { createClient } from "@/utils/supabase/server";
+import { and, eq, inArray } from "drizzle-orm";
 
 export async function updateTribeRequests(
   groupId: string,
@@ -67,102 +14,84 @@ export async function updateTribeRequests(
   status: string,
 ) {
   try {
-    const notifUpdate = await db
-      .update(notificationsTable)
-      .set({
-        isRead: true,
-      })
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const [callerProfile] = await db
+      .select({ id: profileTable.id })
+      .from(profileTable)
+      .where(eq(profileTable.uuid, user.id));
+
+    if (!callerProfile) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const [membership] = await db
+      .select({ roleId: profileGroupTable.roleId })
+      .from(profileGroupTable)
       .where(
         and(
-          sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
-          sql`${notificationsTable.data}->>'requester_id' = ${requesterId}`,
+          eq(profileGroupTable.groupId, groupId),
+          eq(profileGroupTable.profileId, callerProfile.id),
+          inArray(profileGroupTable.roleId, [1, 2]),
         ),
-      )
-      .returning();
+      );
 
-    if (notifUpdate.length === 0) {
-      console.error("Failed to update notifactions table");
+    if (!membership) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const { data: claimed, error: rpcError } = await supabase.rpc(
+      "approve_join_request",
+      {
+        p_req_id: requesterId,
+        p_group_id: groupId,
+        p_decision: status,
+      },
+    );
+
+    if (rpcError) {
+      console.error("approve_join_request RPC failed:", rpcError);
       return {
         success: false,
         message: "Failed to make change to user. Please try again later.",
       };
     }
 
-    const joinRequestUpdate = await db
-      .update(groupJoinRequestTable)
-      .set({ status: status })
-      .where(
-        and(
-          eq(groupJoinRequestTable.groupId, groupId),
-          eq(groupJoinRequestTable.profileId, requesterId),
-        ),
-      )
-      .returning();
-
-    if (joinRequestUpdate.length === 0) {
-      console.error("Failed to update group_join_requests table");
+    if (!claimed) {
       return {
         success: false,
-        message: "Failed to make change to user. Please try again later.",
+        message: "This request has already been handled by another admin.",
       };
     }
 
-    if (status === "accept") {
-      // Insert new user role into tribe
-      const insertUserToTribe = await db
-        .insert(profileGroupTable)
-        .values({
-          groupId: groupId,
-          profileId: requesterId,
-          roleId: 3,
-        })
-        .onConflictDoNothing()
-        .returning();
+    // Inform only the SuperAdmins in notifications
+    await db.insert(notificationsTable).values({
+      type: "tribe_join",
+      data: {
+        tribeName,
+        tribeImageUrl,
+        outcome: status,
+      },
+      isRead: false,
+      profileId: requesterId,
+    });
 
-      if (insertUserToTribe.length === 0) {
-        console.error("Failed to insert into profile_group table");
-        return {
-          success: false,
-          message: "Failed to make change to user. Please try again later.",
-        };
-      }
-
-      // Insert new user to notifications
-      await db.insert(notificationsTable).values({
-        type: "tribe_join",
-        data: {
-          tribeName: tribeName,
-          tribeImageUrl: tribeImageUrl,
-          outcome: status,
-        },
-        isRead: false,
-        profileId: requesterId,
-      });
-
-      return {
-        success: true,
-        message: "Successfully added user to the group!",
-      };
-    } else {
-      // Insert new user to notifications
-      await db.insert(notificationsTable).values({
-        type: "tribe_join",
-        data: {
-          tribeName: tribeName,
-          tribeImageUrl: tribeImageUrl,
-          outcome: status,
-        },
-        isRead: false,
-        profileId: requesterId,
-      });
-
-      return {
-        success: true,
-        message: "Successfully rejected user request to join the group!",
-      };
-    }
+    return {
+      success: true,
+      message:
+        status === "accept"
+          ? "Successfully added user to the group!"
+          : "Successfully rejected user request to join the group!",
+    };
   } catch (error) {
-    console.error("Failed to retrieve tribe requests: ", error);
+    console.error("Failed to update tribe request: ", error);
     return {
       success: false,
       message: "Failed to make change to user. Please try again later.",

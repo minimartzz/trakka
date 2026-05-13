@@ -3,13 +3,13 @@ import {
   deleteNotification,
   markNotificationsAsRead,
 } from "@/components/actions/notificationActions";
+import { useNotifications } from "@/components/NotificationsProvider";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import createClient from "@/utils/supabase/client";
 import {
   Bell,
   X,
@@ -149,14 +149,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             config?.color || "text-muted-foreground",
           )}
         />
-        {/* <span
-          className={cn(
-            "text-[10px] font-medium",
-            config?.color || "text-muted-foreground"
-          )}
-        >
-          {config?.label}
-        </span> */}
       </div>
     </div>
   );
@@ -240,9 +232,8 @@ const GenericContent: React.FC<{ data: Record<string, any> }> = ({ data }) => (
   </div>
 );
 
-const ActivityLog = ({ profileId }: { profileId: number }) => {
-  const supabase = createClient();
-  const [activities, setActivities] = useState<ActivitiesInterface[]>([]);
+const ActivityLog = () => {
+  const { notifications, setNotifications, refetch } = useNotifications();
   const [displayCount, setDisplayCount] = useState(INITIAL_LOAD);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -256,7 +247,23 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
   const markedAsReadIds = useRef<Set<string>>(new Set());
   const activitiesRef = useRef<ActivitiesInterface[]>([]);
 
-  // Keep activitiesRef in sync with activities state
+  // Gets only the tribe_join and new_session notification types
+  // Information retrieved in realtime + initial fetch from NotificationProvider
+  const activities = useMemo<ActivitiesInterface[]>(
+    () =>
+      notifications
+        .filter((n) => n.type in NOTIFICATION_CONFIG)
+        .map((n) => ({
+          id: n.id,
+          type: n.type as NotificationType,
+          data: n.data,
+          isRead: n.isRead,
+          profileId: n.profileId,
+          createdAt: n.createdAt,
+        })),
+    [notifications],
+  );
+
   activitiesRef.current = activities;
 
   // Computed values
@@ -272,97 +279,6 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
 
   const hasMore = displayCount < activities.length;
 
-  // Fetch notifications
-  const fetchNotifications = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("notifications")
-      .select(
-        `
-        id,
-        type,
-        data,
-        isRead:is_read,
-        profileId:profile_id,
-        createdAt:created_at
-      `,
-      )
-      .eq("profile_id", profileId)
-      .in("type", Object.keys(NOTIFICATION_CONFIG))
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Supabase Error:", error.message, error.details);
-      toast.error("Failed to fetch notifications");
-      return;
-    }
-
-    if (data) {
-      setActivities(data);
-      // Reset tracked read IDs when fetching fresh data
-      markedAsReadIds.current.clear();
-    }
-  }, [supabase, profileId]);
-
-  // Initial fetch and realtime subscription
-  useEffect(() => {
-    fetchNotifications();
-
-    // Subscribe for realtime updates
-    const channel = supabase
-      .channel("activity_log")
-      .on(
-        "postgres_changes",
-        {
-          schema: "public",
-          table: "notifications",
-          event: "*",
-          filter: `profile_id=eq.${profileId}`,
-        },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            const notificationType = payload.new.type as string;
-            // Only add notifications that match our configured types
-            if (!(notificationType in NOTIFICATION_CONFIG)) {
-              return;
-            }
-            // Add new notification at the top
-            const newNotification = {
-              id: payload.new.id,
-              type: notificationType as NotificationType,
-              data: payload.new.data,
-              isRead: payload.new.is_read,
-              profileId: payload.new.profile_id,
-              createdAt: payload.new.created_at,
-            };
-            setActivities((prev) => [newNotification, ...prev]);
-          } else if (payload.eventType === "UPDATE") {
-            // Update existing notification
-            setActivities((prev) =>
-              prev.map((a) =>
-                a.id === payload.new.id
-                  ? {
-                      ...a,
-                      isRead: payload.new.is_read,
-                      data: payload.new.data,
-                    }
-                  : a,
-              ),
-            );
-          } else if (payload.eventType === "DELETE") {
-            // Remove deleted notification
-            setActivities((prev) =>
-              prev.filter((a) => a.id !== payload.old.id),
-            );
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profileId, supabase, fetchNotifications]);
-
   // Debounced mark as read function
   const flushPendingReads = useCallback(async () => {
     const ids = Array.from(pendingReadIds.current);
@@ -373,22 +289,20 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
     // Track these as marked so we don't re-process them
     ids.forEach((id) => markedAsReadIds.current.add(id));
 
-    // Optimistically update UI
-    setActivities((prev) =>
-      prev.map((a) => (ids.includes(a.id) ? { ...a, isRead: true } : a)),
+    // Optimistically update the shared notifications state
+    setNotifications((prev) =>
+      prev.map((n) => (ids.includes(n.id) ? { ...n, isRead: true } : n)),
     );
 
     // Persist to database
     const result = await markNotificationsAsRead(ids);
     if (result.error) {
-      // Revert on error
+      // Revert via refetch — re-pulls truth from server without snapshotting
       ids.forEach((id) => markedAsReadIds.current.delete(id));
-      setActivities((prev) =>
-        prev.map((a) => (ids.includes(a.id) ? { ...a, isRead: false } : a)),
-      );
+      refetch();
       console.error("Failed to mark notifications as read");
     }
-  }, []);
+  }, [setNotifications, refetch]);
 
   // Schedule read flush with debounce
   const scheduleReadFlush = useCallback(() => {
@@ -532,12 +446,11 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
   };
 
   const handleDelete = async (notificationId: string) => {
-    const prevActivities = [...activities];
-    setActivities(activities.filter((a) => a.id !== notificationId));
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
 
     const result = await deleteNotification(notificationId);
     if (result?.error) {
-      setActivities(prevActivities);
+      refetch();
       toast.error("Failed to delete notification");
     }
   };
@@ -554,7 +467,7 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[340px] sm:w-[380px] p-0" align="start">
+      <PopoverContent className="w-85 sm:w-95 p-0" align="start">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
           <span className="font-semibold text-sm">Activity Log</span>
@@ -590,7 +503,7 @@ const ActivityLog = ({ profileId }: { profileId: number }) => {
         {/* Notifications List with Infinite Scroll */}
         <div
           ref={scrollContainerRef}
-          className="max-h-[400px] overflow-y-auto overscroll-contain"
+          className="max-h-100 overflow-y-auto overscroll-contain"
           onWheel={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
         >

@@ -1,14 +1,12 @@
 import { createRequestLoggedIn } from "@/app/(generic)/join/[code]/action";
 import RedirectButton from "@/components/RedirectButton";
 import InviteLoginClient from "@/components/tribes/InviteLoginClient";
-import { Button } from "@/components/ui/button";
 import { groupTable } from "@/db/schema/group";
 import { groupInvitesTable } from "@/db/schema/groupInvites";
 import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
 import fetchUser from "@/utils/fetchServerUser";
 import { eq } from "drizzle-orm";
-import Link from "next/link";
 import React from "react";
 
 // Interfaces
@@ -97,7 +95,7 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
       null,
       code,
       group.id,
-      user.id
+      user.id,
     );
 
     return (

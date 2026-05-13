@@ -1,9 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import {
-  getTribeRequestsByGroupId,
-  updateTribeRequests,
-} from "../actions/tribeRequests";
+import React, { useMemo } from "react";
+import { updateTribeRequests } from "../actions/tribeRequests";
+import { useNotifications } from "@/components/NotificationsProvider";
 import {
   Popover,
   PopoverContent,
@@ -17,14 +15,27 @@ import { TribeRequest } from "@/lib/interfaces";
 
 const RequestInbox = ({
   tribeId,
-  profileId,
+  profileId: _profileId,
   tribeImageUrl,
 }: {
   tribeId: string;
   profileId: number;
   tribeImageUrl: string;
 }) => {
-  const [requests, setRequests] = useState<TribeRequest[]>([]);
+  const { notifications, setNotifications } = useNotifications();
+
+  // Realtime + Initial pull
+  // Filters only to join_request type notifications
+  const requests = useMemo<TribeRequest[]>(
+    () =>
+      notifications.filter(
+        (n) =>
+          n.type === "join_request" &&
+          !n.isRead &&
+          (n.data as { group_id?: string }).group_id === tribeId,
+      ) as unknown as TribeRequest[],
+    [notifications, tribeId],
+  );
 
   const handleAction = async (
     tribeId: string,
@@ -42,13 +53,20 @@ const RequestInbox = ({
     );
 
     if (result.success) {
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => {
-          const isTarget =
-            req.data.group_id === tribeId &&
-            req.data.requester_id === requesterId;
-
-          return !isTarget;
+      setNotifications((prev) =>
+        prev.map((n) => {
+          const d = n.data as {
+            group_id?: string;
+            requester_id?: number;
+          };
+          if (
+            n.type === "join_request" &&
+            d.group_id === tribeId &&
+            d.requester_id === requesterId
+          ) {
+            return { ...n, isRead: true };
+          }
+          return n;
         }),
       );
       toast.success(result.message);
@@ -57,18 +75,6 @@ const RequestInbox = ({
     }
   };
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      const results = await getTribeRequestsByGroupId(profileId, tribeId);
-
-      if (results) {
-        setRequests(results as unknown as TribeRequest[]);
-      }
-    };
-
-    fetchRequests();
-  }, []);
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -76,7 +82,7 @@ const RequestInbox = ({
           variant="ghost"
           className="relative h-9 w-9 sm:w-fit sm:px-4 sm:rounded-md rounded-full p-0 bg-accent-2/80 hover:bg-accent-2 dark:hover:bg-accent-2/60 hover:cursor-pointer"
         >
-          <Inbox className="!h-4 !w-4" />
+          <Inbox className="h-4! w-4!" />
           <span className="hidden sm:block">Inbox</span>
           {requests.length > 0 && (
             <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[12px] text-white font-semibold">
@@ -134,7 +140,7 @@ const RequestInbox = ({
                   <Button
                     size="icon"
                     variant="default"
-                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-green-600 border-1 hover:bg-green-600 hover:text-white cursor-pointer z-10"
+                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-green-600 border hover:bg-green-600 hover:text-white cursor-pointer z-10"
                     onClick={() =>
                       handleAction(
                         req.data.group_id,
@@ -150,7 +156,7 @@ const RequestInbox = ({
                   <Button
                     size="icon"
                     variant="default"
-                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-destructive border-1 hover:bg-destructive hover:text-white cursor-pointer z-10"
+                    className="h-8 w-8 rounded-full dark:bg-background bg-slate-100 text-destructive border hover:bg-destructive hover:text-white cursor-pointer z-10"
                     onClick={() =>
                       handleAction(
                         req.data.group_id,
