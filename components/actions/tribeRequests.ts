@@ -4,61 +4,7 @@ import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
 import { createClient } from "@/utils/supabase/server";
-import { and, eq, inArray, sql } from "drizzle-orm";
-
-export async function getAllTribeRequests(profileId: number) {
-  try {
-    const result = await db
-      .select({
-        id: notificationsTable.id,
-        profileId: notificationsTable.profileId,
-        type: notificationsTable.type,
-        data: notificationsTable.data,
-        isRead: notificationsTable.isRead,
-      })
-      .from(notificationsTable)
-      .where(
-        and(
-          eq(notificationsTable.profileId, profileId),
-          eq(notificationsTable.type, "join_request"),
-          eq(notificationsTable.isRead, false),
-        ),
-      );
-
-    return result;
-  } catch (error) {
-    console.error("Failed to retrieve tribe requests: ", error);
-  }
-}
-
-export async function getTribeRequestsByGroupId(
-  profileId: number,
-  groupId: string,
-) {
-  try {
-    const result = await db
-      .select({
-        id: notificationsTable.id,
-        profileId: notificationsTable.profileId,
-        type: notificationsTable.type,
-        data: notificationsTable.data,
-        isRead: notificationsTable.isRead,
-      })
-      .from(notificationsTable)
-      .where(
-        and(
-          eq(notificationsTable.profileId, profileId),
-          eq(notificationsTable.type, "join_request"),
-          eq(notificationsTable.isRead, false),
-          sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
-        ),
-      );
-
-    return result;
-  } catch (error) {
-    console.error("Failed to retrieve tribe requests: ", error);
-  }
-}
+import { and, eq, inArray } from "drizzle-orm";
 
 export async function updateTribeRequests(
   groupId: string,
@@ -125,8 +71,7 @@ export async function updateTribeRequests(
       };
     }
 
-    // Tell the requester what happened. Runs only on the winning call so
-    // the requester sees exactly one notification.
+    // Inform only the SuperAdmins in notifications
     await db.insert(notificationsTable).values({
       type: "tribe_join",
       data: {

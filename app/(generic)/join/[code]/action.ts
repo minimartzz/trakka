@@ -67,57 +67,6 @@ export async function createRequestLoggedIn(
   redirect("/dashboard");
 }
 
-// Runs the SQL function to update state based on "accept" or "reject"
-export async function handleRequestAction(
-  groupId: string,
-  profileId: number,
-  action: "accept" | "reject",
-) {
-  const supabase = await createClient();
-
-  // Verify the caller is authenticated and is an admin (roleId 1 or 2) of this group
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, message: "Unauthorized" };
-
-  const [callerProfile] = await db
-    .select({ id: profileTable.id })
-    .from(profileTable)
-    .where(eq(profileTable.uuid, user.id));
-
-  if (!callerProfile) return { success: false, message: "Unauthorized" };
-
-  const [membership] = await db
-    .select({ roleId: profileGroupTable.roleId })
-    .from(profileGroupTable)
-    .where(
-      and(
-        eq(profileGroupTable.groupId, groupId),
-        eq(profileGroupTable.profileId, callerProfile.id),
-        inArray(profileGroupTable.roleId, [1, 2]),
-      ),
-    );
-
-  if (!membership) return { success: false, message: "Unauthorized" };
-
-  const { error } = await supabase.rpc("approve_join_request", {
-    p_req_id: profileId,
-    p_group_id: groupId,
-    p_decision: action,
-  });
-  if (error) {
-    console.error(error);
-    return {
-      success: false,
-      message: "Action failed or already handled by another admin",
-    };
-  }
-
-  revalidatePath("/dashboard");
-  return { success: true, message: "Action successful" };
-}
-
 // Form action to trigger Login
 export async function inviteLogin(formData: FormData) {
   const supabase = await createClient();

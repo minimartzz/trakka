@@ -1,9 +1,7 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  getTribeRequestsByGroupId,
-  updateTribeRequests,
-} from "../actions/tribeRequests";
+import React, { useMemo } from "react";
+import { updateTribeRequests } from "../actions/tribeRequests";
+import { useNotifications } from "@/components/NotificationsProvider";
 import {
   Popover,
   PopoverContent,
@@ -14,24 +12,30 @@ import { Check, Inbox, User, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { TribeRequest } from "@/lib/interfaces";
-import createSupabaseClient from "@/utils/supabase/client";
 
 const RequestInbox = ({
   tribeId,
-  profileId,
+  profileId: _profileId,
   tribeImageUrl,
 }: {
   tribeId: string;
   profileId: number;
   tribeImageUrl: string;
 }) => {
-  const [requests, setRequests] = useState<TribeRequest[]>([]);
-  const supabase = useMemo(() => createSupabaseClient(), []);
+  const { notifications, setNotifications } = useNotifications();
 
-  const fetchRequests = useCallback(async () => {
-    const results = await getTribeRequestsByGroupId(profileId, tribeId);
-    if (results) setRequests(results as unknown as TribeRequest[]);
-  }, [profileId, tribeId]);
+  // Realtime + Initial pull
+  // Filters only to join_request type notifications
+  const requests = useMemo<TribeRequest[]>(
+    () =>
+      notifications.filter(
+        (n) =>
+          n.type === "join_request" &&
+          !n.isRead &&
+          (n.data as { group_id?: string }).group_id === tribeId,
+      ) as unknown as TribeRequest[],
+    [notifications, tribeId],
+  );
 
   const handleAction = async (
     tribeId: string,
@@ -49,13 +53,20 @@ const RequestInbox = ({
     );
 
     if (result.success) {
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => {
-          const isTarget =
-            req.data.group_id === tribeId &&
-            req.data.requester_id === requesterId;
-
-          return !isTarget;
+      setNotifications((prev) =>
+        prev.map((n) => {
+          const d = n.data as {
+            group_id?: string;
+            requester_id?: number;
+          };
+          if (
+            n.type === "join_request" &&
+            d.group_id === tribeId &&
+            d.requester_id === requesterId
+          ) {
+            return { ...n, isRead: true };
+          }
+          return n;
         }),
       );
       toast.success(result.message);
@@ -63,40 +74,6 @@ const RequestInbox = ({
       toast.error(result.message || "Something went wrong");
     }
   };
-
-  useEffect(() => {
-    fetchRequests();
-
-    const channel = supabase
-      .channel(`tribe-inbox-${profileId}-${tribeId}-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `profile_id=eq.${profileId}`,
-        },
-        (payload) => {
-          if (payload.eventType === "DELETE") {
-            fetchRequests();
-            return;
-          }
-          const row = payload.new as {
-            type?: string;
-            data?: { group_id?: string };
-          };
-          if (row?.type !== "join_request") return;
-          if (row.data?.group_id !== tribeId) return;
-          fetchRequests();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, profileId, tribeId, fetchRequests]);
 
   return (
     <Popover>

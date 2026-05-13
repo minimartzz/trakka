@@ -1,7 +1,9 @@
+import ActivityLog from "@/components/ActivityLog";
 import { AppSidebar } from "@/components/app-sidebar";
 import Feedback from "@/components/Feedback";
 import Footer from "@/components/Footer";
 import GlobalSearchBar from "@/components/GlobalSearchBar";
+import { NotificationsProvider } from "@/components/NotificationsProvider";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,46 +54,51 @@ export default async function AccountLayout({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar
-        user={{
-          id: user.id,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          username: user.username,
-          email: user.email,
-          avatar: user.image,
-        }}
-        tribes={groups}
-      />
-      <SidebarInset>
-        <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
-          <div className="flex items-center gap-2 sm:gap-10 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <GlobalSearchBar />
+      <NotificationsProvider profileId={user.id}>
+        <AppSidebar
+          user={{
+            id: user.id,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            username: user.username,
+            email: user.email,
+            avatar: user.image,
+          }}
+          tribes={groups}
+        />
+        <SidebarInset>
+          <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
+            <div className="flex items-center gap-2 sm:gap-10 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <div className="flex items-center gap-3">
+                <GlobalSearchBar />
+                <ActivityLog />
+              </div>
+            </div>
+            <div className="flex gap-x-4 items-center justify-center">
+              <ShareButton userId={user.id} tribes={groups} />
+              <Button
+                className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-10 bg-[#1e4790] hover:bg-primary"
+                asChild
+              >
+                <Link href="/session/create">
+                  <Play className="text-white fill-white" />
+                  <span className="hidden sm:block font-semibold text-[16px] text-white">
+                    New Session
+                  </span>
+                </Link>
+              </Button>
+            </div>
+          </header>
+          {children}
+          <div className="flex justify-end-safe">
+            <div className="fixed bottom-5 right-4 z-10">
+              <Feedback profileId={user.id} />
+            </div>
           </div>
-          <div className="flex gap-x-4 items-center justify-center">
-            <ShareButton userId={user.id} tribes={groups} />
-            <Button
-              className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-10 bg-[#1e4790] hover:bg-primary"
-              asChild
-            >
-              <Link href="/session/create">
-                <Play className="text-white fill-white" />
-                <span className="hidden sm:block font-semibold text-[16px] text-white">
-                  New Session
-                </span>
-              </Link>
-            </Button>
-          </div>
-        </header>
-        {children}
-        <div className="flex justify-end-safe">
-          <div className="fixed bottom-5 right-4 z-10">
-            <Feedback profileId={user.id} />
-          </div>
-        </div>
-        <Footer />
-      </SidebarInset>
+          <Footer />
+        </SidebarInset>
+      </NotificationsProvider>
     </SidebarProvider>
   );
 }

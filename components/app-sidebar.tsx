@@ -20,13 +20,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import Logo from "@/public/trakka_logo.png";
 import { Input } from "@/components/ui/input";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import SidebarUser from "@/components/SidebarUser";
 import NewGroup from "@/components/NewGroup";
-import ActivityLog from "@/components/ActivityLog";
-import { getAllTribeRequests } from "@/components/actions/tribeRequests";
-import { TribeRequest } from "@/lib/interfaces";
-import createSupabaseClient from "@/utils/supabase/client";
+import { useNotifications } from "@/components/NotificationsProvider";
 
 interface AppSidebarProps {
   user: {
@@ -60,90 +57,51 @@ const items = {
   ],
 };
 
-// Functions
-const numTribeRequests = (
-  allRequests: TribeRequest[],
-  tribeId: string,
-): number => {
-  const filteredRequests = allRequests.filter(
-    (req) => req.data.group_id === tribeId,
-  );
-
-  return filteredRequests.length;
-};
-
 export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const pathname = usePathname();
   const sidebar = useSidebar();
   const isCollapsed = sidebar.state === "collapsed";
   const showCollapsedView = isCollapsed && !sidebar.isMobile;
-  const [requests, setRequests] = useState<TribeRequest[]>([]);
   const [tribeSearch, setTribeSearch] = useState<string>("");
-  const supabase = useMemo(() => createSupabaseClient(), []);
+  const { notifications } = useNotifications();
 
-  const fetchRequests = useCallback(async () => {
-    const results = await getAllTribeRequests(user.id);
-    if (results) setRequests(results as unknown as TribeRequest[]);
-  }, [user.id]);
-
-  useEffect(() => {
-    fetchRequests();
-
-    const channel = supabase
-      .channel(`sidebar-notifs-${user.id}-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `profile_id=eq.${user.id}`,
-        },
-        (payload) => {
-          if (payload.eventType === "DELETE") {
-            fetchRequests();
-            return;
-          }
-          const row = payload.new as { type?: string };
-          if (row?.type !== "join_request") return;
-          fetchRequests();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, user.id, fetchRequests]);
+  // Counts the number of notifications
+  // Prevents rerendering of the component unless state changes
+  const tribeRequestCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const n of notifications) {
+      if (n.type !== "join_request" || n.isRead) continue;
+      const groupId = (n.data as { group_id?: string }).group_id;
+      if (typeof groupId === "string") {
+        counts[groupId] = (counts[groupId] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [notifications]);
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader />
       <SidebarContent className="overflow-x-hidden">
-        {/* Header Logo */}
-        {showCollapsedView ? (
-          <SidebarMenuButton size="lg" className="ml-2" asChild>
-            <a href={"/dashboard"}>
-              <Image src={Logo} alt="logo" width={30} />
-              <span className="font-brand text-2xl">TRAKKA</span>
-              <div>
-                <ActivityLog profileId={user.id} />
-              </div>
-            </a>
-          </SidebarMenuButton>
-        ) : (
-          <SidebarMenuButton asChild>
-            <div className="flex items-center justify-between hover:bg-transparent">
-              <a href={"/dashboard"} className="flex items-center gap-x-2">
-                <Image src={Logo} alt="logo" height={35} />
+        <div className="relative">
+          {showCollapsedView ? (
+            <SidebarMenuButton size="lg" className="ml-2" asChild>
+              <a href={"/dashboard"}>
+                <Image src={Logo} alt="logo" width={30} />
                 <span className="font-brand text-2xl">TRAKKA</span>
               </a>
-              <div>
-                <ActivityLog profileId={user.id} />
+            </SidebarMenuButton>
+          ) : (
+            <SidebarMenuButton asChild>
+              <div className="flex items-center hover:bg-transparent">
+                <a href={"/dashboard"} className="flex items-center gap-x-2">
+                  <Image src={Logo} alt="logo" height={35} />
+                  <span className="font-brand text-2xl">TRAKKA</span>
+                </a>
               </div>
-            </div>
-          </SidebarMenuButton>
-        )}
+            </SidebarMenuButton>
+          )}
+        </div>
         <SidebarSeparator className="bg-sidebar-accent mx-0" />
 
         {/* Performance */}
@@ -223,7 +181,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                         />
                       </div>
                       {showCollapsedView &&
-                        numTribeRequests(requests, item.id) > 0 && (
+                        (tribeRequestCounts[item.id] ?? 0) > 0 && (
                           <span className="absolute bottom-5 -right-1 flex h-2.5 w-2.5 items-center justify-center">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
@@ -232,7 +190,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                       <span>{item.name}</span>
                     </div>
                     {!showCollapsedView &&
-                      numTribeRequests(requests, item.id) > 0 && (
+                      (tribeRequestCounts[item.id] ?? 0) > 0 && (
                         <span className="flex h-2.5 w-2.5 items-center justify-center">
                           <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-destructive opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
