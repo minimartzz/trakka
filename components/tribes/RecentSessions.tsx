@@ -317,7 +317,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <GameImageCell
-                                imageUrl={session.gameImageUrl}
+                                imageUrl={session.thumbnail}
                                 gameTitle={session.gameTitle}
                               />
                               <span

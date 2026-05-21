@@ -10,6 +10,7 @@ export interface GameSession {
   gameId: number;
   gameTitle: string;
   gameImageUrl: string | null;
+  thumbnail: string | null;
   playingTime: number | null;
   gameWeight: number | null;
   players: {
@@ -92,6 +93,7 @@ export interface GameListItem {
   gameTitle: string;
   playCount: number;
   imageUrl: string | null;
+  thumbnail: string | null;
 }
 
 export interface LeadingPlayer {

@@ -38,6 +38,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         id: gameTable.id,
         name: gameTable.name,
         imageUrl: gameTable.imageUrl,
+        thumbnail: gameTable.thumbnail,
         yearPublished: gameTable.yearPublished,
         description: gameTable.description,
         rating: gameTable.rating,
@@ -85,6 +86,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         tribeName: tribeDetails.name,
         // Game details
         gameImageUrl: gameDetails.imageUrl,
+        gameThumbnail: gameDetails.thumbnail,
         gameYearPublished: gameDetails.yearPublished,
         gameDescription: gameDetails.description,
         gameRating: gameDetails.rating,
@@ -98,7 +100,10 @@ export async function fetchSessionForEdit(sessionId: string) {
         gameMinAge: gameDetails.minAge,
       })
       .from(compGameLogTable)
-      .innerJoin(playerDetails, eq(compGameLogTable.profileId, playerDetails.id))
+      .innerJoin(
+        playerDetails,
+        eq(compGameLogTable.profileId, playerDetails.id),
+      )
       .innerJoin(tribeDetails, eq(compGameLogTable.groupId, tribeDetails.id))
       .innerJoin(gameDetails, eq(compGameLogTable.gameId, gameDetails.id))
       .where(eq(compGameLogTable.sessionId, sessionId))
@@ -161,10 +166,7 @@ export async function updateSession(
         .where(
           and(
             eq(rollingPlayerStatsTable.profileId, oldRow.profileId),
-            eq(
-              rollingPlayerStatsTable.groupId,
-              newPayload[0].groupId,
-            ),
+            eq(rollingPlayerStatsTable.groupId, newPayload[0].groupId),
           ),
         );
     }

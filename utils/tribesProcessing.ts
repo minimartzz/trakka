@@ -29,6 +29,7 @@ export function processGameSessions(
         gameId: compGameLog.gameId,
         gameTitle: compGameLog.gameTitle,
         gameImageUrl: gameDetails?.imageUrl || null,
+        thumbnail: gameDetails?.thumbnail || null,
         playingTime: gameDetails?.playingTime || null,
         gameWeight: gameDetails?.weight || null,
         players: [],

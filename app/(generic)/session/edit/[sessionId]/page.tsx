@@ -20,11 +20,7 @@ import {
   getScore,
   getWinContrib,
 } from "@/utils/sessionLog";
-import {
-  checkUserRole,
-  fetchSessionForEdit,
-  updateSession,
-} from "./action";
+import { checkUserRole, fetchSessionForEdit, updateSession } from "./action";
 
 const Page = () => {
   const params = useParams();
@@ -77,7 +73,7 @@ const Page = () => {
         id: String(firstRow.gameId),
         type: "boardgame",
         title: firstRow.gameTitle,
-        thumbnail: firstRow.gameImageUrl ?? "",
+        thumbnail: firstRow.gameThumbnail ?? "",
         image: firstRow.gameImageUrl ?? "",
         description: firstRow.gameDescription ?? "",
         yearPublished: String(firstRow.gameYearPublished ?? 0),
@@ -164,7 +160,9 @@ const Page = () => {
       .map((player, idx) => (player.firstName === "" ? idx + 1 : null))
       .filter((idx): idx is number => idx !== null);
     if (missingPlayers.length > 0) {
-      toast.error(`Missing player info at position ${missingPlayers.join(", ")}.`);
+      toast.error(
+        `Missing player info at position ${missingPlayers.join(", ")}.`,
+      );
       return;
     }
     const containWinner = submittingPlayers.some((player) => player.isWinner);

@@ -211,6 +211,7 @@ export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
         id: gameId,
         name: selectedGame.title,
         imageUrl: selectedGame.image || null,
+        thumbnail: selectedGame.thumbnail || null,
         yearPublished: parseInt(selectedGame.yearPublished) || 0,
         description: selectedGame.description,
         rating: parseFloat(selectedGame.rating) || 0,

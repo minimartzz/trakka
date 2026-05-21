@@ -154,7 +154,7 @@ const Page = () => {
             const sessionNotification = payload.map((player) => ({
               type: "new_session",
               data: {
-                gameImageUrl: gameDetails.image,
+                gameImageUrl: gameDetails.thumbnail,
                 gameTitle: gameDetails.title,
                 tribeName: tribe.name,
               },
