@@ -13,7 +13,9 @@ import { notificationsTable } from "@/db/schema/notifications";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
+import { requireTribeMembership } from "@/utils/auth";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { updateTag } from "next/cache";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 
@@ -147,6 +149,21 @@ export async function getSelectablePlayers(tribeId: string) {
 
 // Submit Session
 export async function submitNewSession(payload: CompGameLog[]) {
+  if (payload.length === 0) {
+    return { success: false };
+  }
+
+  // All rows in a single session belong to the same tribe.
+  // Caller must be a member of that tribe to write to it.
+  const affectedGroupIds = Array.from(new Set(payload.map((log) => log.groupId)));
+  try {
+    for (const groupId of affectedGroupIds) {
+      await requireTribeMembership(groupId);
+    }
+  } catch {
+    return { success: false };
+  }
+
   try {
     const result = await db
       .insert(compGameLogTable)
@@ -181,6 +198,10 @@ export async function submitNewSession(payload: CompGameLog[]) {
 
     if (result.length === 0) {
       return { success: false };
+    }
+
+    for (const groupId of affectedGroupIds) {
+      updateTag(`tribe:${groupId}`);
     }
 
     return { success: true };

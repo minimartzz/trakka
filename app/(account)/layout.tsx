@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import Feedback from "@/components/Feedback";
 import Footer from "@/components/Footer";
 import GlobalSearchBar from "@/components/GlobalSearchBar";
+import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import { NotificationsProvider } from "@/components/NotificationsProvider";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,31 @@ import { Play } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
-export default async function AccountLayout({
+export default function AccountLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<LayoutFallback />}>
+      <AuthenticatedShell>{children}</AuthenticatedShell>
+    </Suspense>
+  );
+}
+
+// Children can't render inside the fallback because page components consume
+// the NotificationsProvider context, which only exists inside AuthenticatedShell.
+function LayoutFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <LoadingSpinner />
+    </div>
+  );
+}
+
+async function AuthenticatedShell({
   children,
 }: {
   children: React.ReactNode;

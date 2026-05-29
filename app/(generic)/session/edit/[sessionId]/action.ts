@@ -7,7 +7,9 @@ import { profileGroupTable } from "@/db/schema/profileGroup";
 import { profileTable } from "@/db/schema/profile";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { db } from "@/utils/db";
+import { requireTribeAdmin } from "@/utils/auth";
 import { and, eq, sql } from "drizzle-orm";
+import { updateTag } from "next/cache";
 
 type CompGameLog = typeof compGameLogTable.$inferInsert;
 
@@ -151,6 +153,23 @@ export async function updateSession(
   oldRows: { profileId: number; isWinner: boolean; score: number | null }[],
   newPayload: CompGameLog[],
 ) {
+  if (newPayload.length === 0) {
+    return { success: false };
+  }
+
+  // Editing a session is restricted to admins of the tribes involved.
+  // Use a Set in case the edit moves the session between groups.
+  const affectedGroupIds = Array.from(
+    new Set(newPayload.map((log) => log.groupId)),
+  );
+  try {
+    for (const groupId of affectedGroupIds) {
+      await requireTribeAdmin(groupId);
+    }
+  } catch {
+    return { success: false };
+  }
+
   try {
     // Step 1: Reverse the old rolling stats
     for (const oldRow of oldRows) {
@@ -204,6 +223,10 @@ export async function updateSession(
           latestSession: sql`EXCLUDED.latest_session`,
         },
       });
+
+    for (const groupId of affectedGroupIds) {
+      updateTag(`tribe:${groupId}`);
+    }
 
     return { success: true };
   } catch (error) {

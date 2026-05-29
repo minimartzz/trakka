@@ -1,8 +1,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { toast } from "sonner";
+import { cache } from "react";
 
-export default async function fetchUser() {
+export default cache(async function fetchUser() {
   const supabase = await createClient();
 
   // From auth.users table
@@ -31,4 +32,4 @@ export default async function fetchUser() {
   };
 
   return profile;
-}
+});

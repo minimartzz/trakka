@@ -1,12 +1,13 @@
 import { getAllPlayers } from "@/components/actions/fetchPlayers";
 import EditTribes from "@/components/tribes/EditTribes";
+import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import { groupTable } from "@/db/schema/group";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
 import fetchUser from "@/utils/fetchServerUser";
 import { eq } from "drizzle-orm";
-import React from "react";
+import { Suspense } from "react";
 
 // Interfaces & Types
 interface TribeDetailsInterface {
@@ -53,9 +54,13 @@ const getTribeDetails = async (groupId: string) => {
   return tribeDetails;
 };
 
-const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
+const EditTribeContent = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
   const tribeId = (await params).id;
-  const user = await fetchUser();
+  await fetchUser();
 
   // Get current players
   const tribeMembers: TribeMemberInterface[] = await getTribeMembers(tribeId);
@@ -77,15 +82,29 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
   )[0];
 
   return (
+    <EditTribes
+      tribeId={tribeId}
+      profilePic={tribeDetails.group.image!}
+      groupName={tribeDetails.group.name}
+      description={tribeDetails.group.description}
+      selectablePlayers={selectablePlayers}
+      playersDetails={players}
+    />
+  );
+};
+
+const EditTribeFallback = () => (
+  <div className="flex justify-center items-center min-h-[60vh]">
+    <LoadingSpinner />
+  </div>
+);
+
+const Page = ({ params }: { params: Promise<{ id: string }> }) => {
+  return (
     <div className="flex mt-8 justify-center w-full p-12">
-      <EditTribes
-        tribeId={tribeId}
-        profilePic={tribeDetails.group.image!}
-        groupName={tribeDetails.group.name}
-        description={tribeDetails.group.description}
-        selectablePlayers={selectablePlayers}
-        playersDetails={players}
-      />
+      <Suspense fallback={<EditTribeFallback />}>
+        <EditTribeContent params={params} />
+      </Suspense>
     </div>
   );
 };

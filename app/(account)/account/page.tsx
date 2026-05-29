@@ -1,22 +1,21 @@
+import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import { SquarePen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { Suspense } from "react";
 
-const Page = async () => {
-  // Get user details
+const formatDate = (dateStr: string): string => {
+  return format(new Date(dateStr), "dd MMM yyyy");
+};
+
+const AccountContent = async () => {
   const user = await fetchUser();
 
-  // Formatting functions
-  const formatDate = (dateStr: string): string => {
-    return format(new Date(dateStr), "dd MMM yyyy");
-  };
-
   return (
-    <div className="p-12 space-y-6">
+    <>
       {/* Header */}
       <div className="flex flex-col md:flex-row items-center justify-center">
         <div className="relative">
@@ -29,7 +28,7 @@ const Page = async () => {
             />
           </div>
           <Button
-            className="sm:hidden absolute top-0 right-[-80px] dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
+            className="sm:hidden absolute top-0 right-20 dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
             asChild
           >
             <Link href="/account/edit">
@@ -86,6 +85,22 @@ const Page = async () => {
       </div>
 
       {/* TODO: Linked Accounts, Interests, Favourite Games, etc. */}
+    </>
+  );
+};
+
+const AccountFallback = () => (
+  <div className="flex justify-center items-center h-64">
+    <LoadingSpinner />
+  </div>
+);
+
+const Page = () => {
+  return (
+    <div className="p-12 space-y-6">
+      <Suspense fallback={<AccountFallback />}>
+        <AccountContent />
+      </Suspense>
     </div>
   );
 };

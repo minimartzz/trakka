@@ -3,6 +3,7 @@ import { SelectProfile } from "@/db/schema/profile";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import TribePageClient from "@/components/tribes/TribePageClient";
+import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import {
   processGameSessions,
   processMembersWithStats,
@@ -16,9 +17,8 @@ import {
   getTribeMembers,
 } from "@/app/(account)/tribe/[id]/action";
 import { notFound } from "next/navigation";
-
-// Revalidate page every 60 seconds for ISR caching
-export const revalidate = 60;
+import { Suspense } from "react";
+import TribeLoading from "./loading";
 
 // Interfaces & Types
 interface TribeDetailsInterface {
@@ -31,9 +31,12 @@ const formatDate = (dateStr: string): string => {
   return format(new Date(dateStr), "dd MMM yyyy");
 };
 
-const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
+const TribeContent = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
   const tribeId = (await params).id;
-
   // Fetch user and tribe data in parallel for better performance
   const [
     user,
@@ -121,6 +124,14 @@ const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
       sessions={sessions}
       histStats={histStats}
     />
+  );
+};
+
+const Page = ({ params }: { params: Promise<{ id: string }> }) => {
+  return (
+    <Suspense fallback={<TribeLoading />}>
+      <TribeContent params={params} />
+    </Suspense>
   );
 };
 

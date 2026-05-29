@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -46,15 +46,15 @@
     "lucide-react": "^0.544.0",
     "motion": "^12.23.15",
     "nanoid": "^5.1.6",
-    "next": "15.4.10",
+    "next": "16.2.6",
     "next-themes": "^0.4.6",
     "nextjs-toploader": "^3.9.17",
     "postgres": "^3.4.7",
     "radix-ui": "^1.4.3",
-    "react": "19.1.0",
+    "react": "19.2.6",
     "react-day-picker": "^9.9.0",
-    "react-dom": "19.1.0",
-    "react-is": "^19.2.6",
+    "react-dom": "19.2.6",
+    "react-is": "19.2.6",
     "recharts": "^3.7.0",
     "shadcn": "^3.3.1",
     "sonner": "^2.0.7",
@@ -71,12 +71,12 @@
     "@types/d3": "^7.4.3",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
     "@types/xml2js": "^0.4.14",
     "drizzle-kit": "^0.31.4",
     "eslint": "^9",
-    "eslint-config-next": "15.4.6",
+    "eslint-config-next": "16.2.6",
     "supabase": ">=1.8.1",
     "tailwindcss": "^4",
     "tsx": "^4.20.4",
@@ -84,6 +84,8 @@
     "typescript": "^5"
   },
   "resolutions": {
-    "import-in-the-middle": "3.0.1"
+    "import-in-the-middle": "3.0.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3"
   }
 }
