@@ -76,7 +76,6 @@ export interface FilteredCounts {
   numGames: number;
   numWins: number;
   numLoss: number;
-  numPlayed: number;
   numTied: number;
 }
 

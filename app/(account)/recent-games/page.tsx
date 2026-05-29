@@ -36,7 +36,7 @@ import { getUserTribeRoles } from "@/app/(generic)/session/edit/[sessionId]/acti
 import { toast } from "sonner";
 
 interface GameFilter {
-  result: "all" | "won" | "lost" | "tie" | "not_involved";
+  result: "all" | "won" | "lost" | "tie";
   game: string;
 }
 
@@ -71,7 +71,6 @@ const Page = () => {
     numGames: 0,
     numWins: 0,
     numLoss: 0,
-    numPlayed: 0,
     numTied: 0,
   });
   const [editableTribeIds, setEditableTribeIds] = useState<Set<string>>(
@@ -110,7 +109,9 @@ const Page = () => {
         fetchSessionsByProfile(user.id),
         getUserTribeRoles(user.id),
       ]);
-      const groupedSessions = filterSessionData(user.id, sessionData);
+      const groupedSessions = filterSessionData(user.id, sessionData).filter(
+        (session) => session.isPlayer,
+      );
       const filteredCounts = getFilteredCounts(groupedSessions);
       const uniqueGames = getAvailableGames(groupedSessions);
 
@@ -149,15 +150,13 @@ const Page = () => {
         setAvailableGames(getAvailableGames(filtered));
         break;
       case "tie":
+        // Ties are not counted into "All" games, just as a separate filter
         filtered = filtered.filter((session) => session.isTied);
         setAvailableGames(getAvailableGames(filtered));
         break;
       case "lost":
-        filtered = filtered.filter((session) => session.isLoser);
-        setAvailableGames(getAvailableGames(filtered));
-        break;
-      case "not_involved":
-        filtered = filtered.filter((session) => !session.isPlayer);
+        // Lost is a count of games are NOT won by the player
+        filtered = filtered.filter((session) => !session.isWinner);
         setAvailableGames(getAvailableGames(filtered));
         break;
       default:
@@ -231,11 +230,6 @@ const Page = () => {
             { key: "won", label: "Won", count: filterCounts.numWins },
             { key: "lost", label: "Lost", count: filterCounts.numLoss },
             { key: "tie", label: "Tie", count: filterCounts.numTied },
-            {
-              key: "not_involved",
-              label: "Not Involved",
-              count: filterCounts.numGames - filterCounts.numPlayed,
-            },
           ].map(({ key, label, count }) => (
             <Button
               key={key}
@@ -253,7 +247,7 @@ const Page = () => {
             value={selectedFilter.game}
             onValueChange={(value) => handleSelectFilter("game", value)}
           >
-            <SelectTrigger className="w-[200px] h-8">
+            <SelectTrigger className="w-50 h-8">
               <SelectValue placeholder="All games" />
             </SelectTrigger>
             <SelectContent>

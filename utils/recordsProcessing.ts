@@ -106,10 +106,13 @@ export const filterSessionData = (
 export const getFilteredCounts = (data: GroupedSession[]): FilteredCounts => {
   const counts = data.reduce<FilteredCounts>(
     (acc, item) => {
-      acc.numGames += 1;
-      if (item.isPlayer) acc.numPlayed += 1;
-      if (item.isWinner) acc.numWins += 1;
-      if (item.isLoser) acc.numLoss += 1;
+      // Only sessions that a player has played in
+      if (!item.isPlayer) return acc;
+      if (item.isWinner) {
+        acc.numWins += 1;
+      } else {
+        acc.numLoss += 1;
+      }
       if (item.isTied) acc.numTied += 1;
       return acc;
     },
@@ -117,11 +120,11 @@ export const getFilteredCounts = (data: GroupedSession[]): FilteredCounts => {
       numGames: 0,
       numWins: 0,
       numLoss: 0,
-      numPlayed: 0,
       numTied: 0,
     },
   );
 
+  counts.numGames = counts.numWins + counts.numLoss;
   return counts;
 };
 
