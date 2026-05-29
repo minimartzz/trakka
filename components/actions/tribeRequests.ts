@@ -77,6 +77,7 @@ export async function updateTribeRequests(
       data: {
         tribeName,
         tribeImageUrl,
+        groupId,
         outcome: status,
       },
       isRead: false,

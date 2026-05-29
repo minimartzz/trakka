@@ -157,6 +157,7 @@ const Page = () => {
                 gameImageUrl: gameDetails.thumbnail,
                 gameTitle: gameDetails.title,
                 tribeName: tribe.name,
+                groupId: tribe.id,
               },
               isRead: false,
               profileId: player.profileId,
