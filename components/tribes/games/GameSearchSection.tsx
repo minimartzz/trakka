@@ -72,11 +72,10 @@ export function GameSearchSection({
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           {dropdownOpen ? (
             <Input
-              autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search games..."
-              className="border-0 p-0 h-auto shadow-none focus-visible:ring-0 text-sm"
+              className="border-0 p-0 h-auto shadow-none focus-visible:ring-0 text-sm bg-transparent dark:bg-transparent"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (

@@ -3,7 +3,6 @@ import { SelectProfile } from "@/db/schema/profile";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
 import TribePageClient from "@/components/tribes/TribePageClient";
-import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import {
   processGameSessions,
   processMembersWithStats,

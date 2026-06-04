@@ -39,16 +39,6 @@ interface TribePageClientProps {
   histStats: HistStatsInterface;
 }
 
-/**
- * TribePageClient - Renders tribe information
- *
- * This component orchestrates all the tribe page sections:
- * - TribeHeader: Modern header with tribe info and admin controls
- * - TribeTabs: Tab navigation for Home/Players/Games
- * - TribeHomeTab: Dashboard with stats and leaderboards
- * - TribePlayersTab: Member cards with statistics
- * - TribeGamesTab: Game history timeline
- */
 const TribePageClient: React.FC<TribePageClientProps> = ({
   tribeId,
   tribeName,
