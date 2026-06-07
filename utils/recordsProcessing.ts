@@ -19,6 +19,7 @@ export const filterSessionData = (
         datePlayed: record.datePlayed,
         gameTitle: record.gameTitle,
         gameId: record.gameId,
+        gameImage: record.gameImage,
         createdAt: new Date(record.createdAt),
         numPlayers: record.numPlayers,
         tribe: record.tribeName,
@@ -128,8 +129,44 @@ export const getFilteredCounts = (data: GroupedSession[]): FilteredCounts => {
   return counts;
 };
 
-export const getAvailableGames = (data: GroupedSession[]): string[] => {
-  return [...new Set(data.map((items) => items.gameTitle))].sort();
+export interface AvailableGame {
+  gameId: number;
+  gameTitle: string;
+  gameImage: string | null;
+}
+
+// Unique games the player has sessions for, sorted alphabetically by title.
+// Keyed by gameId so distinct games sharing a title stay separate.
+export const getAvailableGames = (data: GroupedSession[]): AvailableGame[] => {
+  const games = new Map<number, AvailableGame>();
+  data.forEach(({ gameId, gameTitle, gameImage }) => {
+    if (!games.has(gameId)) {
+      games.set(gameId, { gameId, gameTitle, gameImage });
+    }
+  });
+  return [...games.values()].sort((a, b) =>
+    a.gameTitle.localeCompare(b.gameTitle),
+  );
+};
+
+export interface AvailableTribe {
+  tribeId: string;
+  tribeName: string;
+}
+
+// Unique tribes the player has sessions for, sorted alphabetically by name.
+export const getAvailableTribes = (
+  data: GroupedSession[],
+): AvailableTribe[] => {
+  const tribes = new Map<string, AvailableTribe>();
+  data.forEach(({ tribeId, tribe }) => {
+    if (!tribes.has(tribeId)) {
+      tribes.set(tribeId, { tribeId, tribeName: tribe });
+    }
+  });
+  return [...tribes.values()].sort((a, b) =>
+    a.tribeName.localeCompare(b.tribeName),
+  );
 };
 
 export const positionOrdinalSuffix = (position: number): string => {

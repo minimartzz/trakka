@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FilteredCounts,
   GroupedSession,
@@ -7,24 +7,24 @@ import {
 } from "@/lib/interfaces";
 import Link from "next/link";
 import {
+  AvailableGame,
+  AvailableTribe,
   filterSessionData,
   getAvailableGames,
+  getAvailableTribes,
   getFilteredCounts,
 } from "@/utils/recordsProcessing";
-import { Filter, Play, Search, Trophy } from "lucide-react";
+import { Play, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import GameSessionCard from "@/components/GameSessionCard";
+import RecentGamesFilters, {
+  RecentGamesFilterState,
+} from "@/components/RecentGamesFilters";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -35,10 +35,14 @@ import { fetchSessions } from "@/app/(account)/recent-games/action";
 import { getUserTribeRoles } from "@/app/(generic)/session/edit/[sessionId]/action";
 import { toast } from "sonner";
 
-interface GameFilter {
-  result: "all" | "won" | "lost" | "tie";
-  game: string;
-}
+const ITEMS_PER_PAGE = 10;
+
+const DEFAULT_FILTERS: RecentGamesFilterState = {
+  result: "all",
+  gameIds: [],
+  tribeIds: [],
+  dateRange: undefined,
+};
 
 const fetchSessionsByProfile = async (
   id: number,
@@ -56,17 +60,28 @@ const fetchSessionsByProfile = async (
   }
 };
 
+// Build a visible page-number window so long lists don't render 50 links.
+const getPageWindow = (current: number, total: number): (number | "...")[] => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages: (number | "...")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push("...");
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push("...");
+  pages.push(total);
+  return pages;
+};
+
 const Page = () => {
   const [loading, setLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState<GameFilter>({
-    result: "all",
-    game: "all",
-  });
+  const [filters, setFilters] =
+    useState<RecentGamesFilterState>(DEFAULT_FILTERS);
   const [gameSessions, setGameSessions] = useState<GroupedSession[]>([]);
-  const [filteredSessions, setFilteredSessions] = useState<GroupedSession[]>(
-    [],
-  );
-  const [availableGames, setAvailableGames] = useState<string[]>([]);
+  const [availableGames, setAvailableGames] = useState<AvailableGame[]>([]);
+  const [availableTribes, setAvailableTribes] = useState<AvailableTribe[]>([]);
   const [filterCounts, setFilterCounts] = useState<FilteredCounts>({
     numGames: 0,
     numWins: 0,
@@ -77,26 +92,14 @@ const Page = () => {
     new Set(),
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  // Get User Details
   const { user, authLoading } = useAuth();
 
-  // Pagination details
-  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentSessions = filteredSessions.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-
-  // Handle page changes
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  const isDefault =
+    filters.result === "all" &&
+    filters.gameIds.length === 0 &&
+    filters.tribeIds.length === 0 &&
+    filters.dateRange === undefined;
 
   // Initial Mount - Load
   useEffect(() => {
@@ -112,8 +115,6 @@ const Page = () => {
       const groupedSessions = filterSessionData(user.id, sessionData).filter(
         (session) => session.isPlayer,
       );
-      const filteredCounts = getFilteredCounts(groupedSessions);
-      const uniqueGames = getAvailableGames(groupedSessions);
 
       // Build set of tribe IDs where user is SuperAdmin (1) or Admin (2)
       const editableIds = new Set(
@@ -123,176 +124,195 @@ const Page = () => {
       );
 
       setGameSessions(groupedSessions);
-      setFilteredSessions(groupedSessions);
-      setFilterCounts(filteredCounts);
-      setAvailableGames(uniqueGames);
+      setFilterCounts(getFilteredCounts(groupedSessions));
+      setAvailableGames(getAvailableGames(groupedSessions));
+      setAvailableTribes(getAvailableTribes(groupedSessions));
       setEditableTribeIds(editableIds);
-
       setLoading(false);
     };
 
     getData();
   }, [user, authLoading]);
 
-  // Handle selecting filter change
-  const handleSelectFilter = (type: "result" | "game", value: string) => {
-    setSelectedFilter((prev) => ({ ...prev, [type]: value }));
+  // Apply all filters together (result + games + date)
+  const filteredSessions = useMemo(() => {
+    return gameSessions.filter((session) => {
+      // Result
+      if (filters.result === "won" && !session.isWinner) return false;
+      if (filters.result === "lost" && session.isWinner) return false;
+      if (filters.result === "tie" && !session.isTied) return false;
+
+      // Games (empty = all)
+      if (
+        filters.gameIds.length > 0 &&
+        !filters.gameIds.includes(session.gameId)
+      ) {
+        return false;
+      }
+
+      // Tribes (empty = all)
+      if (
+        filters.tribeIds.length > 0 &&
+        !filters.tribeIds.includes(session.tribeId)
+      ) {
+        return false;
+      }
+
+      // Date range (inclusive of both ends; "to" optional = single day)
+      const { from, to } = filters.dateRange ?? {};
+      if (from) {
+        const sessionDay = new Date(session.datePlayed);
+        sessionDay.setHours(0, 0, 0, 0);
+        const start = new Date(from);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(to ?? from);
+        end.setHours(0, 0, 0, 0);
+        if (sessionDay < start || sessionDay > end) return false;
+      }
+
+      return true;
+    });
+  }, [gameSessions, filters]);
+
+  // Reset to first page whenever the filter set changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  const totalPages = Math.ceil(filteredSessions.length / ITEMS_PER_PAGE);
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const currentSessions = filteredSessions.slice(
+    indexOfLastItem - ITEMS_PER_PAGE,
+    indexOfLastItem,
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
   };
 
-  // Implementing filters
-  useEffect(() => {
-    let filtered = [...gameSessions];
+  const resultChips = [
+    {
+      key: "all" as const,
+      label: "All",
+      count: filterCounts.numGames,
+      dotClass: "bg-primary",
+    },
+    {
+      key: "won" as const,
+      label: "Won",
+      count: filterCounts.numWins,
+      dotClass: "bg-accent-1",
+    },
+    {
+      key: "lost" as const,
+      label: "Lost",
+      count: filterCounts.numLoss,
+      dotClass: "bg-destructive",
+    },
+    {
+      key: "tie" as const,
+      label: "Tie",
+      count: filterCounts.numTied,
+      dotClass: "bg-accent-2",
+    },
+  ];
 
-    // Filtering on button selection
-    switch (selectedFilter.result) {
-      case "won":
-        filtered = filtered.filter((session) => session.isWinner);
-        setAvailableGames(getAvailableGames(filtered));
-        break;
-      case "tie":
-        // Ties are not counted into "All" games, just as a separate filter
-        filtered = filtered.filter((session) => session.isTied);
-        setAvailableGames(getAvailableGames(filtered));
-        break;
-      case "lost":
-        // Lost is a count of games are NOT won by the player
-        filtered = filtered.filter((session) => !session.isWinner);
-        setAvailableGames(getAvailableGames(filtered));
-        break;
-      default:
-        setAvailableGames(getAvailableGames(filtered));
-    }
-
-    // Filtering on game selection
-    if (selectedFilter.game !== "all") {
-      filtered = filtered.filter(
-        (session) => session.gameTitle === selectedFilter.game,
-      );
-    }
-
-    setFilteredSessions(filtered);
-  }, [gameSessions, selectedFilter]);
-
-  // Loading the page if data is still being fetched
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="p-4 sm:p-8 space-y-6">
-        {/* Header */}
+      <div className="space-y-6 p-4 sm:p-8">
         <div>
           <h1 className="text-3xl font-bold">My Recent Games</h1>
-          <p className="text-muted-foreground mt-2">
-            You latest game sessions and results
+          <p className="mt-2 text-muted-foreground">
+            Your latest game sessions and results
           </p>
         </div>
-        <div className="p-8">
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="h-4 bg-muted rounded w-1/4 mb-2"></div>
-                  <div className="h-6 bg-muted rounded w-1/2 mb-4"></div>
-                  <div className="flex gap-4">
-                    <div className="h-4 bg-muted rounded w-16"></div>
-                    <div className="h-4 bg-muted rounded w-24"></div>
-                    <div className="h-4 bg-muted rounded w-20"></div>
+        <div className="space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse py-0">
+              <CardContent className="p-0">
+                <div className="flex items-start gap-4 border-b p-5">
+                  <div className="size-16 shrink-0 rounded-md bg-muted" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-6 w-1/2 rounded bg-muted" />
+                    <div className="h-4 w-1/3 rounded bg-muted" />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+                <div className="space-y-2 p-5">
+                  {[...Array(3)].map((_, j) => (
+                    <div key={j} className="h-7 rounded bg-muted/60" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="space-y-6 p-4 sm:p-8 mb-10">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">My Recent Games</h1>
-        <p className="text-muted-foreground mt-2">
-          You latest game sessions and results
+        <p className="mt-2 text-muted-foreground">
+          Your latest game sessions and results
         </p>
       </div>
 
-      {/* Filtering and Recent Games */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filter by:</span>
-          </div>
-
-          {/* Filter Buttons */}
-          <div className="flex gap-2"></div>
-          {[
-            { key: "all", label: "All", count: filterCounts.numGames },
-            { key: "won", label: "Won", count: filterCounts.numWins },
-            { key: "lost", label: "Lost", count: filterCounts.numLoss },
-            { key: "tie", label: "Tie", count: filterCounts.numTied },
-          ].map(({ key, label, count }) => (
-            <Button
-              key={key}
-              variant={selectedFilter.result === key ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleSelectFilter("result", key)}
-              className="h-8"
-            >
-              {label} ({count})
-            </Button>
-          ))}
-
-          {/* Filter Games */}
-          <Select
-            value={selectedFilter.game}
-            onValueChange={(value) => handleSelectFilter("game", value)}
-          >
-            <SelectTrigger className="w-50 h-8">
-              <SelectValue placeholder="All games" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All games</SelectItem>
-              {availableGames.map((game) => (
-                <SelectItem key={game} value={game}>
-                  {game}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground border-b pb-2">
-        <Trophy className="h-4 w-4" />
-        <span>Total Recent Games • {filterCounts.numGames} sessions</span>
-      </div>
-
-      {/* Mobile: Show Legend */}
-      <div className="sm:hidden flex text-sm justify-between">
-        <p>Legends:</p>
-        <p>🏆 = Winner</p>
-        <p>🤝 = Tied</p>
-      </div>
+      {/* Filters */}
+      <RecentGamesFilters
+        filters={filters}
+        resultChips={resultChips}
+        availableGames={availableGames}
+        availableTribes={availableTribes}
+        isDefault={isDefault}
+        shownCount={filteredSessions.length}
+        totalCount={gameSessions.length}
+        onResultChange={(result) => setFilters((f) => ({ ...f, result }))}
+        onToggleGame={(gameId) =>
+          setFilters((f) => ({
+            ...f,
+            gameIds: f.gameIds.includes(gameId)
+              ? f.gameIds.filter((id) => id !== gameId)
+              : [...f.gameIds, gameId],
+          }))
+        }
+        onClearGames={() => setFilters((f) => ({ ...f, gameIds: [] }))}
+        onToggleTribe={(tribeId) =>
+          setFilters((f) => ({
+            ...f,
+            tribeIds: f.tribeIds.includes(tribeId)
+              ? f.tribeIds.filter((id) => id !== tribeId)
+              : [...f.tribeIds, tribeId],
+          }))
+        }
+        onClearTribes={() => setFilters((f) => ({ ...f, tribeIds: [] }))}
+        onDateRangeChange={(dateRange) =>
+          setFilters((f) => ({ ...f, dateRange }))
+        }
+        onReset={() => setFilters(DEFAULT_FILTERS)}
+      />
 
       {/* Game Sessions */}
       {gameSessions.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No games played yet</h3>
-            <p className="text-muted-foreground mb-4">
+            <Trophy className="mx-auto mb-4 size-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No games played yet</h3>
+            <p className="mb-4 text-muted-foreground">
               Start recording your game sessions to see them here
             </p>
-            <Button
-              className="rounded-full h-12 w-12 sm:h-12 sm:w-auto px-2"
-              asChild
-            >
+            <Button asChild>
               <Link href="/session/create">
-                <Play className="text-white" />
-                <span className="hidden sm:block font-semibold text-[16px] text-white">
-                  New Session
-                </span>
+                <Play className="size-4" />
+                New Session
               </Link>
             </Button>
           </CardContent>
@@ -300,8 +320,8 @@ const Page = () => {
       ) : filteredSessions.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
+            <Search className="mx-auto mb-4 size-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">
               No sessions match your filters
             </h3>
             <p className="text-muted-foreground">
@@ -310,7 +330,7 @@ const Page = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6 sm:space-y-8">
           {currentSessions.map((session) => (
             <GameSessionCard
               key={session.sessionId}
@@ -322,7 +342,7 @@ const Page = () => {
         </div>
       )}
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-8">
           <Pagination>
@@ -339,18 +359,23 @@ const Page = () => {
                 />
               </PaginationItem>
 
-              {/* Dynamic Page Links */}
-              {[...Array(totalPages)].map((_, index) => (
-                <PaginationItem key={index}>
-                  <PaginationLink
-                    onClick={() => handlePageChange(index + 1)}
-                    isActive={currentPage === index + 1}
-                    className="cursor-pointer"
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {getPageWindow(currentPage, totalPages).map((page, index) =>
+                page === "..." ? (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
 
               <PaginationItem>
                 <PaginationNext

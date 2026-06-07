@@ -14,6 +14,7 @@ export interface SessionDataInterface {
   datePlayed: string;
   gameTitle: string;
   gameId: number;
+  gameImage: string | null;
   createdAt: Date;
   numPlayers: number;
   rowId: number;
@@ -56,6 +57,7 @@ export interface GroupedSession {
   datePlayed: string;
   gameTitle: string;
   gameId: number;
+  gameImage: string | null;
   createdAt: Date;
   numPlayers: number;
   tribe: string;
