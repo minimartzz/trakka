@@ -326,7 +326,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 gameTitle={session.gameTitle}
                               />
                               <span
-                                className="font-medium truncate max-w-30"
+                                className="font-medium truncate max-w-30 md:max-w-48 lg:max-w-64"
                                 title={session.gameTitle}
                               >
                                 {session.gameTitle}
