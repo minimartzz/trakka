@@ -55,6 +55,10 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200],
     minimumCacheTTL: 60 * 60 * 24,
   },
+  allowedDevOrigins: [
+    "192.168.1.76",
+    "onslaught-coeditor-unpledged.ngrok-free.dev",
+  ],
 };
 
 export default withSentryConfig(nextConfig, {
