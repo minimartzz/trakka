@@ -7,6 +7,7 @@ import type { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 export interface GameSession {
   sessionId: string;
   datePlayed: string;
+  createdAt: string;
   gameId: number;
   gameTitle: string;
   gameImageUrl: string | null;

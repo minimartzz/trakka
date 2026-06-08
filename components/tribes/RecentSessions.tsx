@@ -146,11 +146,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
       );
     }
 
-    // Sort by date descending (most recent first)
-    return [...filtered].sort(
-      (a, b) =>
-        new Date(b.datePlayed).getTime() - new Date(a.datePlayed).getTime(),
-    );
+    // Sort by datePlayed descending, then createdAt descending for same-day sessions
+    return [...filtered].sort((a, b) => {
+      const dateDiff =
+        new Date(b.datePlayed).getTime() - new Date(a.datePlayed).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [sessions, timeFilter, showOnlyMe, currentUserId]);
 
   useEffect(() => {
