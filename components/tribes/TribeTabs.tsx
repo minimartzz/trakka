@@ -3,12 +3,13 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Home, Users, Dices } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
 
 interface TribeTabsProps {
   homeContent: React.ReactNode;
   playersContent: React.ReactNode;
   gamesContent: React.ReactNode;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
 /**
@@ -26,14 +27,14 @@ const TribeTabs: React.FC<TribeTabsProps> = ({
   homeContent,
   playersContent,
   gamesContent,
+  activeTab,
+  onTabChange,
 }) => {
-  const [activeTab, setActiveTab] = useState("home");
-
   return (
     <Tabs
       defaultValue="home"
       value={activeTab}
-      onValueChange={setActiveTab}
+      onValueChange={onTabChange}
       className="w-full"
     >
       {/* Tab Navigation Bar */}

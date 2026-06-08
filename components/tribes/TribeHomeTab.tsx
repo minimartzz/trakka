@@ -37,6 +37,7 @@ interface TribeHomeTabProps {
   memberCount: number;
   currentUserId?: number;
   histStats: HistStatsInterface;
+  onGameCardClick?: (gameId: number) => void;
 }
 
 /**
@@ -56,6 +57,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   memberCount,
   currentUserId,
   histStats,
+  onGameCardClick,
 }) => {
   const [leaderboardInfoOpen, setLeaderboardInfoOpen] = useState(false);
   // Calculate statistics from sessions data
@@ -353,7 +355,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           <h2 className="text-lg font-semibold">Popular Games</h2>
         </motion.div>
 
-        <PopularGamesCarousel games={popularGames} delay={0.5} />
+        <PopularGamesCarousel games={popularGames} delay={0.5} onGameClick={onGameCardClick} />
       </section>
 
       {/* Section: Historical */}

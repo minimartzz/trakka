@@ -19,6 +19,7 @@ import { type PopularGame } from "@/types/tribes";
 interface PopularGamesCarouselProps {
   games: PopularGame[];
   delay?: number;
+  onGameClick?: (gameId: number) => void;
 }
 
 const GameImage: React.FC<{
@@ -61,6 +62,7 @@ const GameImage: React.FC<{
 const PopularGamesCarousel: React.FC<PopularGamesCarouselProps> = ({
   games,
   delay = 0,
+  onGameClick,
 }) => {
   const getPositionStyle = (position: number) => {
     switch (position) {
@@ -137,7 +139,13 @@ const PopularGamesCarousel: React.FC<PopularGamesCarouselProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: delay + index * 0.05 }}
                 >
-                  <Card className="relative overflow-hidden hover:bg-muted/50 transition-colors h-full flex flex-col py-0 gap-0">
+                  <Card
+                    className={cn(
+                      "relative overflow-hidden hover:bg-muted/50 transition-colors h-full flex flex-col py-0 gap-0",
+                      onGameClick && "cursor-pointer",
+                    )}
+                    onClick={() => onGameClick?.(Number(game.gameId))}
+                  >
                     {/* Position badge */}
                     <div
                       className={cn(
@@ -155,7 +163,7 @@ const PopularGamesCarousel: React.FC<PopularGamesCarouselProps> = ({
                     />
 
                     {/* Game info */}
-                    <div className="text-center space-y-1 flex-grow p-4">
+                    <div className="text-center space-y-1 grow p-4">
                       <p
                         className="font-medium text-sm truncate"
                         title={game.gameTitle}

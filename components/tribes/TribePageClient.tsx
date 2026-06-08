@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
 import TribeHomeTab from "./TribeHomeTab";
@@ -56,6 +57,14 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   sessions,
   histStats,
 }) => {
+  const [activeTab, setActiveTab] = useState("home");
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+
+  const handleGameCardClick = (gameId: number) => {
+    setSelectedGameId(gameId);
+    setActiveTab("games");
+  };
+
   return (
     <div className="min-h-screen mb-20">
       {/* Tribe Header */}
@@ -76,12 +85,15 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
 
       {/* Tabbed Content */}
       <TribeTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         homeContent={
           <TribeHomeTab
             sessions={sessions}
             memberCount={memberCount}
             currentUserId={userId}
             histStats={histStats}
+            onGameCardClick={handleGameCardClick}
           />
         }
         playersContent={
@@ -99,6 +111,8 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             members={members}
             groupId={tribeId}
             currentUserId={userId}
+            selectedGameId={selectedGameId}
+            onSelectGame={setSelectedGameId}
           />
         }
       />
