@@ -82,24 +82,12 @@ export async function getTribes(profileId: number) {
 
 export async function getRecentUsedTribes(profileId: number) {
   try {
-    const tribeInfo = db
-      .select({
-        id: groupTable.id,
-        name: groupTable.name,
-        image: groupTable.image,
-      })
-      .from(groupTable)
-      .as("tribeInfo");
-
-    const result = await db
+    const latestPerTribe = db
       .selectDistinctOn([compGameLogTable.groupId], {
-        id: compGameLogTable.groupId,
-        name: tribeInfo.name,
-        image: tribeInfo.image,
-        createdAt: compGameLogTable.createdAt,
+        groupId: compGameLogTable.groupId,
+        latestAt: compGameLogTable.createdAt,
       })
       .from(compGameLogTable)
-      .leftJoin(tribeInfo, eq(compGameLogTable.groupId, tribeInfo.id))
       .where(
         and(
           eq(compGameLogTable.profileId, profileId),
@@ -107,6 +95,18 @@ export async function getRecentUsedTribes(profileId: number) {
         ),
       )
       .orderBy(compGameLogTable.groupId, desc(compGameLogTable.createdAt))
+      .as("latestPerTribe");
+
+    const result = await db
+      .select({
+        id: groupTable.id,
+        name: groupTable.name,
+        image: groupTable.image,
+        createdAt: latestPerTribe.latestAt,
+      })
+      .from(latestPerTribe)
+      .innerJoin(groupTable, eq(latestPerTribe.groupId, groupTable.id))
+      .orderBy(desc(latestPerTribe.latestAt))
       .limit(3);
 
     return result;

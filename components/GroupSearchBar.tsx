@@ -29,7 +29,11 @@ interface GroupSearchBarProps {
   initialTribeId?: string;
 }
 
-const GroupSearchBar = ({ profileId, onSelect, initialTribeId }: GroupSearchBarProps) => {
+const GroupSearchBar = ({
+  profileId,
+  onSelect,
+  initialTribeId,
+}: GroupSearchBarProps) => {
   const [tribes, setTribes] = useState<Tribes[]>([]);
   const [recentTribes, setRecentTribes] = useState<RecentUsedTribes[]>([]);
   const [selectedTribe, setSelectedTribe] = useState(initialTribeId ?? "");
@@ -98,7 +102,7 @@ const GroupSearchBar = ({ profileId, onSelect, initialTribeId }: GroupSearchBarP
                 "flex-1 h-6 p-1 sm:p-3 text-xs rounded-full transition-all",
                 tribeExist
                   ? "font-semibold text-gray-500 bg-gray-300 hover:bg-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  : "!opacity-30 font-normal border-dashed bg-gray-800 text-white"
+                  : "opacity-30! font-normal border-dashed bg-gray-800 text-white",
               )}
               disabled={!tribeExist}
               onClick={() => tribeExist && handleTribeChange(tribe.id!)}
@@ -110,7 +114,7 @@ const GroupSearchBar = ({ profileId, onSelect, initialTribeId }: GroupSearchBarP
                     alt={tribe.name!}
                     width="14"
                     height="14"
-                    className="rounded-xs"
+                    className="h-4 w-4 rounded-xs object-cover"
                   />
                   <span>{tribe.name!}</span>
                 </div>

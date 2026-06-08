@@ -17,7 +17,6 @@ import {
 } from "@/utils/sessionLog";
 import { format } from "date-fns";
 import { useRouter } from "nextjs-toploader/app";
-import React from "react";
 import { toast } from "sonner";
 
 // Re-export Player type for backwards compatibility
