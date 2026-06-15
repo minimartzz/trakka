@@ -1,14 +1,35 @@
-import { type GameSession, type GameListItem, type LeadingPlayer, type TribeMember } from "@/types/tribes";
+import {
+  type GameSession,
+  type GameListItem,
+  type LeadingPlayer,
+  type TribeMember,
+} from "@/types/tribes";
 import { cn } from "@/lib/utils";
-import { Crown, TrendingUp, Target, Zap, Star, TrendingDown } from "lucide-react";
-import { type PlayerSnapshot, type ScoreStatData, type ScoreCardKey } from "./types";
+import {
+  Crown,
+  TrendingUp,
+  Target,
+  Zap,
+  Star,
+  TrendingDown,
+} from "lucide-react";
+import {
+  type PlayerSnapshot,
+  type ScoreStatData,
+  type ScoreCardKey,
+} from "./types";
 
 // ─── Game list ────────────────────────────────────────────────────────────────
 
 export function buildGameList(sessions: GameSession[]): GameListItem[] {
   const map = new Map<
     number,
-    { gameTitle: string; playCount: number; imageUrl: string | null }
+    {
+      gameTitle: string;
+      playCount: number;
+      imageUrl: string | null;
+      thumbnail: string | null;
+    }
   >();
   sessions.forEach((s) => {
     const existing = map.get(s.gameId);
@@ -19,6 +40,7 @@ export function buildGameList(sessions: GameSession[]): GameListItem[] {
         gameTitle: s.gameTitle,
         playCount: 1,
         imageUrl: s.gameImageUrl,
+        thumbnail: s.thumbnail,
       });
     }
   });
@@ -445,7 +467,10 @@ export function buildGamePlayerOptions(
   members: TribeMember[],
 ): GamePlayerOption[] {
   const gameSessions = sessions.filter((s) => s.gameId === gameId);
-  const counts = new Map<number, { plays: number; p: GameSession["players"][number] }>();
+  const counts = new Map<
+    number,
+    { plays: number; p: GameSession["players"][number] }
+  >();
 
   gameSessions.forEach((s) =>
     s.players.forEach((p) => {
@@ -468,7 +493,9 @@ export function buildGamePlayerOptions(
       };
     })
     .sort((a, b) =>
-      `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`),
+      `${a.firstName} ${a.lastName}`.localeCompare(
+        `${b.firstName} ${b.lastName}`,
+      ),
     );
 }
 
@@ -536,12 +563,14 @@ export function computePlayerGameStats(
 
     plays++;
     playDates.push(session.datePlayed);
-    if (!lastPlayed || session.datePlayed > lastPlayed) lastPlayed = session.datePlayed;
+    if (!lastPlayed || session.datePlayed > lastPlayed)
+      lastPlayed = session.datePlayed;
 
     if (player.isWinner) {
       wins++;
       winDates.push(session.datePlayed);
-      if (!lastWon || session.datePlayed > lastWon) lastWon = session.datePlayed;
+      if (!lastWon || session.datePlayed > lastWon)
+        lastWon = session.datePlayed;
     }
 
     if (player.victoryPoints !== null) {
@@ -606,8 +635,10 @@ export function computeTribeGameStats(
       if (p.victoryPoints !== null) {
         totalVp += p.victoryPoints;
         vpCount++;
-        if (highest === null || p.victoryPoints > highest) highest = p.victoryPoints;
-        if (lowest === null || p.victoryPoints < lowest) lowest = p.victoryPoints;
+        if (highest === null || p.victoryPoints > highest)
+          highest = p.victoryPoints;
+        if (lowest === null || p.victoryPoints < lowest)
+          lowest = p.victoryPoints;
       }
       if (p.score !== null) {
         const existing = perPlayerScore.get(p.profileId);

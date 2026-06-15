@@ -5,8 +5,9 @@ import { SessionDataInterface } from "@/lib/interfaces";
 import fetchUser from "@/utils/fetchServerUser";
 import { filterSessionData } from "@/utils/recordsProcessing";
 import { redirect } from "next/navigation";
-import React from "react";
+import { Suspense } from "react";
 import { toast } from "sonner";
+import DashboardLoading from "./loading";
 
 const fetchSessionsByProfile = async (
   id: number,
@@ -24,7 +25,7 @@ const fetchSessionsByProfile = async (
   }
 };
 
-const Page = async () => {
+const DashboardContent = async () => {
   const user = await fetchUser();
   if (!user) {
     redirect("/login");
@@ -36,6 +37,17 @@ const Page = async () => {
   ]);
   const processedSessions = filterSessionData(user.id, sessionData);
 
+  return (
+    <TimeFilteredPerformance
+      userId={user.id}
+      recentActivity={processedSessions}
+      sessions={sessionData}
+      rollingStats={rollingStats}
+    />
+  );
+};
+
+const Page = () => {
   return (
     <div className="min-h-screen p-4 sm:p-6 space-y-6 mb-15">
       {/* Header */}
@@ -49,12 +61,9 @@ const Page = async () => {
       </div>
 
       {/* Content */}
-      <TimeFilteredPerformance
-        userId={user.id}
-        recentActivity={processedSessions}
-        sessions={sessionData}
-        rollingStats={rollingStats}
-      />
+      <Suspense fallback={<DashboardLoading />}>
+        <DashboardContent />
+      </Suspense>
     </div>
   );
 };

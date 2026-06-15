@@ -46,6 +46,7 @@ certs
 # claude
 .claude
 graphify-out/
+.impeccable
 
 # Sentry Config File
 .env.sentry-build-plugin

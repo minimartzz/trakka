@@ -7,7 +7,7 @@ export default function TribeLoading() {
       {/* Header Section */}
       <div className="relative">
         {/* Banner Background */}
-        <div className="h-32 sm:h-48 bg-gradient-to-r from-primary/20 to-primary/5" />
+        <div className="h-32 sm:h-48 bg-linear-to-r from-primary/20 to-primary/5" />
 
         {/* Profile Section */}
         <div className="px-4 sm:px-6 pb-4">
@@ -171,7 +171,7 @@ export default function TribeLoading() {
 
           <div className="flex gap-4 overflow-hidden">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="min-w-[200px] flex-shrink-0">
+              <Card key={i} className="min-w-50 shrink-0">
                 <CardContent className="p-4">
                   <Skeleton className="h-24 w-full rounded-md mb-3" />
                   <Skeleton className="h-4 w-32 mb-2" />

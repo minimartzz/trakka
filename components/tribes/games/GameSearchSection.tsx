@@ -6,6 +6,7 @@ import { Search, ChevronDown, Dices } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { type GameListItem } from "@/types/tribes";
+import Image from "next/image";
 
 export function GameSearchSection({
   gameList,
@@ -71,11 +72,10 @@ export function GameSearchSection({
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           {dropdownOpen ? (
             <Input
-              autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search games..."
-              className="border-0 p-0 h-auto shadow-none focus-visible:ring-0 text-sm"
+              className="border-0 p-0 h-auto shadow-none focus-visible:ring-0 text-sm bg-transparent dark:bg-transparent"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
@@ -118,10 +118,12 @@ export function GameSearchSection({
                       )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        {game.imageUrl ? (
-                          <img
-                            src={game.imageUrl}
+                        {game.thumbnail ? (
+                          <Image
+                            src={game.thumbnail}
                             alt={game.gameTitle}
+                            width={20}
+                            height={20}
                             className="w-7 h-7 rounded object-cover shrink-0"
                           />
                         ) : (

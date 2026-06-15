@@ -18,6 +18,8 @@ interface TribeGamesTabProps {
   members?: TribeMember[];
   groupId?: string;
   currentUserId?: number;
+  selectedGameId?: number | null;
+  onSelectGame?: (id: number | null) => void;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -26,13 +28,18 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
   sessions,
   members = [],
   currentUserId,
+  selectedGameId: controlledGameId,
+  onSelectGame,
 }) => {
   const gameList = useMemo(() => buildGameList(sessions), [sessions]);
   const defaultGame = useMemo(() => getDefaultGame(gameList), [gameList]);
 
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(
+  const [internalGameId, setInternalGameId] = useState<number | null>(
     defaultGame?.gameId ?? null,
   );
+
+  const selectedGameId = controlledGameId !== undefined ? controlledGameId : internalGameId;
+  const setSelectedGameId = onSelectGame ?? setInternalGameId;
 
   const selectedGame = useMemo(
     () => gameList.find((g) => g.gameId === selectedGameId) ?? null,

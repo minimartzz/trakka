@@ -1,4 +1,5 @@
 import { createRequestLoggedIn } from "@/app/(generic)/join/[code]/action";
+import LoadingSpinner from "@/components/icons/LoadingSpinner";
 import RedirectButton from "@/components/RedirectButton";
 import InviteLoginClient from "@/components/tribes/InviteLoginClient";
 import { groupTable } from "@/db/schema/group";
@@ -7,7 +8,7 @@ import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
 import fetchUser from "@/utils/fetchServerUser";
 import { eq } from "drizzle-orm";
-import React from "react";
+import { Suspense } from "react";
 
 // Interfaces
 interface HeaderContentProps {
@@ -34,7 +35,36 @@ const getInvitee = async (code: string) => {
   }
 };
 
-const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
+// Header info
+const HeaderContent = ({
+  inviteeFirstName,
+  inviteeGroupName,
+  userFirstName,
+}: HeaderContentProps) => {
+  return userFirstName ? (
+    <h2 className="text-2xl sm:text-3xl font-heading font-semibold sm:max-w-3xl max-w-sm">
+      {`Hi, ${userFirstName}`}
+      <br />
+      <span className="text-primary font-semibold">{inviteeFirstName}</span>
+      {" has invited you to join "}
+      <span className="text-primary font-semibold">{inviteeGroupName}</span>
+    </h2>
+  ) : (
+    <h2 className="text-2xl sm:text-3xl font-heading font-semibold">
+      Hello!
+      <br />
+      <span className="text-primary font-semibold">{inviteeFirstName}</span>
+      {" has invited you to join "}
+      <span className="text-primary font-semibold">{inviteeGroupName}</span>
+    </h2>
+  );
+};
+
+const JoinContent = async ({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) => {
   const { code } = await params;
   const user = await fetchUser();
   const inviteeInfo = await getInvitee(code);
@@ -64,33 +94,7 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
     );
   }
 
-  // Header info
-  const HeaderContent = ({
-    inviteeFirstName,
-    inviteeGroupName,
-    userFirstName,
-  }: HeaderContentProps) => {
-    return userFirstName ? (
-      <h2 className="text-2xl sm:text-3xl font-heading font-semibold">
-        {`Hi, ${userFirstName}`}
-        <br />
-        <span className="text-primary font-semibold">{inviteeFirstName}</span>
-        {" has invited you to join "}
-        <span className="text-primary font-semibold">{inviteeGroupName}</span>
-      </h2>
-    ) : (
-      <h2 className="text-2xl sm:text-3xl font-heading font-semibold">
-        Hello!
-        <br />
-        <span className="text-primary font-semibold">{inviteeFirstName}</span>
-        {" has invited you to join "}
-        <span className="text-primary font-semibold">{inviteeGroupName}</span>
-      </h2>
-    );
-  };
-
-  // View 1: If user has already logged in and clicks on link
-  const AuthenticatedView = async () => {
+  if (user) {
     const joinGroupAction = createRequestLoggedIn.bind(
       null,
       code,
@@ -119,11 +123,9 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
         </div>
       </div>
     );
-  };
+  }
 
-  return user ? (
-    <AuthenticatedView />
-  ) : (
+  return (
     <div className="flex min-h-screen justify-center items-center bg-background">
       <div className="flex flex-col gap-y-10">
         <HeaderContent
@@ -133,6 +135,20 @@ const Page = async ({ params }: { params: Promise<{ code: string }> }) => {
         <InviteLoginClient />
       </div>
     </div>
+  );
+};
+
+const JoinFallback = () => (
+  <div className="flex min-h-screen justify-center items-center bg-background">
+    <LoadingSpinner />
+  </div>
+);
+
+const Page = ({ params }: { params: Promise<{ code: string }> }) => {
+  return (
+    <Suspense fallback={<JoinFallback />}>
+      <JoinContent params={params} />
+    </Suspense>
   );
 };
 

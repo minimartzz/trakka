@@ -300,7 +300,7 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
         {label && <span>{label}</span>}
       </DialogTrigger>
-      <DialogContent className="p-4 sm:p-6 w-[95%] sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="p-4 sm:p-6 w-[95%] sm:max-w-137.5 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Tribe</DialogTitle>
           <DialogDescription>

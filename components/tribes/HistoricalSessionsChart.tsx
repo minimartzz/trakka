@@ -638,7 +638,7 @@ const HistoricalSessionsChart: React.FC<HistoricalSessionsChartProps> = ({
           transform: "translate(-50%, -100%)",
         }}
       >
-        <div className="bg-popover border rounded-lg shadow-lg p-3 min-w-[220px] max-w-[300px]">
+        <div className="bg-popover border rounded-lg shadow-lg p-3 min-w-55 max-w-75">
           <div className="mb-2">
             <span className="font-semibold text-sm">{label}</span>
           </div>

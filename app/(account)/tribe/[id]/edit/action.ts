@@ -6,7 +6,7 @@ import { groupTable } from "@/db/schema/group";
 import { format } from "date-fns";
 import { db } from "@/utils/db";
 import { and, eq, notInArray } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { Player } from "@/components/tribes/EditTribes";
 
@@ -113,6 +113,7 @@ export async function syncTribes(formData: FormData, playersUpdate: Player[]) {
       await Promise.all(upsertPromises);
     });
 
+    updateTag(`tribe:${groupId}`);
     revalidatePath(`/tribe/${groupId}`);
     return {
       success: true,

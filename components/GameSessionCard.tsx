@@ -4,7 +4,16 @@ import { GroupedSession } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { format } from "date-fns";
-import { Medal, Pencil, Trophy, User, Users, Weight } from "lucide-react";
+import {
+  CalendarDays,
+  Crown,
+  Dices,
+  Handshake,
+  Medal,
+  Pencil,
+  Trophy,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -14,17 +23,6 @@ interface GameSessionsCardProps {
   session: GroupedSession;
   canEdit?: boolean;
 }
-interface VariantAndColourInterface {
-  variant:
-    | "default"
-    | "secondary"
-    | "destructive"
-    | "outline"
-    | null
-    | undefined;
-  className: string;
-  result: string;
-}
 
 const GameSessionCard: React.FC<GameSessionsCardProps> = ({
   userId,
@@ -32,6 +30,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     sessionId,
     datePlayed,
     gameTitle,
+    gameImage,
     isPlayer,
     isWinner,
     isLoser,
@@ -42,185 +41,194 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 }) => {
   const playerDetails = players.find((player) => player.profileId === userId);
   const position = playerDetails?.position;
-  const positionWithSuffix = positionOrdinalSuffix(position!);
+  const positionWithSuffix =
+    position !== undefined ? positionOrdinalSuffix(position) : null;
 
-  const getResultsBadge = () => {
-    // Results badge
-    const getVariantAndColour = (): VariantAndColourInterface => {
-      if (isPlayer && isWinner) {
-        return {
-          variant: "default" as const,
-          className:
-            "bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold",
-          result: `${positionWithSuffix} Place`,
-        };
-      } else if (isPlayer && !isWinner && !isLoser) {
-        return {
-          variant: "secondary" as const,
-          className:
-            "bg-orange-400 hover:bg-orange-500 text-white rounded-full font-semibold",
-          result: `${positionWithSuffix} Place`,
-        };
-      } else if (isPlayer && isLoser) {
-        return {
-          variant: "destructive" as const,
-          className: "rounded-full font-semibold",
-          result: `${positionWithSuffix} Place`,
-        };
-      } else {
-        return {
-          variant: "secondary" as const,
-          className:
-            "bg-gray-500 hover:bg-gray-600 text-white rounded-full font-semibold",
-          result: "Not Involved",
-        };
-      }
-    };
-
-    const { variant, className, result } = getVariantAndColour();
+  // The user's headline result chip: outcome color + a non-color icon/label so
+  // win/loss/tie never relies on hue alone (Color-Vision Safe Rule).
+  const getResultBadge = () => {
+    if (isPlayer && isWinner) {
+      return (
+        <Badge className="gap-1 rounded-full border-transparent bg-accent-1 px-2.5 py-1 font-semibold text-[oklch(25.3%_0.0321_265.95)]">
+          <Trophy className="size-3.5" />
+          {positionWithSuffix} place
+        </Badge>
+      );
+    }
+    if (isPlayer && isLoser) {
+      return (
+        <Badge className="gap-1 rounded-full border-transparent bg-destructive px-2.5 py-1 font-semibold text-white">
+          <Medal className="size-3.5" />
+          {positionWithSuffix} place
+        </Badge>
+      );
+    }
+    if (isPlayer) {
+      return (
+        <Badge className="gap-1 rounded-full border-transparent bg-accent-2 px-2.5 py-1 font-semibold text-[oklch(25.3%_0.0321_265.95)]">
+          <Medal className="size-3.5" />
+          {positionWithSuffix} place
+        </Badge>
+      );
+    }
     return (
-      <Badge variant={variant} className={className}>
-        {variant === "default" ? (
-          <Trophy className="h-3 w-3 mr-1" />
-        ) : variant === "secondary" ? (
-          <Medal className="h-3 w-3 mr-1" />
-        ) : (
-          <Weight className="h-3 w-3 mr-1" />
-        )}
-        {result}
+      <Badge
+        variant="outline"
+        className="gap-1 rounded-full px-2.5 py-1 font-semibold text-muted-foreground"
+      >
+        Not involved
       </Badge>
     );
   };
 
-  // Formatting date
-  const formatGameDate = (dateString: string) => {
-    return format(new Date(dateString), "dd MMM yyyy");
-  };
+  const formatGameDate = (dateString: string) =>
+    format(new Date(dateString), "dd MMM yyyy");
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="px-6">
-        {/* Header */}
-        <div className="flex item-start justify-between mb-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-bold truncate">{gameTitle}</h3>
+    <Card className="overflow-hidden py-0 transition-colors hover:border-primary/40">
+      <CardContent className="p-0">
+        {/* ── Header: game image + title + meta + result ───────────────── */}
+        <div className="flex items-start gap-3 border-b p-4 sm:gap-4 sm:p-5">
+          {/* Game thumbnail */}
+          <div className="relative size-14 shrink-0 overflow-hidden rounded-md bg-muted sm:size-16">
+            {gameImage ? (
+              <Image
+                src={gameImage}
+                alt={gameTitle}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex size-full items-center justify-center">
+                <Dices className="size-6 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+
+          {/* Title + meta */}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-display truncate text-xl font-bold sm:text-2xl">
+                {gameTitle}
+              </h3>
               {canEdit && (
                 <Link
                   href={`/session/edit/${sessionId}`}
-                  className="inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-colors flex-shrink-0"
+                  aria-label={`Edit ${gameTitle} session`}
+                  className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <Pencil className="size-3.5" />
                 </Link>
               )}
             </div>
-            <div className="flex items-center gap-x-2 mb-1 text-muted-foreground">
-              <Users className="w-4" />
-              <p className="text-sm">{tribe}</p>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {formatGameDate(datePlayed)}
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-5">
-            <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-              {getResultsBadge()}
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="size-3.5" />
+                <span className="truncate">{tribe}</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="size-3.5" />
+                {formatGameDate(datePlayed)}
+              </span>
             </div>
           </div>
+
+          {/* Headline result */}
+          <div className="shrink-0">{getResultBadge()}</div>
         </div>
 
-        {/* Standings Table */}
-        <div className="w-full">
-          <ul className="divide-y divide-border/50">
-            {players.map((player, index) => (
+        {/* ── Standings ────────────────────────────────────────────────── */}
+        <ul className="divide-y divide-border/60">
+          {players.map((player) => {
+            const isCurrentUser = player.profileId === userId;
+            return (
               <li
                 key={player.profileId}
                 className={cn(
-                  "flex items-center justify-between py-2.5 px-1 text-sm",
-                  player.profileId === userId && "bg-accent/20 rounded-sm",
-                  index % 2 === 0 ? "bg-muted/20" : "bg-background",
+                  "flex items-center gap-2.5 px-4 py-2.5 text-sm sm:gap-3 sm:px-5",
+                  isCurrentUser && "bg-primary/8 dark:bg-primary/12",
                 )}
               >
-                {/* Rank column - fixed Width */}
-                <div className="w-10 text-center">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {player.position}
-                  </span>
-                </div>
+                {/* Rank */}
+                <span
+                  className={cn(
+                    "font-display w-6 shrink-0 text-center text-lg font-bold tabular-nums",
+                    player.isWinner
+                      ? "text-foreground"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {player.position}
+                </span>
 
-                {/* Player icon column - fixed width */}
-                <div className="hidden sm:flex justify-center w-[20px] h-[20px] overflow-hidden">
+                {/* Avatar */}
+                <div className="relative size-7 shrink-0 overflow-hidden rounded-full bg-muted sm:size-8">
                   {player.profilePic ? (
                     <Image
                       src={player.profilePic}
-                      alt="player profile pic"
-                      height={20}
-                      width={20}
-                      className="rounded-full"
+                      alt={`${player.firstName}'s avatar`}
+                      fill
+                      sizes="32px"
+                      className="object-cover"
                     />
                   ) : (
-                    <User
-                      className={cn(
-                        "h-3 w-3 flex-shrink-0",
-                        player.profileId === userId
-                          ? "text-blue-600"
-                          : "text-gray-400",
-                      )}
-                    />
+                    <span className="flex size-full items-center justify-center text-xs font-semibold text-muted-foreground">
+                      {player.firstName.charAt(0).toUpperCase()}
+                    </span>
                   )}
                 </div>
 
-                {/* Player names */}
-                <div className="flex-1 min-w-0 text-left ml-2 items-center">
+                {/* Name + username */}
+                <div className="min-w-0 flex-1">
                   <span
                     className={cn(
-                      "text-sm font-medium text-foreground truncate block",
-                      player.profileId === userId &&
-                        "font-semibold text-blue-600",
+                      "block truncate font-medium text-foreground",
+                      isCurrentUser && "font-semibold text-primary",
                     )}
                   >
                     {player.firstName}
-                    <span className="hidden sm:inline ml-2 text-gray-400">{`(${player.username})`}</span>
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    @{player.username}
                   </span>
                 </div>
 
-                {/* Status for high score */}
-
-                {/* Status for winners and ties */}
-                <div className="hidden sm:flex items-center justify-center min-w-0 w-20 gap-2">
+                {/* Winner / tie marker — icon-backed, color-vision safe, same
+                    vocabulary on mobile and desktop. */}
+                <div className="flex w-12 shrink-0 items-center justify-end gap-1 sm:w-24">
                   {player.isWinner && (
-                    <div>
-                      <Badge
-                        variant="outline"
-                        className="text-xs font-semibold px-2 py-0.5 border-green-200 text-green-700 bg-green-50"
-                      >
+                    <span
+                      title="Winner"
+                      className="inline-flex items-center gap-1 rounded-full bg-accent-1/25 px-1.5 py-0.5 text-[oklch(40%_0.09_156)] dark:text-accent-1"
+                    >
+                      <Crown className="size-3.5" />
+                      <span className="hidden text-xs font-semibold sm:inline">
                         Winner
-                      </Badge>
-                    </div>
+                      </span>
+                    </span>
                   )}
                   {player.isTie && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs font-semibold px-2 py-0.5 border-orange-200 text-orange-700 bg-orange-50"
+                    <span
+                      title="Tied"
+                      className="inline-flex items-center gap-1 rounded-full bg-accent-2/25 px-1.5 py-0.5 text-[oklch(45%_0.08_203)] dark:text-accent-2"
                     >
-                      Tied
-                    </Badge>
+                      <Handshake className="size-3.5" />
+                      <span className="hidden text-xs font-semibold sm:inline">
+                        Tied
+                      </span>
+                    </span>
                   )}
                 </div>
-                {/* Mobile: Display */}
-                <div className="sm:hidden flex items-center justify-center min-w-0">
-                  {player.isWinner && <p>🏆</p>}
-                  {player.isTie && <p>🤝</p>}
-                </div>
 
-                {/* Score aligned right */}
-                <div className="text-sm font-medium text-right flex-shrink-0 w-16 mr-4">
-                  {player.victoryPoints !== null ? player.victoryPoints : "—"}
-                </div>
+                {/* Victory points */}
+                <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
+                  {player.victoryPoints ?? "—"}
+                </span>
               </li>
-            ))}
-          </ul>
-        </div>
+            );
+          })}
+        </ul>
       </CardContent>
     </Card>
   );

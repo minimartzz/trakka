@@ -74,16 +74,19 @@ const getTimeFilterDate = (filter: TimeFilter): Date | null => {
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
-  const diffTime = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round(
+    (today.getTime() - dateDay.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
     month: "short",
-    day: "numeric",
   });
 };
 
@@ -95,7 +98,7 @@ const GameImageCell: React.FC<{
 
   if (!imageUrl || imageError) {
     return (
-      <div className="flex items-center justify-center w-10 h-10 rounded-md bg-primary/10 shrink-0">
+      <div className="hidden sm:flex items-center justify-center w-10 h-10 rounded-md bg-primary/10 shrink-0">
         <Dices className="w-5 h-5 text-primary" />
       </div>
     );
@@ -146,11 +149,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
       );
     }
 
-    // Sort by date descending (most recent first)
-    return [...filtered].sort(
-      (a, b) =>
-        new Date(b.datePlayed).getTime() - new Date(a.datePlayed).getTime(),
-    );
+    // Sort by datePlayed descending, then createdAt descending for same-day sessions
+    return [...filtered].sort((a, b) => {
+      const dateDiff =
+        new Date(b.datePlayed).getTime() - new Date(a.datePlayed).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [sessions, timeFilter, showOnlyMe, currentUserId]);
 
   useEffect(() => {
@@ -317,11 +322,11 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <GameImageCell
-                                imageUrl={session.gameImageUrl}
+                                imageUrl={session.thumbnail}
                                 gameTitle={session.gameTitle}
                               />
                               <span
-                                className="font-medium truncate max-w-30"
+                                className="font-medium truncate max-w-30 md:max-w-48 lg:max-w-64"
                                 title={session.gameTitle}
                               >
                                 {session.gameTitle}

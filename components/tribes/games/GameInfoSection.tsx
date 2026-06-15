@@ -25,6 +25,7 @@ import {
   getWeightLabel,
 } from "./utils";
 import { TribeMetric } from "./TribeMetric";
+import Image from "next/image";
 
 export function GameInfoSection({
   sessions,
@@ -90,9 +91,11 @@ export function GameInfoSection({
           {loadingDetails ? (
             <Skeleton className="w-28 h-28 sm:w-36 sm:h-36 rounded-xl" />
           ) : gameDetails?.imageUrl ? (
-            <img
+            <Image
               src={gameDetails.imageUrl}
               alt={selectedGame.gameTitle}
+              width={144}
+              height={144}
               className="w-28 h-28 sm:w-36 sm:h-36 rounded-xl object-cover"
             />
           ) : (

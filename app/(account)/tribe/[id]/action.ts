@@ -1,73 +1,38 @@
 "use server";
 
-import { compGameLogTable } from "@/db/schema/compGameLog";
 import { gameTable } from "@/db/schema/game";
 import { gameCategoryTable } from "@/db/schema/gameCategory";
 import { gameMechanicTable } from "@/db/schema/gameMechanic";
 import { juncGameCategoryTable } from "@/db/schema/juncGameCategory";
 import { juncGameMechanicTable } from "@/db/schema/juncGameMechanic";
-import { groupTable } from "@/db/schema/group";
 import { histDailyPlayerStatsTable } from "@/db/schema/histDailyPlayerStats";
 import { histMonthlyPlayerStatsTable } from "@/db/schema/histMonthlyPlayerStats";
-import { profileTable } from "@/db/schema/profile";
-import { profileGroupTable } from "@/db/schema/profileGroup";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { db } from "@/utils/db";
-import { createClient } from "@/utils/supabase/server";
-import { and, eq } from "drizzle-orm";
-
-// Verifies the current session and returns the Supabase user. Throws if unauthenticated.
-async function requireAuth() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
-  return user;
-}
+import { requireAuth, requireTribeMembership } from "@/utils/auth";
+import { eq } from "drizzle-orm";
+import {
+  getTribeMembersCached,
+  getTribeDetailsCached,
+  getTribeGameSessionsCached,
+  getRollingPlayerStatsByGroupCached,
+  getDailyPlayerStatsByGroupCached,
+  getMonthlyPlayerStatsByGroupCached,
+} from "./data";
 
 export async function getTribeMembers(groupId: string) {
-  await requireAuth();
-
-  const members = await db
-    .select({
-      profileGroup: profileGroupTable,
-      profile: profileTable,
-    })
-    .from(profileGroupTable)
-    .leftJoin(profileTable, eq(profileGroupTable.profileId, profileTable.id))
-    .where(eq(profileGroupTable.groupId, groupId));
-
-  return members;
+  await requireTribeMembership(groupId);
+  return getTribeMembersCached(groupId);
 }
 
 export async function getTribeDetails(groupId: string) {
-  await requireAuth();
-
-  const tribeDetails = await db
-    .select()
-    .from(groupTable)
-    .leftJoin(profileTable, eq(groupTable.createdBy, profileTable.id))
-    .where(eq(groupTable.id, groupId));
-
-  return tribeDetails;
+  await requireTribeMembership(groupId);
+  return getTribeDetailsCached(groupId);
 }
 
 export async function getTribeGameSessions(groupId: string) {
-  await requireAuth();
-
-  const sessions = await db
-    .select({
-      compGameLog: compGameLogTable,
-      profile: profileTable,
-      gameDetails: gameTable,
-    })
-    .from(compGameLogTable)
-    .leftJoin(profileTable, eq(compGameLogTable.profileId, profileTable.id))
-    .leftJoin(gameTable, eq(compGameLogTable.gameId, gameTable.id))
-    .where(eq(compGameLogTable.groupId, groupId));
-
-  return sessions;
+  await requireTribeMembership(groupId);
+  return getTribeGameSessionsCached(groupId);
 }
 
 // ========================================
@@ -77,71 +42,60 @@ export async function getRollingPlayerStats(params?: {
   groupId?: string;
   profileId?: number;
 }) {
-  await requireAuth();
-
-  const conditions = [];
-
-  if (params?.profileId) {
-    conditions.push(eq(rollingPlayerStatsTable.profileId, params.profileId));
-  }
   if (params?.groupId) {
-    conditions.push(eq(rollingPlayerStatsTable.groupId, params.groupId));
+    await requireTribeMembership(params.groupId);
+    return getRollingPlayerStatsByGroupCached(params.groupId);
   }
 
-  const rollingStats = await db
+  await requireAuth();
+  return db
     .select()
     .from(rollingPlayerStatsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined);
-
-  return rollingStats;
+    .where(
+      params?.profileId
+        ? eq(rollingPlayerStatsTable.profileId, params.profileId)
+        : undefined,
+    );
 }
 
 export async function getDailyPlayerStats(params?: {
   groupId?: string;
   profileId?: number;
 }) {
-  await requireAuth();
-
-  const conditions = [];
-
-  if (params?.profileId) {
-    conditions.push(eq(histDailyPlayerStatsTable.profileId, params.profileId));
-  }
   if (params?.groupId) {
-    conditions.push(eq(histDailyPlayerStatsTable.groupId, params.groupId));
+    await requireTribeMembership(params.groupId);
+    return getDailyPlayerStatsByGroupCached(params.groupId);
   }
 
-  const dailyPlayerStats = await db
+  await requireAuth();
+  return db
     .select()
     .from(histDailyPlayerStatsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined);
-
-  return dailyPlayerStats;
+    .where(
+      params?.profileId
+        ? eq(histDailyPlayerStatsTable.profileId, params.profileId)
+        : undefined,
+    );
 }
 
 export async function getMonthlyPlayerStats(params?: {
   groupId?: string;
   profileId?: number;
 }) {
-  await requireAuth();
-
-  const conditions = [];
-
-  if (params?.profileId) {
-    conditions.push(
-      eq(histMonthlyPlayerStatsTable.profileId, params.profileId),
-    );
-  }
   if (params?.groupId) {
-    conditions.push(eq(histMonthlyPlayerStatsTable.groupId, params.groupId));
+    await requireTribeMembership(params.groupId);
+    return getMonthlyPlayerStatsByGroupCached(params.groupId);
   }
 
-  const monthlyPlayerStats = await db
+  await requireAuth();
+  return db
     .select()
     .from(histMonthlyPlayerStatsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined);
-
-  return monthlyPlayerStats;
+    .where(
+      params?.profileId
+        ? eq(histMonthlyPlayerStatsTable.profileId, params.profileId)
+        : undefined,
+    );
 }
 
 // ========================================

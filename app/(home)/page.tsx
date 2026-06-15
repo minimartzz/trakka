@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -6,15 +8,35 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import fetchUser from "@/utils/fetchServerUser";
+import LoadingSpinner from "@/components/icons/LoadingSpinner";
+import createClient from "@/utils/supabase/client";
 import { ArrowRight, Calendar, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const Index = async () => {
-  const user = await fetchUser();
+const Index = () => {
+  const [checking, setChecking] = useState(true);
+  const router = useRouter();
 
-  if (user) redirect("/dashboard");
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.replace("/dashboard");
+      } else {
+        setChecking(false);
+      }
+    });
+  }, [router]);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner className="w-10 h-10" />
+      </div>
+    );
+  }
 
   return (
     <div

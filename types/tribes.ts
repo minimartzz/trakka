@@ -7,9 +7,11 @@ import type { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 export interface GameSession {
   sessionId: string;
   datePlayed: string;
+  createdAt: string;
   gameId: number;
   gameTitle: string;
   gameImageUrl: string | null;
+  thumbnail: string | null;
   playingTime: number | null;
   gameWeight: number | null;
   players: {
@@ -92,6 +94,7 @@ export interface GameListItem {
   gameTitle: string;
   playCount: number;
   imageUrl: string | null;
+  thumbnail: string | null;
 }
 
 export interface LeadingPlayer {

@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React, {
   useEffect,
   useState,
@@ -89,6 +90,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             gameImageUrl={notification.data.gameImageUrl}
             gameTitle={notification.data.gameTitle}
             tribeName={notification.data.tribeName}
+            groupId={notification.data.groupId}
           />
         );
       case "tribe_join":
@@ -97,6 +99,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             tribeName={notification.data.tribeName}
             tribeImageUrl={notification.data.tribeImageUrl}
             outcome={notification.data.outcome}
+            groupId={
+              notification.data.outcome === "accept"
+                ? notification.data.groupId
+                : undefined
+            }
           />
         );
       default:
@@ -158,69 +165,91 @@ interface GameSessionContentProps {
   gameImageUrl: string;
   gameTitle: string;
   tribeName: string;
+  groupId?: string;
 }
 
 const GameSessionContent: React.FC<GameSessionContentProps> = ({
   gameImageUrl,
   gameTitle,
   tribeName,
-}) => (
-  <div className="flex items-center gap-3">
-    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-sm">
-      <Image
-        src={gameImageUrl}
-        alt="Game Picture"
-        className="object-cover"
-        fill
-      />
+  groupId,
+}) => {
+  const inner = (
+    <div className="flex items-center gap-3">
+      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-sm">
+        <Image
+          src={gameImageUrl}
+          alt="Game Picture"
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          fill
+        />
+      </div>
+      <div className="flex flex-col min-w-0">
+        <h4 className="text-sm font-semibold leading-none">New Game Session</h4>
+        <span className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+          A new session for <b className="font-medium">{gameTitle}</b> was
+          recorded in{" "}
+          <span className="font-medium text-primary">{tribeName}</span>
+        </span>
+      </div>
     </div>
-    <div className="flex flex-col min-w-0">
-      <h4 className="text-sm font-semibold leading-none">New Game Session</h4>
-      <span className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-        A new session for <b className="font-medium">{gameTitle}</b> was
-        recorded in{" "}
-        <span className="font-medium text-primary">{tribeName}</span>
-      </span>
-    </div>
-  </div>
-);
+  );
+
+  return groupId ? (
+    <Link href={`/tribe/${groupId}`} className="block hover:opacity-80 transition-opacity">
+      {inner}
+    </Link>
+  ) : inner;
+};
 
 interface TribeJoinContentProps {
   tribeName: string;
   tribeImageUrl: string;
   outcome: "accept" | "reject";
+  groupId?: string;
 }
 
 const TribeJoinContent: React.FC<TribeJoinContentProps> = ({
   tribeName,
   tribeImageUrl,
   outcome,
-}) => (
-  <div className="flex items-center gap-3">
-    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
-      <Image
-        src={tribeImageUrl}
-        alt="Tribe Profile Picture"
-        className="object-cover"
-        fill
-      />
+  groupId,
+}) => {
+  const inner = (
+    <div className="flex items-center gap-3">
+      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+        <Image
+          src={tribeImageUrl}
+          alt="Tribe Profile Picture"
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          fill
+        />
+      </div>
+      <div className="flex flex-col min-w-0">
+        <h4 className="text-sm font-semibold leading-none">
+          {outcome === "accept" ? "Tribe Joined" : "Request Rejected"}
+        </h4>
+        <span className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+          Your request to join{" "}
+          <b className="font-medium text-primary">{tribeName}</b> was{" "}
+          {outcome === "accept" ? (
+            <span className="font-medium text-green-600">accepted</span>
+          ) : (
+            <span className="font-medium text-destructive">rejected</span>
+          )}
+        </span>
+      </div>
     </div>
-    <div className="flex flex-col min-w-0">
-      <h4 className="text-sm font-semibold leading-none">
-        {outcome === "accept" ? "Tribe Joined" : "Request Rejected"}
-      </h4>
-      <span className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-        Your request to join{" "}
-        <b className="font-medium text-primary">{tribeName}</b> was{" "}
-        {outcome === "accept" ? (
-          <span className="font-medium text-green-600">accepted</span>
-        ) : (
-          <span className="font-medium text-destructive">rejected</span>
-        )}
-      </span>
-    </div>
-  </div>
-);
+  );
+
+  return groupId ? (
+    <Link href={`/tribe/${groupId}`} className="block hover:opacity-80 transition-opacity">
+      {inner}
+    </Link>
+  ) : inner;
+};
 
 // Generic fallback for future notification types
 const GenericContent: React.FC<{ data: Record<string, any> }> = ({ data }) => (

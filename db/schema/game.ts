@@ -15,6 +15,7 @@ export const gameTable = pgTable("game", {
   id: integer("id").primaryKey().notNull(),
   name: text("name").notNull(),
   imageUrl: text("image_url"),
+  thumbnail: text("thumbnail"),
   yearPublished: smallint("year_published").notNull(),
   description: text("description").notNull(),
   rating: real("rating").notNull(),

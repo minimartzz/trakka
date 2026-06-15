@@ -24,7 +24,11 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useContainerSize } from "@/hooks/useContainerSize";
 import { format, formatDistanceToNow } from "date-fns";
-import { type GameSession, type TribeMember, type GameListItem } from "@/types/tribes";
+import {
+  type GameSession,
+  type TribeMember,
+  type GameListItem,
+} from "@/types/tribes";
 import {
   buildGamePlayerOptions,
   pickDefaultPlayer,
@@ -111,7 +115,7 @@ function PlayerDropdown({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search players..."
-              className="border-0 p-0 h-auto shadow-none focus-visible:ring-0 text-sm"
+              className="border-0 p-0 h-auto shadow-none focus-visible:ring-0 text-sm bg-transparent dark:bg-transparent"
               onClick={(e) => e.stopPropagation()}
             />
           </>
@@ -244,45 +248,46 @@ function ProfileBanner({
     },
   ];
 
-  const toneStyles: Record<string, { bg: string; text: string; icon: string }> = {
-    primary: {
-      bg: "bg-primary/10",
-      text: "text-primary",
-      icon: "text-primary",
-    },
-    emerald: {
-      bg: "bg-emerald-500/10",
-      text: "text-emerald-600 dark:text-emerald-400",
-      icon: "text-emerald-500",
-    },
-    slate: {
-      bg: "bg-slate-500/10",
-      text: "text-slate-700 dark:text-slate-300",
-      icon: "text-slate-500",
-    },
-    amber: {
-      bg: "bg-amber-500/10",
-      text: "text-amber-600 dark:text-amber-400",
-      icon: "text-amber-500",
-    },
-    rose: {
-      bg: "bg-rose-500/10",
-      text: "text-rose-600 dark:text-rose-400",
-      icon: "text-rose-500",
-    },
-  };
+  const toneStyles: Record<string, { bg: string; text: string; icon: string }> =
+    {
+      primary: {
+        bg: "bg-primary/10",
+        text: "text-primary",
+        icon: "text-primary",
+      },
+      emerald: {
+        bg: "bg-emerald-500/10",
+        text: "text-emerald-600 dark:text-emerald-400",
+        icon: "text-emerald-500",
+      },
+      slate: {
+        bg: "bg-slate-500/10",
+        text: "text-slate-700 dark:text-slate-300",
+        icon: "text-slate-500",
+      },
+      amber: {
+        bg: "bg-amber-500/10",
+        text: "text-amber-600 dark:text-amber-400",
+        icon: "text-amber-500",
+      },
+      rose: {
+        bg: "bg-rose-500/10",
+        text: "text-rose-600 dark:text-rose-400",
+        icon: "text-rose-500",
+      },
+    };
 
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/5 via-card to-[var(--accent-5)]/5">
+    <div className="relative overflow-hidden rounded-xl border bg-linear-to-br from-primary/5 via-card to-(--accent-5)/5">
       {/* Decorative blur */}
       <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-[var(--accent-5)]/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-(--accent-5)/10 blur-3xl pointer-events-none" />
 
       <div className="relative p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Avatar */}
         <div className="flex items-center gap-4 shrink-0">
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-[var(--accent-5)] blur-md opacity-60" />
+            <div className="absolute inset-0 rounded-full bg-linear-to-br from-primary to-accent-5 blur-md opacity-60" />
             <Avatar className="relative w-16 h-16 sm:w-20 sm:h-20 ring-4 ring-background">
               <AvatarImage src={player.image ?? ""} alt={player.username} />
               <AvatarFallback className="text-lg bg-primary/10 text-primary font-bold">
@@ -408,7 +413,7 @@ function ScoreDeltaCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-gradient-to-br",
+        "relative overflow-hidden rounded-xl border bg-linear-to-br",
         t.grad,
         t.border,
       )}
@@ -436,7 +441,9 @@ function ScoreDeltaCard({
             {playerValue !== null ? playerValue : "—"}
           </span>
           {playerValue !== null && (
-            <span className="text-xs font-semibold text-muted-foreground">VP</span>
+            <span className="text-xs font-semibold text-muted-foreground">
+              VP
+            </span>
           )}
         </div>
 
@@ -469,7 +476,12 @@ function DeltaPill({
     down: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
     same: "bg-muted text-muted-foreground",
   } as const;
-  const Icon = delta.tone === "up" ? TrendingUp : delta.tone === "down" ? TrendingDown : Minus;
+  const Icon =
+    delta.tone === "up"
+      ? TrendingUp
+      : delta.tone === "down"
+        ? TrendingDown
+        : Minus;
   return (
     <span
       className={cn(
@@ -592,7 +604,7 @@ function RadialGauge({
               style={{ transform: `rotate(${tribeAngle}deg)` }}
             >
               <div
-                className="absolute left-1/2 -translate-x-1/2 h-3 w-[3px] rounded-full bg-foreground/70"
+                className="absolute left-1/2 -translate-x-1/2 h-3 w-0.75 rounded-full bg-foreground/70"
                 style={{ top: stroke / 2 - 6 }}
               />
             </div>
@@ -653,7 +665,8 @@ function PlayTimeline({
 
   const totalWins = winDates.length;
   const totalPlays = playDates.length;
-  const winRate = totalPlays > 0 ? Math.round((totalWins / totalPlays) * 100) : 0;
+  const winRate =
+    totalPlays > 0 ? Math.round((totalWins / totalPlays) * 100) : 0;
 
   if (entries.length === 0) {
     return (
@@ -678,8 +691,7 @@ function PlayTimeline({
   const maxMs = entries[entries.length - 1].dateMs;
   const range = Math.max(maxMs - minMs, 1);
 
-  const xFor = (ms: number) =>
-    padX + ((ms - minMs) / range) * (W - padX * 2);
+  const xFor = (ms: number) => padX + ((ms - minMs) / range) * (W - padX * 2);
 
   const cumulative = entries.map((_, i) => i + 1);
   const maxCum = cumulative[cumulative.length - 1];
@@ -761,7 +773,13 @@ function PlayTimeline({
           style={{ height: H }}
         >
           <defs>
-            <linearGradient id="timeline-area" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient
+              id="timeline-area"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
               <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.25} />
               <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
             </linearGradient>

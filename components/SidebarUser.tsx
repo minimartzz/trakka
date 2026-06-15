@@ -57,7 +57,7 @@ const SidebarUser = ({
 
   const menuItems = [
     { icon: User, label: "Account", action: () => router.push("/account") },
-    { icon: HelpCircle, label: "Help", action: () => console.log("Help") },
+    { icon: HelpCircle, label: "Help", action: () => router.push("/faq") },
     {
       icon: RefreshCcw,
       label: "Sync with BoardGameGeek",

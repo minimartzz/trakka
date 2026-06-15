@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -20,13 +20,9 @@ import {
   getScore,
   getWinContrib,
 } from "@/utils/sessionLog";
-import {
-  checkUserRole,
-  fetchSessionForEdit,
-  updateSession,
-} from "./action";
+import { checkUserRole, fetchSessionForEdit, updateSession } from "./action";
 
-const Page = () => {
+const EditSessionPage = () => {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const router = useRouter();
@@ -77,7 +73,7 @@ const Page = () => {
         id: String(firstRow.gameId),
         type: "boardgame",
         title: firstRow.gameTitle,
-        thumbnail: firstRow.gameImageUrl ?? "",
+        thumbnail: firstRow.gameThumbnail ?? "",
         image: firstRow.gameImageUrl ?? "",
         description: firstRow.gameDescription ?? "",
         yearPublished: String(firstRow.gameYearPublished ?? 0),
@@ -164,7 +160,9 @@ const Page = () => {
       .map((player, idx) => (player.firstName === "" ? idx + 1 : null))
       .filter((idx): idx is number => idx !== null);
     if (missingPlayers.length > 0) {
-      toast.error(`Missing player info at position ${missingPlayers.join(", ")}.`);
+      toast.error(
+        `Missing player info at position ${missingPlayers.join(", ")}.`,
+      );
       return;
     }
     const containWinner = submittingPlayers.some((player) => player.isWinner);
@@ -268,5 +266,17 @@ const Page = () => {
     />
   );
 };
+
+const Page = () => (
+  <Suspense
+    fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }
+  >
+    <EditSessionPage />
+  </Suspense>
+);
 
 export default Page;

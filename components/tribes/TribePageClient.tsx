@@ -1,10 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
 import TribeHomeTab from "./TribeHomeTab";
 import TabSkeleton from "./TabSkeleton";
+import { buildGameList, getDefaultGame } from "./games/utils";
 import {
   type GameSession,
   type TribeMember,
@@ -39,16 +41,6 @@ interface TribePageClientProps {
   histStats: HistStatsInterface;
 }
 
-/**
- * TribePageClient - Renders tribe information
- *
- * This component orchestrates all the tribe page sections:
- * - TribeHeader: Modern header with tribe info and admin controls
- * - TribeTabs: Tab navigation for Home/Players/Games
- * - TribeHomeTab: Dashboard with stats and leaderboards
- * - TribePlayersTab: Member cards with statistics
- * - TribeGamesTab: Game history timeline
- */
 const TribePageClient: React.FC<TribePageClientProps> = ({
   tribeId,
   tribeName,
@@ -66,6 +58,17 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   sessions,
   histStats,
 }) => {
+  const [activeTab, setActiveTab] = useState("home");
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(() => {
+    const gameList = buildGameList(sessions);
+    return getDefaultGame(gameList)?.gameId ?? null;
+  });
+
+  const handleGameCardClick = (gameId: number) => {
+    setSelectedGameId(gameId);
+    setActiveTab("games");
+  };
+
   return (
     <div className="min-h-screen mb-20">
       {/* Tribe Header */}
@@ -86,12 +89,15 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
 
       {/* Tabbed Content */}
       <TribeTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         homeContent={
           <TribeHomeTab
             sessions={sessions}
             memberCount={memberCount}
             currentUserId={userId}
             histStats={histStats}
+            onGameCardClick={handleGameCardClick}
           />
         }
         playersContent={
@@ -109,6 +115,8 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             members={members}
             groupId={tribeId}
             currentUserId={userId}
+            selectedGameId={selectedGameId}
+            onSelectGame={setSelectedGameId}
           />
         }
       />

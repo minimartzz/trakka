@@ -61,11 +61,7 @@ const PlayerInput = <T extends BasePlayer>({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInput(val);
-    if (val.length > 0) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
+    setOpen(true);
   };
 
   const selectPlayer = (player: T) => {
@@ -121,7 +117,7 @@ const PlayerInput = <T extends BasePlayer>({
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              onFocus={() => input.length > 0 && setOpen(true)}
+              onFocus={() => setOpen(true)}
               className="pl-9"
             />
           </div>

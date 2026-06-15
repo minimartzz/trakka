@@ -13,7 +13,9 @@ import { notificationsTable } from "@/db/schema/notifications";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { db } from "@/utils/db";
+import { requireTribeMembership } from "@/utils/auth";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { updateTag } from "next/cache";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 
@@ -80,24 +82,12 @@ export async function getTribes(profileId: number) {
 
 export async function getRecentUsedTribes(profileId: number) {
   try {
-    const tribeInfo = db
-      .select({
-        id: groupTable.id,
-        name: groupTable.name,
-        image: groupTable.image,
-      })
-      .from(groupTable)
-      .as("tribeInfo");
-
-    const result = await db
+    const latestPerTribe = db
       .selectDistinctOn([compGameLogTable.groupId], {
-        id: compGameLogTable.groupId,
-        name: tribeInfo.name,
-        image: tribeInfo.image,
-        createdAt: compGameLogTable.createdAt,
+        groupId: compGameLogTable.groupId,
+        latestAt: compGameLogTable.createdAt,
       })
       .from(compGameLogTable)
-      .leftJoin(tribeInfo, eq(compGameLogTable.groupId, tribeInfo.id))
       .where(
         and(
           eq(compGameLogTable.profileId, profileId),
@@ -105,6 +95,18 @@ export async function getRecentUsedTribes(profileId: number) {
         ),
       )
       .orderBy(compGameLogTable.groupId, desc(compGameLogTable.createdAt))
+      .as("latestPerTribe");
+
+    const result = await db
+      .select({
+        id: groupTable.id,
+        name: groupTable.name,
+        image: groupTable.image,
+        createdAt: latestPerTribe.latestAt,
+      })
+      .from(latestPerTribe)
+      .innerJoin(groupTable, eq(latestPerTribe.groupId, groupTable.id))
+      .orderBy(desc(latestPerTribe.latestAt))
       .limit(3);
 
     return result;
@@ -147,6 +149,21 @@ export async function getSelectablePlayers(tribeId: string) {
 
 // Submit Session
 export async function submitNewSession(payload: CompGameLog[]) {
+  if (payload.length === 0) {
+    return { success: false };
+  }
+
+  // All rows in a single session belong to the same tribe.
+  // Caller must be a member of that tribe to write to it.
+  const affectedGroupIds = Array.from(new Set(payload.map((log) => log.groupId)));
+  try {
+    for (const groupId of affectedGroupIds) {
+      await requireTribeMembership(groupId);
+    }
+  } catch {
+    return { success: false };
+  }
+
   try {
     const result = await db
       .insert(compGameLogTable)
@@ -183,6 +200,10 @@ export async function submitNewSession(payload: CompGameLog[]) {
       return { success: false };
     }
 
+    for (const groupId of affectedGroupIds) {
+      updateTag(`tribe:${groupId}`);
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Failed to submit session: ", error);
@@ -211,6 +232,7 @@ export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
         id: gameId,
         name: selectedGame.title,
         imageUrl: selectedGame.image || null,
+        thumbnail: selectedGame.thumbnail || null,
         yearPublished: parseInt(selectedGame.yearPublished) || 0,
         description: selectedGame.description,
         rating: parseFloat(selectedGame.rating) || 0,
