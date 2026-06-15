@@ -6,6 +6,7 @@ import TribeHeader from "./TribeHeader";
 import TribeTabs from "./TribeTabs";
 import TribeHomeTab from "./TribeHomeTab";
 import TabSkeleton from "./TabSkeleton";
+import { buildGameList, getDefaultGame } from "./games/utils";
 import {
   type GameSession,
   type TribeMember,
@@ -58,7 +59,10 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   histStats,
 }) => {
   const [activeTab, setActiveTab] = useState("home");
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(() => {
+    const gameList = buildGameList(sessions);
+    return getDefaultGame(gameList)?.gameId ?? null;
+  });
 
   const handleGameCardClick = (gameId: number) => {
     setSelectedGameId(gameId);
