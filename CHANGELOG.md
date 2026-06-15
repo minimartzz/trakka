@@ -2,7 +2,32 @@
 
 All notable changes to Trakka are recorded in this changelog
 
-## [0.1.0] Feature Ready - 2025-05-10
+## [0.2.0] Fixes - 2026-06-16
+
+### Added
+
+- Introduce caching to improve site performance
+- Redesigned “Recent Games” page
+
+### Changed
+
+- Activity log content now links to tribe that you joined or session that you played
+- README for repo updated
+- Tribes: Popular games cards now link to respective game on Games tab
+
+### Fixed
+
+- Improved performance by switching to smaller images on searches
+- Recent Games: Filter calculations now make sense
+- Create Session: Recent tribe bubbles now displays the most recent tribes the user added sessions to
+- Create Session: Player dropdown now automatically shows when player field is selected
+- Tribes: Games tab search bars now no longer automatically open keyboard when clicked
+- Tribes: Recent sessions now displays the latest session at the top
+- Tribes: Recent sessions date for yesterday was showing as “-1 day”
+- Tribes: Recent sessions removed game icon on mobile view
+- Tribes: Recent sessions increased the threshold for game name truncation on desktop view
+
+## [0.1.0] Feature Ready - 2026-05-10
 
 ### Changed
 
