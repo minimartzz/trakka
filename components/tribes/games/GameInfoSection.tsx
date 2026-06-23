@@ -31,10 +31,16 @@ export function GameInfoSection({
   sessions,
   selectedGameId,
   selectedGame,
+  readOnly = false,
 }: {
   sessions: GameSession[];
   selectedGameId: number;
   selectedGame: GameListItem;
+  /**
+   * Demo mode: skip the auth-gated BGG metadata fetch. The component falls back
+   * to session-derived data, which is all the public landing demo needs.
+   */
+  readOnly?: boolean;
 }) {
   const [gameDetails, setGameDetails] = useState<SelectGame | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
@@ -74,8 +80,16 @@ export function GameInfoSection({
   }, [selectedGameId]);
 
   useEffect(() => {
+    // Demo mode never hits the auth-gated metadata endpoint; render fallbacks.
+    if (readOnly) {
+      setGameDetails(null);
+      setCategories([]);
+      setMechanics([]);
+      setLoadingDetails(false);
+      return;
+    }
     fetchDetails();
-  }, [fetchDetails]);
+  }, [fetchDetails, readOnly]);
 
   return (
     <motion.section

@@ -20,6 +20,8 @@ interface TribeGamesTabProps {
   currentUserId?: number;
   selectedGameId?: number | null;
   onSelectGame?: (id: number | null) => void;
+  /** Demo mode: skip auth-gated BGG metadata fetches. */
+  readOnly?: boolean;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -30,6 +32,7 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
   currentUserId,
   selectedGameId: controlledGameId,
   onSelectGame,
+  readOnly = false,
 }) => {
   const gameList = useMemo(() => buildGameList(sessions), [sessions]);
   const defaultGame = useMemo(() => getDefaultGame(gameList), [gameList]);
@@ -87,6 +90,7 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
             sessions={sessions}
             selectedGameId={selectedGameId}
             selectedGame={selectedGame}
+            readOnly={readOnly}
           />
           <LeadingPlayersSection
             key={`players-${selectedGameId}`}
