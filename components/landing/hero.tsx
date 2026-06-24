@@ -18,13 +18,59 @@ const TAGLINES = [
   "Prove it wasn't a fluke. Again. And again.",
 ];
 
+/**
+ * Showcase screenshot pairs. Each entry is one carousel slide: `browser` and
+ * `phone` advance together. Add as many pairs as you like — paste image URLs
+ * (or /public paths) here.
+ */
+const SHOWCASE_PAIRS: { browser: string; phone: string }[] = [
+  {
+    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/homepage.png`,
+    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/homepage_m.png`,
+  },
+  {
+    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/recentgames.png`,
+    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/recentgames_m.png`,
+  },
+  {
+    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/session.png`,
+    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/session_m.png`,
+  },
+  {
+    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe1.png`,
+    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe1_m.png`,
+  },
+  {
+    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe2.png`,
+    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe2_m.png`,
+  },
+];
+
+/** Milliseconds each showcase pair stays on screen before crossfading. */
+const SHOWCASE_INTERVAL = 4500;
+
+const browserImages = SHOWCASE_PAIRS.map((p) => p.browser);
+const phoneImages = SHOWCASE_PAIRS.map((p) => p.phone);
+
 const Hero = () => {
   const [index, setIndex] = useState(0);
   const [tagline, setTagline] = useState(TAGLINES[0]);
+  // Shared index so the browser and phone frames crossfade in lockstep.
+  const [showcaseIndex, setShowcaseIndex] = useState(0);
 
   useEffect(() => {
     setTagline(TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
     const id = setInterval(() => setIndex((i) => (i + 1) % WORDS.length), 3800);
+    return () => clearInterval(id);
+  }, []);
+
+  // Auto-advance the synced showcase carousel (no user controls).
+  useEffect(() => {
+    if (SHOWCASE_PAIRS.length <= 1) return;
+    const id = setInterval(
+      () => setShowcaseIndex((i) => (i + 1) % SHOWCASE_PAIRS.length),
+      SHOWCASE_INTERVAL,
+    );
     return () => clearInterval(id);
   }, []);
 
@@ -106,6 +152,8 @@ const Hero = () => {
             <PhoneFrame
               label="Replace with mobile screenshot"
               className="mx-auto w-full max-w-xs"
+              images={phoneImages}
+              activeIndex={showcaseIndex}
             />
           </div>
 
@@ -114,9 +162,15 @@ const Hero = () => {
             <BrowserFrame
               label="Replace with dashboard screenshot"
               className="w-9/10"
+              images={browserImages}
+              activeIndex={showcaseIndex}
             />
             <div className="absolute right-0 top-[15%] w-[28%]">
-              <PhoneFrame label="Replace with mobile screenshot" />
+              <PhoneFrame
+                label="Replace with mobile screenshot"
+                images={phoneImages}
+                activeIndex={showcaseIndex}
+              />
             </div>
           </div>
         </div>
