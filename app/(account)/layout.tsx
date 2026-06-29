@@ -3,7 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import Feedback from "@/components/Feedback";
 import Footer from "@/components/Footer";
 import GlobalSearchBar from "@/components/GlobalSearchBar";
-import LoadingSpinner from "@/components/icons/LoadingSpinner";
+import AccountShellSkeleton from "@/components/tribes/AccountShellSkeleton";
 import { NotificationsProvider } from "@/components/NotificationsProvider";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
@@ -37,12 +37,10 @@ export default function AccountLayout({
 
 // Children can't render inside the fallback because page components consume
 // the NotificationsProvider context, which only exists inside AuthenticatedShell.
+// We render the static shell chrome here (rather than a full-screen spinner)
+// so the route's own loading.tsx skeleton can fill the content area.
 function LayoutFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <LoadingSpinner />
-    </div>
-  );
+  return <AccountShellSkeleton />;
 }
 
 async function AuthenticatedShell({
