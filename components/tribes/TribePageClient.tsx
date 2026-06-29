@@ -107,6 +107,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             currentUserId={userId}
             histStats={histStats}
             onGameCardClick={handleGameCardClick}
+            canEditSessions={showSuperAdmin || showAdmin}
           />
         }
         playersContent={

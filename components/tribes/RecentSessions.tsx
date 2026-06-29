@@ -22,8 +22,16 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { Dices, Calendar, Trophy, ChevronDown, Sparkles } from "lucide-react";
+import {
+  Dices,
+  Calendar,
+  Trophy,
+  ChevronDown,
+  Sparkles,
+  Pencil,
+} from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
 import { useState, useMemo, useRef, useEffect } from "react";
 
 import { type GameSession, type TimeFilter } from "@/types/tribes";
@@ -37,6 +45,13 @@ interface RecentSessionsProps {
   pageSize?: number;
   title?: string;
   initialTimeFilter?: TimeFilter;
+  /**
+   * When true, an "Edit mode" toggle is shown. While active, each session
+   * exposes an edit action that redirects to its edit page — available to
+   * tribe admins regardless of whether they played in the session. The edit
+   * page re-validates the user's role server-side, so this flag is UX only.
+   */
+  canEdit?: boolean;
 }
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
@@ -118,6 +133,41 @@ const GameImageCell: React.FC<{
   );
 };
 
+const EditModeToggle: React.FC<{
+  editMode: boolean;
+  onToggle: (checked: boolean) => void;
+  className?: string;
+}> = ({ editMode, onToggle, className }) => (
+  <div
+    className={cn(
+      "flex items-center gap-1.5 self-end rounded-lg py-1.5",
+      className,
+    )}
+  >
+    <Pencil
+      className={cn(
+        "w-3.5 h-3.5 transition-colors",
+        editMode ? "text-primary" : "text-muted-foreground",
+      )}
+    />
+    <Label
+      htmlFor="edit-mode"
+      className={cn(
+        "text-xs cursor-pointer transition-colors whitespace-nowrap",
+        editMode ? "text-foreground font-medium" : "text-muted-foreground",
+      )}
+    >
+      Edit mode
+    </Label>
+    <Switch
+      id="edit-mode"
+      checked={editMode}
+      onCheckedChange={onToggle}
+      size="sm"
+    />
+  </div>
+);
+
 const RecentSessions: React.FC<RecentSessionsProps> = ({
   sessions,
   currentUserId,
@@ -127,11 +177,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   pageSize = PAGE_SIZE,
   title,
   initialTimeFilter = "past_month",
+  canEdit = false,
 }) => {
+  const router = useRouter();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(initialTimeFilter);
   const [showOnlyMe, setShowOnlyMe] = useState(false);
   const [visibleCount, setVisibleCount] = useState(pageSize);
-  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Filter sessions by time and user
@@ -160,24 +212,23 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
 
   useEffect(() => {
     setVisibleCount(pageSize);
-    setIsAtBottom(false);
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [timeFilter, showOnlyMe, pageSize]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    if (el.scrollHeight <= el.clientHeight) setIsAtBottom(true);
-  }, [visibleCount, filteredSessions]);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 8);
-  };
 
   const visibleSessions = filteredSessions.slice(0, visibleCount);
   const hasMore = filteredSessions.length > visibleCount;
   const isEmpty = filteredSessions.length === 0;
+
+  // Leave edit mode if the filters reduce the list to nothing to act on.
+  useEffect(() => {
+    if (isEmpty) setEditMode(false);
+  }, [isEmpty]);
+
+  const showEditColumn = canEdit && editMode;
+
+  const handleEditSession = (sessionId: string) => {
+    router.push(`/session/edit/${sessionId}`);
+  };
 
   const getWinner = (session: GameSession) => {
     return session.players.find((p) => p.isWinner);
@@ -198,6 +249,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
         <CardHeader>
           {showFilters ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+              {canEdit && (
+                <EditModeToggle
+                  editMode={editMode}
+                  onToggle={setEditMode}
+                  className="sm:mr-auto"
+                />
+              )}
               {/* Filters - User Toggle and Time Filter side by side */}
               <div className="flex items-center justify-between sm:justify-start gap-3">
                 {/* User Toggle */}
@@ -265,9 +323,17 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
               </div>
             </div>
           ) : (
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {title ?? "Recent Sessions"}
-            </CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {title ?? "Recent Sessions"}
+              </CardTitle>
+              {canEdit && (
+                <EditModeToggle
+                  editMode={editMode}
+                  onToggle={setEditMode}
+                />
+              )}
+            </div>
           )}
         </CardHeader>
 
@@ -283,7 +349,6 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
               <div
                 ref={scrollRef}
                 className="max-h-107.5 overflow-y-auto overflow-x-auto"
-                onScroll={handleScroll}
               >
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
@@ -295,6 +360,11 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                       <TableHead className="text-right">Winning VP</TableHead>
                       {currentUserId && (
                         <TableHead className="text-right">Your VP</TableHead>
+                      )}
+                      {showEditColumn && (
+                        <TableHead className="w-12 text-right sticky right-0 bg-card">
+                          Edit
+                        </TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
@@ -449,29 +519,54 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                               )}
                             </TableCell>
                           )}
+
+                          {/* Edit action — sticky to the right so it stays
+                              reachable while the row scrolls horizontally on
+                              narrow screens. Solid background occludes the
+                              scrolled content beneath it. */}
+                          {showEditColumn && (
+                            <TableCell className="text-right sticky right-0 bg-card">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                aria-label={`Edit ${session.gameTitle} session`}
+                                onClick={() =>
+                                  handleEditSession(session.sessionId)
+                                }
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       );
                     })}
                   </TableBody>
                 </Table>
-              </div>
 
-              {/* Show more button — only visible once scrolled to bottom */}
-              {isAtBottom && hasMore && (
-                <div className="mt-3 pt-3 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setVisibleCount((c) => c + pageSize)}
-                  >
-                    Show{" "}
-                    {Math.min(pageSize, filteredSessions.length - visibleCount)}{" "}
-                    more
-                    <ChevronDown className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              )}
+                {/* Show more button — always at the bottom of the scroll area,
+                    so the user reveals it by scrolling rather than it popping
+                    into view. Hidden only when no more games remain. */}
+                {hasMore && (
+                  <div className="mt-3 pt-3 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setVisibleCount((c) => c + pageSize)}
+                    >
+                      Show{" "}
+                      {Math.min(
+                        pageSize,
+                        filteredSessions.length - visibleCount,
+                      )}{" "}
+                      more
+                      <ChevronDown className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </CardContent>
