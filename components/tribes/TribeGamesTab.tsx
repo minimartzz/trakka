@@ -9,6 +9,7 @@ import { GameSearchSection } from "./games/GameSearchSection";
 import { GameInfoSection } from "./games/GameInfoSection";
 import { LeadingPlayersSection } from "./games/LeadingPlayersSection";
 import { ScoresSection } from "./games/ScoresSection";
+import { RecentGamesSection } from "./games/RecentGamesSection";
 import { PlayerPerformanceSection } from "./games/PlayerPerformanceSection";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -22,6 +23,8 @@ interface TribeGamesTabProps {
   onSelectGame?: (id: number | null) => void;
   /** Demo mode: skip auth-gated BGG metadata fetches. */
   readOnly?: boolean;
+  /** Enables the edit-mode toggle in the recent games table. */
+  canEditSessions?: boolean;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -33,6 +36,7 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
   selectedGameId: controlledGameId,
   onSelectGame,
   readOnly = false,
+  canEditSessions = false,
 }) => {
   const gameList = useMemo(() => buildGameList(sessions), [sessions]);
   const defaultGame = useMemo(() => getDefaultGame(gameList), [gameList]);
@@ -101,6 +105,13 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
             key={`scores-${selectedGameId}`}
             sessions={sessions}
             selectedGameId={selectedGameId}
+          />
+          <RecentGamesSection
+            key={`recent-${selectedGameId}`}
+            sessions={sessions}
+            selectedGameId={selectedGameId}
+            currentUserId={currentUserId}
+            canEdit={canEditSessions}
           />
           <PlayerPerformanceSection
             key={`player-${selectedGameId}`}

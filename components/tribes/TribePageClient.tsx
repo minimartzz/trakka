@@ -128,6 +128,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             selectedGameId={selectedGameId}
             onSelectGame={setSelectedGameId}
             readOnly={readOnly}
+            canEditSessions={showSuperAdmin || showAdmin}
           />
         }
       />
