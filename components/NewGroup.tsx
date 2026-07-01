@@ -3,14 +3,15 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Minus, Plus, X } from "lucide-react";
+import { Info, Loader2, Minus, Plus, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import React, { useActionState, useEffect, useState } from "react";
-import ProfilePictureUploader from "@/components/ProfilePictureUploader";
+import React, { useActionState, useEffect, useMemo, useState } from "react";
+import TribeImageUploader from "@/components/TribeImageUploader";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Roles } from "@/lib/interfaces";
 import { useRouter } from "nextjs-toploader/app";
 import { toast } from "sonner";
@@ -46,48 +53,50 @@ interface Player extends SelectablePlayers {
 
 interface PlayerControllerProps {
   players: Player[];
-  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+  onAdd: () => void;
+  onRemoveLast: () => void;
 }
 
 interface PlayerCardProps {
   player: Player;
-  players: Player[];
   selectablePlayers: SelectablePlayers[];
-  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+  onUpdate: (id: string, updates: Partial<Player>) => void;
+  onRemove: (id: string) => void;
+  canRemove: boolean;
+  locked?: boolean;
 }
 
 interface NewGroupProps {
   user: {
     id: number;
     firstName: string;
+    lastName?: string;
     username: string;
   };
   className?: string;
   label?: string;
 }
 
-const groupId = uuidv4();
-const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/groups/generic_group.png`;
+type FormState = {
+  ok: false;
+  fields: { groupName: string; description: string };
+} | null;
 
-const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
-  const handleReducePlayer = () => {
-    if (players.length > 1) {
-      setPlayers(players.slice(0, -1));
-    }
-  };
+const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/avatars/tribe/default_tribe.png`;
 
-  const handleAddPlayer = () => {
-    const newPlayer: Player = {
-      id: Date.now().toString(),
-      profileId: 0,
-      firstName: "",
-      lastName: "",
-      username: "",
-      role: 0,
-    };
-    setPlayers([...players, newPlayer]);
-  };
+// One-line summary of what each role grants, surfaced inline as a tooltip.
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  SuperAdmin:
+    "Full control: manage members, edit any session, delete the tribe.",
+  Admin: "Manage members and edit any session.",
+  Member: "Log and edit their own sessions.",
+};
 
+const PlayerController = ({
+  players,
+  onAdd,
+  onRemoveLast,
+}: PlayerControllerProps) => {
   return (
     <div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
       <Button
@@ -95,11 +104,11 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
         type="button"
         size="icon"
         className="rounded-none rounded-l-md shadow-none focus-visible:z-10"
-        onClick={handleReducePlayer}
+        onClick={onRemoveLast}
         disabled={players.length <= 1}
       >
         <Minus className="w-4 h-4" />
-        <span className="sr-only">Remove Player</span>
+        <span className="sr-only">Remove last player</span>
       </Button>
       <span className="bg-background dark:border-input dark:bg-input/30 flex items-center border px-3 text-sm font-medium">
         {players.length}
@@ -109,10 +118,10 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
         type="button"
         size="icon"
         className="rounded-none rounded-r-md shadow-none focus-visible:z-10"
-        onClick={handleAddPlayer}
+        onClick={onAdd}
       >
         <Plus className="w-4 h-4" />
-        <span className="sr-only">Add Player</span>
+        <span className="sr-only">Add player</span>
       </Button>
     </div>
   );
@@ -120,63 +129,67 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
 
 const PlayerCard = ({
   player,
-  players,
   selectablePlayers,
-  setPlayers,
+  onUpdate,
+  onRemove,
+  canRemove,
+  locked = false,
 }: PlayerCardProps) => {
-  const handleReducePlayer = () => {
-    if (players.length > 1) {
-      setPlayers(players.slice(0, -1));
-    }
-  };
-
-  const handleUpdates = (id: string, updates: Partial<Player>) => {
-    setPlayers((prev) =>
-      prev.map((player) =>
-        player.id === id ? { ...player, ...updates } : player,
-      ),
-    );
-  };
+  const currentRoleName =
+    Object.keys(Roles).find(
+      (name) => Roles[name as keyof typeof Roles] === player.role,
+    ) ?? undefined;
 
   return (
     <Card
       key={player.id}
-      className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
+      className="group relative w-full overflow-hidden border-muted-foreground/20 rounded-md shadow-none"
     >
-      {/* Remove Player */}
-      <Button
-        variant="ghost"
-        type="button"
-        size="icon"
-        className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        onClick={handleReducePlayer}
-      >
-        <X className="h-4 w-4" />
-      </Button>
+      {/* Remove this player */}
+      {canRemove && !locked && (
+        <Button
+          variant="ghost"
+          type="button"
+          size="icon"
+          className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => onRemove(player.id)}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Remove this player</span>
+        </Button>
+      )}
 
       <CardContent className="relative z-10 py-0 px-3 sm:px-5">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           {/* Player Input */}
           <div className="w-full md:max-w-lg md:flex-1 md:pr-0">
             <Label className="text-muted-foreground mb-2">Player Name</Label>
-            <PlayerInput
-              selectablePlayers={selectablePlayers}
-              playerId={player.id}
-              playerSelect={handleUpdates}
-            />
+            {locked ? (
+              <div className="flex h-9 items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
+                {`${player.firstName} ${player.lastName} (you)`}
+              </div>
+            ) : (
+              <PlayerInput
+                selectablePlayers={selectablePlayers}
+                playerId={player.id}
+                playerSelect={onUpdate}
+                openOnFocus={false}
+              />
+            )}
           </div>
 
           {/* Role */}
           <div>
             <Label className="text-muted-foreground mb-2">Role</Label>
             <Select
+              value={currentRoleName}
               onValueChange={(roleName) => {
                 const roleValue = Roles[roleName as keyof typeof Roles];
-                handleUpdates(player.id, { role: roleValue });
+                onUpdate(player.id, { role: roleValue });
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select Role" />
+                <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
                 {Object.keys(Roles).map((role) => (
@@ -195,34 +208,76 @@ const PlayerCard = ({
 
 const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
   const [isOpen, setIsOpen] = useState(false);
+  // Singleton uuid creation - second tribe never collides on primary key
+  const [groupId, setGroupId] = useState(() => uuidv4());
   const [groupPictureUrl, setGroupPictureUrl] = useState<string | null>(null);
   const [selectablePlayers, setSelectablePlayers] = useState<
     SelectablePlayers[]
   >([]);
-  const [players, setPlayers] = useState<Player[]>([
-    {
-      id: "1",
-      profileId: 0,
-      firstName: "",
-      lastName: "",
-      username: "",
-      role: 0,
-    },
-  ]);
+
+  // Row 1 is always the creator, pre-assigned as SuperAdmin and locked.
+  const makeCreatorRow = (): Player => ({
+    id: "creator",
+    profileId: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName ?? "",
+    username: user.username,
+    role: Roles.SuperAdmin,
+  });
+
+  const [players, setPlayers] = useState<Player[]>([makeCreatorRow()]);
   const router = useRouter();
 
   const handleImageUrlChange = (url: string | null) => {
     setGroupPictureUrl(url);
   };
 
-  // Get a list of selectable players
+  const handleAddPlayer = () => {
+    setPlayers((prev) => [
+      ...prev,
+      {
+        id: `player-${Date.now()}`,
+        profileId: 0,
+        firstName: "",
+        lastName: "",
+        username: "",
+        role: Roles.Member,
+      },
+    ]);
+  };
+
+  const handleRemoveLast = () => {
+    setPlayers((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+  };
+
+  const handleRemovePlayer = (id: string) => {
+    setPlayers((prev) => prev.filter((player) => player.id !== id));
+  };
+
+  const handleUpdatePlayer = (id: string, updates: Partial<Player>) => {
+    setPlayers((prev) =>
+      prev.map((player) =>
+        player.id === id ? { ...player, ...updates } : player,
+      ),
+    );
+  };
+
+  const resetForm = () => {
+    setGroupId(uuidv4());
+    setGroupPictureUrl(null);
+    setPlayers([makeCreatorRow()]);
+  };
+
+  // Get a list of selectable players (excluding the creator, already in row 1)
   useEffect(() => {
     const fetchSelectablePlayers = async () => {
       try {
         const response = await getAllPlayers();
 
         if (response.success) {
-          setSelectablePlayers(response.data!);
+          setSelectablePlayers(
+            (response.data ?? []).filter((p) => p.profileId !== user.id),
+          );
         } else {
           setSelectablePlayers([]);
           toast.error(response.message);
@@ -233,37 +288,54 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
     };
 
     fetchSelectablePlayers();
-  }, []);
+  }, [user.id]);
+
+  // Players already chosen, so they can't be picked twice across rows.
+  const takenProfileIds = useMemo(
+    () => new Set(players.map((p) => p.profileId).filter((id) => id !== 0)),
+    [players],
+  );
 
   // Handling form submission
-  const handleSubmit = async (prevState: any, formData: FormData) => {
-    const groupName = formData.get("groupname") as string;
-    const description = formData.get("description") as string;
+  const handleSubmit = async (
+    _prevState: FormState,
+    formData: FormData,
+  ): Promise<FormState> => {
+    const groupName = (formData.get("groupname") as string)?.trim();
+    const description = (formData.get("description") as string) ?? "";
+    const fail = (): FormState => ({
+      ok: false,
+      fields: { groupName, description },
+    });
 
-    // Field checks on players
-    // 1. Check if any player is empty
-    const hasEmptyPlayer = players.some((player) => player.profileId === 0);
-    if (hasEmptyPlayer) {
-      toast.error("Please ensure all players are selected.");
-      return { fields: { groupName: groupName, description: description } };
-    }
-    // 2. Check if there is at least 1 superadmin
-    const hasSuperAdmin = players.some((player) => player.role === 1);
-    if (!hasSuperAdmin) {
+    // 1. Every non-creator row must have a player selected
+    if (players.some((player) => player.profileId === 0)) {
       toast.error(
-        "Please ensure at least one player is has the SuperAdmin role.",
+        "Please select a player for every row, or remove empty rows.",
       );
-      return { fields: { groupName: groupName, description: description } };
+      return fail();
+    }
+    // 2. No duplicate players
+    const ids = players.map((p) => p.profileId);
+    if (new Set(ids).size !== ids.length) {
+      toast.error("Each player can only be added once.");
+      return fail();
+    }
+    // 3. At least one SuperAdmin (guaranteed by the locked creator row, but
+    //    kept as a guard in case that ever changes)
+    if (!players.some((player) => player.role === Roles.SuperAdmin)) {
+      toast.error("Your tribe needs at least one SuperAdmin.");
+      return fail();
     }
 
-    // Create payloads
+    const today = format(new Date(), "yyyy-MM-dd");
     const tribePayload = {
       id: groupId,
       image: groupPictureUrl ?? GENERIC_GROUP_URL,
       name: groupName,
       description: description,
-      dateCreated: format(new Date(), "yyyy-MM-dd"),
-      lastUpdated: format(new Date(), "yyyy-MM-dd"),
+      dateCreated: today,
+      lastUpdated: today,
       createdBy: user.id,
     };
 
@@ -272,31 +344,39 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
       groupId: groupId,
       roleId: player.role,
     }));
-    console.log(playersPayload);
 
-    // Insert entries into tables
     try {
       const response = await createTribe(tribePayload, playersPayload);
       if (!response.success) {
-        toast.error("Failed to create tribe. Please try again later.");
-        return { fields: { groupName: groupName, description: description } };
+        toast.error("Couldn't create the tribe. Please try again.");
+        return fail();
       }
 
-      // On success redirect and close window
       toast.success(`Tribe ${tribePayload.name} created successfully! 🎉`);
       setIsOpen(false);
+      resetForm();
       router.push(`/tribe/${groupId}`);
+      return null;
     } catch (error) {
       console.error("Error creating tribe:", error);
-      toast.error("Failed to create tribe. Please try again later.");
-      return { fields: { groupName: groupName, description: description } };
+      toast.error("Couldn't create the tribe. Please try again.");
+      return fail();
     }
   };
-  const [state, formAction, isPending] = useActionState(handleSubmit, null);
+  const [state, formAction, isPending] = useActionState<FormState, FormData>(
+    handleSubmit,
+    null,
+  );
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger className={`${className}`}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) resetForm();
+      }}
+    >
+      <DialogTrigger className={className} aria-label={label ?? "Create tribe"}>
         <Plus className="h-4 w-4 p-0 cursor-pointer" />
         {label && <span>{label}</span>}
       </DialogTrigger>
@@ -310,19 +390,12 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
         <Form action={formAction}>
           <div className="flex flex-col justify-center items-center gap-y-5 w-full min-w-0">
             <div className="w-full max-w-full">
-              <ProfilePictureUploader
-                userId={groupId}
+              <TribeImageUploader
+                tribeId={groupId}
                 onImageUrlChange={handleImageUrlChange}
                 initialImageUrl={groupPictureUrl}
                 defaultImageUrl={GENERIC_GROUP_URL}
-                path="groups"
               />
-              <div className="mt-3 text-center">
-                <p className="text-xs text-gray-400 italic">
-                  Please make sure your image file does not contain a
-                  &quot;.&quot;
-                </p>
-              </div>
             </div>
           </div>
 
@@ -330,12 +403,13 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
           <div className="flex flex-col items-center gap-y-5">
             <div className="w-full">
               <Label htmlFor="groupname" className="mb-2">
-                Group Name
+                Tribe Name
               </Label>
               <Input
                 id="groupname"
                 name="groupname"
-                defaultValue={state?.fields.groupName || ""}
+                placeholder="e.g. Friday Night Gamers"
+                defaultValue={state?.fields.groupName ?? ""}
                 required
               />
             </div>
@@ -346,7 +420,8 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
               <Textarea
                 id="description"
                 name="description"
-                defaultValue={state?.fields.description}
+                placeholder="What's this tribe about? (optional)"
+                defaultValue={state?.fields.description ?? ""}
               />
             </div>
           </div>
@@ -354,36 +429,77 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
           {/* Player information */}
           <div className="flex flex-col mt-6 gap-y-4">
             <div className="flex justify-between items-center">
-              <Label>Players</Label>
-              <PlayerController players={players} setPlayers={setPlayers} />
+              <div className="flex items-center gap-1.5">
+                <Label>Players</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="About roles"
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="w-60 max-w-60 text-wrap">
+                      <ul className="space-y-1 text-xs">
+                        {Object.entries(ROLE_DESCRIPTIONS).map(
+                          ([name, desc]) => (
+                            <li key={name}>
+                              <span className="font-medium">{name}:</span>{" "}
+                              {desc}
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <PlayerController
+                players={players}
+                onAdd={handleAddPlayer}
+                onRemoveLast={handleRemoveLast}
+              />
             </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              You&apos;re the SuperAdmin of this tribe. Add the friends you play
+              with.
+            </p>
             {players.map((player) => (
               <PlayerCard
                 key={player.id}
                 player={player}
-                players={players}
-                selectablePlayers={selectablePlayers}
-                setPlayers={setPlayers}
+                selectablePlayers={selectablePlayers.filter(
+                  (p) =>
+                    !takenProfileIds.has(p.profileId) ||
+                    p.profileId === player.profileId,
+                )}
+                onUpdate={handleUpdatePlayer}
+                onRemove={handleRemovePlayer}
+                canRemove={players.length > 1}
+                locked={player.id === "creator"}
               />
             ))}
           </div>
 
-          <div className="pt-3">
+          <DialogFooter className="pt-4">
             <Button
               type="submit"
               className="w-full hover:cursor-pointer"
               disabled={isPending}
             >
               {isPending ? (
-                <div className="flex items-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span className="flex items-center gap-2">Creating...</span>
-                </div>
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creating...
+                </span>
               ) : (
                 "Create Tribe"
               )}
             </Button>
-          </div>
+          </DialogFooter>
         </Form>
       </DialogContent>
     </Dialog>

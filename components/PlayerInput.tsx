@@ -25,6 +25,7 @@ interface PlayerInputProps<T extends BasePlayer> {
   playerId: string;
   playerSelect: (id: string, updates: Partial<Player>) => void;
   playerDetails?: T;
+  openOnFocus?: boolean;
 }
 
 const PlayerInput = <T extends BasePlayer>({
@@ -32,6 +33,7 @@ const PlayerInput = <T extends BasePlayer>({
   playerId,
   playerSelect,
   playerDetails,
+  openOnFocus = true,
 }: PlayerInputProps<T>) => {
   const getPlayerInfo = (playerDetails?: T) => {
     if (!playerDetails || !playerDetails.firstName) return;
@@ -61,7 +63,7 @@ const PlayerInput = <T extends BasePlayer>({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInput(val);
-    setOpen(true);
+    setOpen(openOnFocus ? true : val.trim().length > 0);
   };
 
   const selectPlayer = (player: T) => {
@@ -79,10 +81,12 @@ const PlayerInput = <T extends BasePlayer>({
     setOpen(false);
   };
 
+  const listboxId = `player-options-${playerId}`;
+
   // Keyboard controls
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Opens the suggestions when the user presses down after focus
-    if (!open && filteredPlayers.length > 0 && e.key === "ArrorDown") {
+    if (!open && filteredPlayers.length > 0 && e.key === "ArrowDown") {
       setOpen(true);
       return;
     }
@@ -117,8 +121,17 @@ const PlayerInput = <T extends BasePlayer>({
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              onFocus={() => setOpen(true)}
+              onFocus={openOnFocus ? () => setOpen(true) : undefined}
               className="pl-9"
+              role="combobox"
+              aria-expanded={open}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-activedescendant={
+                open && filteredPlayers[activeIndex]
+                  ? `${listboxId}-${activeIndex}`
+                  : undefined
+              }
             />
           </div>
         </PopoverAnchor>
@@ -127,15 +140,24 @@ const PlayerInput = <T extends BasePlayer>({
           style={{ width: inputRef.current?.offsetWidth }}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <ul className="m-h-[200px] overflow-y-auto rounded-md border p-1 shadow-md list-none">
+          <ul
+            id={listboxId}
+            role="listbox"
+            className="max-h-50 overflow-y-auto rounded-md border p-1 shadow-md list-none"
+          >
             {filteredPlayers.length === 0 ? (
               <li className="px-2 py-4 text-center text-sm text-muted-foreground">
-                No matching players
+                {selectablePlayers.length === 0
+                  ? "No friends to add yet. Invite people to your tribes first."
+                  : "No matching players"}
               </li>
             ) : (
               filteredPlayers.map((player, idx) => (
                 <li
                   key={player.username}
+                  id={`${listboxId}-${idx}`}
+                  role="option"
+                  aria-selected={activeIndex === idx}
                   onMouseEnter={() => setActiveIndex(idx)}
                   onClick={() => selectPlayer(player)}
                   className={cn(
@@ -145,13 +167,15 @@ const PlayerInput = <T extends BasePlayer>({
                       : "transparent",
                   )}
                 >
-                  <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
-                    <Image
-                      src={player.profilePic!}
-                      alt="Group Icon"
-                      fill
-                      className="object-cover"
-                    />
+                  <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-muted">
+                    {player.profilePic && (
+                      <Image
+                        src={player.profilePic}
+                        alt=""
+                        fill
+                        className="object-cover"
+                      />
+                    )}
                   </div>
                   <span className="ml-3">{`${player.firstName} ${player.lastName} (${player.username})`}</span>
                 </li>

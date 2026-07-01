@@ -2,6 +2,24 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.3.0] Landing Page - 2026-07-01
+
+### Added
+
+- “Edit mode” button allows SuperAdmins and Admins to edit games in their tribes that they were not a part of
+- You can now login with your username
+
+### Changed:
+
+- Redesigned landing page
+- Create new tribe popup now sets user as the default SuperAdmin and has new default tribe image
+
+### Fixed
+
+- Loading spinner no longer appears on every site navigation
+- Tribe sharing link no longer deletes when a new user signs up using it
+- Image uploader now stores images in .webp, and new default avatars for player selection
+
 ## [0.2.0] Fixes - 2026-06-16
 
 ### Added

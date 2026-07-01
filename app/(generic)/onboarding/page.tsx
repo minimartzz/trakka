@@ -1,7 +1,7 @@
 "use client";
 import { saveProfile } from "@/app/(generic)/onboarding/action";
 import LoadingSpinner from "@/components/icons/LoadingSpinner";
-import ProfilePictureUploader from "@/components/ProfilePictureUploader";
+import AvatarUploader from "@/components/AvatarUploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -102,18 +102,12 @@ const Page = () => {
         </CardHeader>
         <CardContent>
           {/* Upload profile picture */}
-          <ProfilePictureUploader
+          <AvatarUploader
             userId={user!.id}
             onImageUrlChange={handleImageUrlChange}
             initialImageUrl={profilePictureUrl}
             defaultImageUrl={GENERIC_IMAGE_URL}
-            path="avatars"
           />
-          <div className="mt-3 text-center">
-            <p className="text-xs text-gray-400 italic">
-              Please make sure your image file does not contain a &quot;.&quot;
-            </p>
-          </div>
           <div className="w-full border-t border-gray-200 my-4" />
 
           {/* Form content */}

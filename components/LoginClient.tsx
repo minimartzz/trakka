@@ -118,12 +118,12 @@ const LoginClient = () => {
             <TabsContent value="login" className="pt-3">
               <form>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="identifier">Username or Email</Label>
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
+                    id="identifier"
+                    name="identifier"
+                    type="text"
+                    placeholder="Enter your username or email"
                     className="rounded-sm"
                     required
                   />

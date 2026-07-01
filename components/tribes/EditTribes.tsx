@@ -1,5 +1,5 @@
 "use client";
-import ProfilePictureUploader from "@/components/ProfilePictureUploader";
+import TribeImageUploader from "@/components/TribeImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +57,7 @@ interface EditTribesProps {
   playersDetails: Player[];
 }
 
-const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/groups/generic_group.png`;
+const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/avatars/tribe/default_tribe.png`;
 
 const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
   const handleReducePlayer = () => {
@@ -246,18 +246,12 @@ const EditTribes = ({
     <div className="p-0 lg:p-12 lg:w-full">
       {/* Group Profile Picture */}
       <div>
-        <ProfilePictureUploader
-          userId={tribeId}
+        <TribeImageUploader
+          tribeId={tribeId}
           onImageUrlChange={handleImageUrlChange}
           initialImageUrl={groupPictureUrl}
           defaultImageUrl={GENERIC_GROUP_URL}
-          path="groups"
         />
-        <div className="mt-3 text-center">
-          <p className="text-xs text-gray-400 italic">
-            Please make sure your image file does not contain a &quot;.&quot;
-          </p>
-        </div>
       </div>
 
       <Form action={formAction}>

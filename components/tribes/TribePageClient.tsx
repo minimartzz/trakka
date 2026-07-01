@@ -39,6 +39,11 @@ interface TribePageClientProps {
   members: TribeMember[];
   sessions: GameSession[];
   histStats: HistStatsInterface;
+  /**
+   * Read-only mode for the public landing demo: forces all admin/edit
+   * affordances off so the only interaction is switching between the 3 tabs.
+   */
+  readOnly?: boolean;
 }
 
 const TribePageClient: React.FC<TribePageClientProps> = ({
@@ -57,7 +62,11 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
   members,
   sessions,
   histStats,
+  readOnly = false,
 }) => {
+  // In read-only demo mode, suppress every admin affordance regardless of role.
+  const showSuperAdmin = isSuperAdmin && !readOnly;
+  const showAdmin = isAdmin && !readOnly;
   const [activeTab, setActiveTab] = useState("home");
   const [selectedGameId, setSelectedGameId] = useState<number | null>(() => {
     const gameList = buildGameList(sessions);
@@ -82,8 +91,8 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
         gamesPlayed={gamesPlayed}
         creatorUsername={creatorUsername}
         admins={admins}
-        isSuperAdmin={isSuperAdmin}
-        isAdmin={isAdmin}
+        isSuperAdmin={showSuperAdmin}
+        isAdmin={showAdmin}
         userId={userId}
       />
 
@@ -98,6 +107,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             currentUserId={userId}
             histStats={histStats}
             onGameCardClick={handleGameCardClick}
+            canEditSessions={showSuperAdmin || showAdmin}
           />
         }
         playersContent={
@@ -117,6 +127,8 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
             currentUserId={userId}
             selectedGameId={selectedGameId}
             onSelectGame={setSelectedGameId}
+            readOnly={readOnly}
+            canEditSessions={showSuperAdmin || showAdmin}
           />
         }
       />

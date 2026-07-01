@@ -38,6 +38,8 @@ interface TribeHomeTabProps {
   currentUserId?: number;
   histStats: HistStatsInterface;
   onGameCardClick?: (gameId: number) => void;
+  /** Whether the current user can edit sessions (tribe admin or super admin). */
+  canEditSessions?: boolean;
 }
 
 /**
@@ -58,6 +60,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
   currentUserId,
   histStats,
   onGameCardClick,
+  canEditSessions = false,
 }) => {
   const [leaderboardInfoOpen, setLeaderboardInfoOpen] = useState(false);
   // Calculate statistics from sessions data
@@ -340,6 +343,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           currentUserId={currentUserId}
           emptyMessage="No sessions recorded yet"
           delay={0.4}
+          canEdit={canEditSessions}
         />
       </section>
 
