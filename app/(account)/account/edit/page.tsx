@@ -1,7 +1,7 @@
 "use client";
 import { updateProfile } from "@/app/(account)/account/edit/action";
 import useAuth from "@/app/hooks/useAuth";
-import ProfilePictureUploader from "@/components/ProfilePictureUploader";
+import AvatarUploader from "@/components/AvatarUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,18 +75,12 @@ const Page = () => {
   return (
     <div className="p-0 lg:p-12">
       {/* Profile Picture */}
-      <ProfilePictureUploader
+      <AvatarUploader
         userId={String(user.id)}
         onImageUrlChange={handleImageUrlChange}
         initialImageUrl={user.image}
         defaultImageUrl={GENERIC_IMAGE_URL}
-        path="avatars"
       />
-      <div className="mt-3 text-center">
-        <p className="text-xs text-gray-400 italic">
-          Please make sure your image file does not contain a &quot;.&quot;
-        </p>
-      </div>
 
       {/* Form Content */}
       <Form action={handleSubmit}>
