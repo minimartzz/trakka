@@ -104,12 +104,18 @@ const Page = () => {
           parseFloat(bgg.gameWeight),
         );
 
+        // New anonymous players have no profile yet; the server creates it
+        const isNewAnonymous = player.isAnonymous && player.profileId === 0;
+
         return {
           sessionId,
           datePlayed,
           ...bgg,
           numPlayers,
-          profileId: player.profileId,
+          profileId: isNewAnonymous ? null : player.profileId,
+          anonymousPlayer: isNewAnonymous
+            ? { firstName: player.firstName, lastName: player.lastName }
+            : undefined,
           groupId,
           isVp,
           victoryPoints: victoryPoints,
@@ -119,7 +125,9 @@ const Page = () => {
           score: score,
           highScore: false,
           ...dateInfo,
-          isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
+          isFirstPlay: isNewAnonymous
+            ? true
+            : await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
           createdBy: user!.id,
         };
@@ -150,18 +158,26 @@ const Page = () => {
           );
         } else {
           try {
-            const sessionNotification = payload.map((player) => ({
-              type: "new_session",
-              data: {
-                gameImageUrl: gameDetails.thumbnail,
-                gameTitle: gameDetails.title,
-                tribeName: tribe.name,
-                groupId: tribe.id,
-              },
-              isRead: false,
-              profileId: player.profileId,
-            }));
-            await notifyPlayersOfSession(sessionNotification);
+            // Anonymous players have no account to read notifications with
+            const sessionNotification = payload
+              .filter(
+                (player): player is typeof player & { profileId: number } =>
+                  player.profileId !== null,
+              )
+              .map((player) => ({
+                type: "new_session",
+                data: {
+                  gameImageUrl: gameDetails.thumbnail,
+                  gameTitle: gameDetails.title,
+                  tribeName: tribe.name,
+                  groupId: tribe.id,
+                },
+                isRead: false,
+                profileId: player.profileId,
+              }));
+            if (sessionNotification.length > 0) {
+              await notifyPlayersOfSession(sessionNotification);
+            }
           } catch {
             console.error("Failed to notify players of new session");
           }

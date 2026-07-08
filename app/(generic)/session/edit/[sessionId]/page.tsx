@@ -107,6 +107,7 @@ const EditSessionPage = () => {
         username: row.username!,
         profilePic: row.profilePic ?? "",
         groupId: row.groupId,
+        isAnonymous: row.isAnonymous ?? false,
         score: row.victoryPoints,
         isWinner: row.isWinner,
         isTie: row.isTie,

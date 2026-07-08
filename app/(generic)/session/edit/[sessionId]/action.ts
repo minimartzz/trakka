@@ -23,6 +23,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         lastName: profileTable.lastName,
         username: profileTable.username,
         profilePic: profileTable.image,
+        isAnonymous: profileTable.isAnonymous,
       })
       .from(profileTable)
       .as("playerDetails");
@@ -84,6 +85,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         lastName: playerDetails.lastName,
         username: playerDetails.username,
         profilePic: playerDetails.profilePic,
+        isAnonymous: playerDetails.isAnonymous,
         // Tribe details
         tribeName: tribeDetails.name,
         // Game details

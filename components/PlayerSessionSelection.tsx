@@ -39,6 +39,7 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
       username: "",
       groupId: "",
       profilePic: "",
+      isAnonymous: false,
       score: null,
       isWinner: false,
       isTie: false,
@@ -96,6 +97,7 @@ const PlayerSessionSelection = ({
       username: "",
       groupId: "",
       profilePic: "",
+      isAnonymous: false,
       score: null,
       isWinner: false,
       isTie: false,
@@ -205,6 +207,7 @@ const PlayerSessionSelection = ({
                       playerDetails={
                         player.profileId !== 0 ? player : undefined
                       }
+                      allowAnonymous={!isEdit}
                     />
                   </div>
 

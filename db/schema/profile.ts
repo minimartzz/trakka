@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   pgTable,
   text,
@@ -23,6 +24,8 @@ export const profileTable = pgTable("profile", {
   description: text("description").notNull(),
   gender: varchar("gender", { enum: ["Male", "Female", "Others"] }).notNull(),
   image: text("image").notNull(),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
+  claimCode: varchar("claim_code").unique(),
 });
 
 export const profileRelations = relations(profileTable, ({ many, one }) => ({
