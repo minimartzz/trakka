@@ -1,111 +1,54 @@
-import { getAllPlayers } from "@/components/actions/fetchPlayers";
-import EditTribes from "@/components/tribes/EditTribes";
-import LoadingSpinner from "@/components/icons/LoadingSpinner";
-import { groupTable } from "@/db/schema/group";
-import { profileTable } from "@/db/schema/profile";
-import { profileGroupTable } from "@/db/schema/profileGroup";
-import { db } from "@/utils/db";
-import fetchUser from "@/utils/fetchServerUser";
-import { eq } from "drizzle-orm";
+import {
+  getAnonymousMembers,
+  getSettingsMembers,
+  getSettingsTribe,
+} from "@/app/(account)/tribe/[id]/edit/data";
+import SettingsSkeleton from "@/components/tribes/settings/SettingsSkeleton";
+import TribeSettingsPage from "@/components/tribes/settings/TribeSettingsPage";
+import { requireTribeSuperAdmin } from "@/utils/auth";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-// Interfaces & Types
-interface TribeDetailsInterface {
-  group: typeof groupTable.$inferSelect;
-  profile: typeof profileTable.$inferSelect | null;
-}
-
-interface TribeMemberInterface {
-  profile_group: typeof profileGroupTable.$inferSelect;
-  profile: typeof profileTable.$inferSelect | null;
-}
-
-interface SelectablePlayers {
-  profileId: number;
-  firstName: string;
-  lastName: string;
-  username: string;
-  profilePic?: string;
-}
-
-interface Player extends SelectablePlayers {
-  id: string;
-  roleId: number;
-}
-
-// Static DB calls
-const getTribeMembers = async (groupId: string) => {
-  const members = await db
-    .select()
-    .from(profileGroupTable)
-    .leftJoin(profileTable, eq(profileGroupTable.profileId, profileTable.id))
-    .where(eq(profileGroupTable.groupId, groupId));
-
-  return members;
-};
-
-const getTribeDetails = async (groupId: string) => {
-  const tribeDetails = await db
-    .select()
-    .from(groupTable)
-    .leftJoin(profileTable, eq(groupTable.createdBy, profileTable.id))
-    .where(eq(groupTable.id, groupId));
-
-  return tribeDetails;
-};
-
-const EditTribeContent = async ({
+const SettingsContent = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
   const tribeId = (await params).id;
-  await fetchUser();
 
-  // Get current players
-  const tribeMembers: TribeMemberInterface[] = await getTribeMembers(tribeId);
-  const players: Player[] = tribeMembers.map((member, idx) => ({
-    id: idx.toString(),
-    profileId: member.profile!.id,
-    firstName: member.profile!.firstName,
-    lastName: member.profile!.lastName,
-    username: member.profile!.username,
-    roleId: member.profile_group.roleId,
-  }));
+  // Settings are SuperAdmin-only; the page carries claim codes
+  let membership;
+  try {
+    membership = await requireTribeSuperAdmin(tribeId);
+  } catch {
+    notFound();
+  }
 
-  // Get selectable players
-  const response = await getAllPlayers();
-  const selectablePlayers: SelectablePlayers[] = response.data!;
+  const [tribe, members, anonymousMembers] = await Promise.all([
+    getSettingsTribe(tribeId),
+    getSettingsMembers(tribeId),
+    getAnonymousMembers(tribeId),
+  ]);
 
-  const tribeDetails: TribeDetailsInterface = (
-    await getTribeDetails(tribeId)
-  )[0];
+  if (!tribe) {
+    notFound();
+  }
 
   return (
-    <EditTribes
-      tribeId={tribeId}
-      profilePic={tribeDetails.group.image!}
-      groupName={tribeDetails.group.name}
-      description={tribeDetails.group.description}
-      selectablePlayers={selectablePlayers}
-      playersDetails={players}
+    <TribeSettingsPage
+      tribe={tribe}
+      members={members}
+      anonymousMembers={anonymousMembers}
+      currentProfileId={membership.profileId}
     />
   );
 };
 
-const EditTribeFallback = () => (
-  <div className="flex justify-center items-center min-h-[60vh]">
-    <LoadingSpinner />
-  </div>
-);
-
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
-    <div className="flex mt-8 justify-center w-full p-12">
-      <Suspense fallback={<EditTribeFallback />}>
-        <EditTribeContent params={params} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<SettingsSkeleton />}>
+      <SettingsContent params={params} />
+    </Suspense>
   );
 };
 
