@@ -83,6 +83,10 @@ const MembersSection = ({
     .filter((p) => p.profileId > 0)
     .map((p) => p.profileId);
 
+  // An unresolved new row (added but no profile picked yet) blocks adding
+  // another until it's filled in.
+  const hasUnresolvedRow = players.some((p) => p.isNew && p.profileId < 0);
+
   const handleRoleChange = (profileId: number, newRoleId: number) => {
     setPlayers((prev) =>
       prev.map((p) =>
@@ -194,6 +198,7 @@ const MembersSection = ({
       variant="outline"
       type="button"
       onClick={handleAddRow}
+      disabled={hasUnresolvedRow}
       className={cn("shrink-0", className)}
     >
       <UserPlus className="h-4 w-4" />
