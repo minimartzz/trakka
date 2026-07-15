@@ -4,6 +4,7 @@ import { profileTable } from "@/db/schema/profile";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { db } from "@/utils/db";
 import { and, asc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 // Plain uncached reads: this page is mutation-heavy and refreshes via
 // router.refresh(), so freshness beats caching here.
@@ -49,6 +50,10 @@ export async function getSettingsMembers(groupId: string) {
 
 // Includes claim codes: only call after requireTribeSuperAdmin has passed.
 export async function getAnonymousMembers(groupId: string) {
+  // Aliased self-join to the profile of whoever currently has a pending claim
+  // on this anonymous player (null when no one is claiming).
+  const claimerProfile = alias(profileTable, "claimerProfile");
+
   return db
     .select({
       profileId: profileTable.id,
@@ -58,6 +63,10 @@ export async function getAnonymousMembers(groupId: string) {
       profilePic: profileTable.image,
       claimCode: profileTable.claimCode,
       sessionsPlayed: rollingPlayerStatsTable.sessionsPlayed,
+      claimerId: claimerProfile.id,
+      claimerFirstName: claimerProfile.firstName,
+      claimerLastName: claimerProfile.lastName,
+      claimerUsername: claimerProfile.username,
     })
     .from(profileGroupTable)
     .innerJoin(profileTable, eq(profileGroupTable.profileId, profileTable.id))
@@ -67,6 +76,10 @@ export async function getAnonymousMembers(groupId: string) {
         eq(rollingPlayerStatsTable.profileId, profileTable.id),
         eq(rollingPlayerStatsTable.groupId, groupId),
       ),
+    )
+    .leftJoin(
+      claimerProfile,
+      eq(claimerProfile.id, profileTable.claimRequestedBy),
     )
     .where(
       and(

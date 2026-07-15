@@ -18,6 +18,7 @@ import {
   Circle,
   CheckCircle2,
   Loader2,
+  KeyRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,7 +33,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 // Notification types - extensible for future types
-type NotificationType = "tribe_join" | "new_session";
+type NotificationType = "tribe_join" | "new_session" | "claim_result";
 
 interface ActivitiesInterface {
   id: string;
@@ -65,6 +66,12 @@ const NOTIFICATION_CONFIG: Record<
     color: "text-purple-600",
     bgColor: "bg-purple-100 dark:bg-purple-900/30",
   },
+  claim_result: {
+    icon: KeyRound,
+    label: "Claim",
+    color: "text-amber-600",
+    bgColor: "bg-amber-100 dark:bg-amber-900/30",
+  },
 };
 
 const INITIAL_LOAD = 5;
@@ -96,6 +103,19 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       case "tribe_join":
         return (
           <TribeJoinContent
+            tribeName={notification.data.tribeName}
+            tribeImageUrl={notification.data.tribeImageUrl}
+            outcome={notification.data.outcome}
+            groupId={
+              notification.data.outcome === "accept"
+                ? notification.data.groupId
+                : undefined
+            }
+          />
+        );
+      case "claim_result":
+        return (
+          <ClaimResultContent
             tribeName={notification.data.tribeName}
             tribeImageUrl={notification.data.tribeImageUrl}
             outcome={notification.data.outcome}
@@ -246,6 +266,57 @@ const TribeJoinContent: React.FC<TribeJoinContentProps> = ({
 
   return groupId ? (
     <Link href={`/tribe/${groupId}`} className="block hover:opacity-80 transition-opacity">
+      {inner}
+    </Link>
+  ) : inner;
+};
+
+interface ClaimResultContentProps {
+  tribeName: string;
+  tribeImageUrl: string;
+  outcome: "accept" | "reject";
+  groupId?: string;
+}
+
+const ClaimResultContent: React.FC<ClaimResultContentProps> = ({
+  tribeName,
+  tribeImageUrl,
+  outcome,
+  groupId,
+}) => {
+  const inner = (
+    <div className="flex items-center gap-3">
+      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+        <Image
+          src={tribeImageUrl}
+          alt="Tribe Profile Picture"
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          fill
+        />
+      </div>
+      <div className="flex flex-col min-w-0">
+        <h4 className="text-sm font-semibold leading-none">
+          {outcome === "accept" ? "Claim Approved" : "Claim Rejected"}
+        </h4>
+        <span className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+          Your request to claim a player in{" "}
+          <b className="font-medium text-primary">{tribeName}</b> was{" "}
+          {outcome === "accept" ? (
+            <span className="font-medium text-green-600">approved</span>
+          ) : (
+            <span className="font-medium text-destructive">rejected</span>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+
+  return groupId ? (
+    <Link
+      href={`/tribe/${groupId}`}
+      className="block hover:opacity-80 transition-opacity"
+    >
       {inner}
     </Link>
   ) : inner;

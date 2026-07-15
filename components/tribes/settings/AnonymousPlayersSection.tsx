@@ -1,5 +1,6 @@
 "use client";
 
+import { respondToClaim } from "@/app/(account)/account/claim/action";
 import { AnonymousMember } from "@/app/(account)/tribe/[id]/edit/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +12,86 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Check, Copy, Search } from "lucide-react";
+import { Check, Copy, Loader2, Search, X } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "nextjs-toploader/app";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface AnonymousPlayersSectionProps {
+  groupId: string;
   members: AnonymousMember[];
 }
+
+// Shown on an anonymous player's row when a user has a pending claim on them.
+// The SuperAdmin can approve or reject here (same action as the Inbox popover).
+const PendingClaim = ({
+  groupId,
+  member,
+}: {
+  groupId: string;
+  member: AnonymousMember;
+}) => {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+
+  const respond = async (decision: "accept" | "reject") => {
+    if (pending || member.claimerId == null) return;
+    setPending(true);
+    const result = await respondToClaim(
+      member.profileId,
+      groupId,
+      member.claimerId,
+      decision,
+    );
+    setPending(false);
+
+    if (result.success) {
+      toast.success(result.message);
+      router.refresh();
+    } else {
+      toast.error(result.message ?? "Something went wrong");
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2">
+      <div className="min-w-0 text-xs">
+        <span className="text-muted-foreground">Claim by </span>
+        <span className="font-medium">
+          {member.claimerFirstName} {member.claimerLastName}
+        </span>{" "}
+        <span className="text-muted-foreground">@{member.claimerUsername}</span>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <Button
+          size="icon"
+          type="button"
+          disabled={pending}
+          onClick={() => respond("accept")}
+          className="h-8 w-8 rounded-full border bg-slate-100 text-green-600 hover:bg-green-600 hover:text-white dark:bg-background"
+          aria-label="Accept claim"
+        >
+          {pending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Check className="h-4 w-4" />
+          )}
+        </Button>
+        <Button
+          size="icon"
+          type="button"
+          disabled={pending}
+          onClick={() => respond("reject")}
+          className="h-8 w-8 rounded-full border bg-slate-100 text-destructive hover:bg-destructive hover:text-white dark:bg-background"
+          aria-label="Reject claim"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const ClaimCodeCopy = ({
   claimCode,
@@ -109,7 +182,10 @@ const AnonAvatar = ({ member }: { member: AnonymousMember }) => (
   </div>
 );
 
-const AnonymousPlayersSection = ({ members }: AnonymousPlayersSectionProps) => {
+const AnonymousPlayersSection = ({
+  groupId,
+  members,
+}: AnonymousPlayersSectionProps) => {
   const [filter, setFilter] = useState("");
 
   const filteredMembers = useMemo(() => {
@@ -154,32 +230,43 @@ const AnonymousPlayersSection = ({ members }: AnonymousPlayersSectionProps) => {
           </TableHeader>
           <TableBody>
             {filteredMembers.map((member) => (
-              <TableRow key={member.profileId}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <AnonAvatar member={member} />
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">
-                        {member.firstName} {member.lastName}
-                      </div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        @{member.username}
+              <React.Fragment key={member.profileId}>
+                <TableRow
+                  className={member.claimerId != null ? "border-b-0" : ""}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <AnonAvatar member={member} />
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">
+                          {member.firstName} {member.lastName}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          @{member.username}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {member.sessionsPlayed ?? 0}
-                </TableCell>
-                <TableCell>
-                  {member.claimCode && (
-                    <ClaimCodeCopy
-                      claimCode={member.claimCode}
-                      memberName={`${member.firstName} ${member.lastName}`}
-                    />
-                  )}
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {member.sessionsPlayed ?? 0}
+                  </TableCell>
+                  <TableCell>
+                    {member.claimCode && (
+                      <ClaimCodeCopy
+                        claimCode={member.claimCode}
+                        memberName={`${member.firstName} ${member.lastName}`}
+                      />
+                    )}
+                  </TableCell>
+                </TableRow>
+                {member.claimerId != null && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="pt-0">
+                      <PendingClaim groupId={groupId} member={member} />
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
@@ -212,6 +299,9 @@ const AnonymousPlayersSection = ({ members }: AnonymousPlayersSectionProps) => {
                 claimCode={member.claimCode}
                 memberName={`${member.firstName} ${member.lastName}`}
               />
+            )}
+            {member.claimerId != null && (
+              <PendingClaim groupId={groupId} member={member} />
             )}
           </li>
         ))}

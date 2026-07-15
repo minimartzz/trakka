@@ -1,5 +1,6 @@
 import WipOverlay from "@/components/account/WipOverlay";
-import { Trophy, History, KeyRound } from "lucide-react";
+import ClaimAnonymousUser from "@/components/account/ClaimAnonymousUser";
+import { Trophy, History } from "lucide-react";
 import React from "react";
 
 const PlaceholderGameCards = () => (
@@ -45,22 +46,7 @@ const GamesTab = () => {
         </WipOverlay>
       </section>
 
-      <section>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <KeyRound className="h-4 w-4 text-muted-foreground" />
-          Claim a Game
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Use a claim code to link an anonymous player's past sessions to
-          your account.
-        </p>
-        <WipOverlay>
-          <div className="flex items-center gap-3 rounded-lg border p-4">
-            <div className="h-9 flex-1 rounded-md bg-muted" />
-            <div className="h-9 w-24 shrink-0 rounded-md bg-muted" />
-          </div>
-        </WipOverlay>
-      </section>
+      <ClaimAnonymousUser />
     </div>
   );
 };

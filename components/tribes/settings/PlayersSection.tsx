@@ -69,7 +69,10 @@ const PlayersSection = ({
         </TabsContent>
 
         <TabsContent value="anonymous" className="mt-4">
-          <AnonymousPlayersSection members={anonymousMembers} />
+          <AnonymousPlayersSection
+            groupId={groupId}
+            members={anonymousMembers}
+          />
         </TabsContent>
       </Tabs>
     </section>

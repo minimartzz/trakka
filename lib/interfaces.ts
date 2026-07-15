@@ -107,3 +107,29 @@ export interface TribeRequest {
   };
   isRead: boolean;
 }
+
+// For Anonymous-user Claim Requests (shown in the SuperAdmin Inbox alongside
+// join requests). Written by requestClaim in account/claim/action.ts.
+export interface ClaimRequest {
+  id: string;
+  profileId: number;
+  type: string;
+  data: {
+    group_id: string;
+    group_name: string;
+    anon_profile_id: number;
+    anon: {
+      first_name: string;
+      last_name: string;
+      username: string;
+    };
+    claimer_id: number;
+    claimer: {
+      first_name: string;
+      last_name: string;
+      username: string;
+      image: string;
+    };
+  };
+  isRead: boolean;
+}
