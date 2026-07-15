@@ -27,12 +27,14 @@ interface GroupSearchBarProps {
   profileId: number;
   onSelect: (item: SessionTribe) => void;
   initialTribeId?: string;
+  invalid?: boolean;
 }
 
 const GroupSearchBar = ({
   profileId,
   onSelect,
   initialTribeId,
+  invalid = false,
 }: GroupSearchBarProps) => {
   const [tribes, setTribes] = useState<Tribes[]>([]);
   const [recentTribes, setRecentTribes] = useState<RecentUsedTribes[]>([]);
@@ -68,7 +70,10 @@ const GroupSearchBar = ({
     <div>
       {/* Dropdown Selection */}
       <Select value={selectedTribe} onValueChange={handleTribeChange}>
-        <SelectTrigger className="className='[&>span_svg]:text-muted-foreground/80 w-full [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0'">
+        <SelectTrigger
+          aria-invalid={invalid}
+          className="className='[&>span_svg]:text-muted-foreground/80 w-full [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0'"
+        >
           <SelectValue placeholder="Select Tribe" />
         </SelectTrigger>
         <SelectContent className="[&_*[role=option]>span>svg]:text-muted-foreground/80 max-h-100 [&_*[role=option]]:pr-8 [&_*[role=option]]:pl-2 [&_*[role=option]>span]:right-2 [&_*[role=option]>span]:left-auto [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0">

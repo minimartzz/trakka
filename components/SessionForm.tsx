@@ -25,6 +25,7 @@ import { ArrowLeft, CalendarIcon } from "lucide-react";
 import Form from "next/form";
 import { useRouter } from "nextjs-toploader/app";
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 type selectablePlayersType = Awaited<
   ReturnType<typeof getSelectablePlayers>
@@ -68,6 +69,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
 }) => {
   const firstUpdate = useRef(!initialData?.tribe);
   const router = useRouter();
+  const [submitted, setSubmitted] = useState(false);
 
   // Calendar controls
   const [date, setDate] = useState<Date | undefined>(
@@ -158,7 +160,16 @@ const SessionForm: React.FC<SessionFormProps> = ({
   };
 
   const handleFormSubmit = async () => {
-    if (!gameDetails || !date || !tribe) return;
+    setSubmitted(true);
+
+    const hasMissingPlayer = submittingPlayers.some(
+      (player) => player.firstName === "",
+    );
+    if (!gameDetails || !date || !tribe || hasMissingPlayer) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
     await onSubmit({
       date,
       gameDetails,
@@ -191,6 +202,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
+                      aria-invalid={submitted && !date}
                       className={cn(
                         "w-full justify-start text-left font-normal",
                         !date && "text-muted-foreground",
@@ -221,6 +233,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                 <BGGSearchBar
                   onSelect={setGameDetails}
                   initialGame={initialData?.gameDetails}
+                  invalid={submitted && !gameDetails}
                 />
               </div>
 
@@ -231,6 +244,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                   profileId={userId}
                   onSelect={setTribe}
                   initialTribeId={initialData?.tribe?.id}
+                  invalid={submitted && !tribe}
                 />
               </div>
 
@@ -245,6 +259,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                   selectablePlayers={selectablePlayers}
                   players={submittingPlayers}
                   setPlayers={setSubmittingPlayers}
+                  submitted={submitted}
                 />
               </div>
             </Form>

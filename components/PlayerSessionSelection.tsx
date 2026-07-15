@@ -21,6 +21,7 @@ interface PlayerSessionSelectionProps {
   selectablePlayers: Awaited<ReturnType<typeof getSelectablePlayers>>[number][];
   players: Player[];
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+  submitted?: boolean;
 }
 
 const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
@@ -81,6 +82,7 @@ const PlayerSessionSelection = ({
   selectablePlayers,
   players,
   setPlayers,
+  submitted = false,
 }: PlayerSessionSelectionProps) => {
   const { pending } = useFormStatus();
   const pathname = usePathname();
@@ -208,6 +210,7 @@ const PlayerSessionSelection = ({
                         player.profileId !== 0 ? player : undefined
                       }
                       allowAnonymous={!isEdit}
+                      invalid={submitted && player.firstName === ""}
                     />
                   </div>
 

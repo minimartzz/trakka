@@ -28,6 +28,7 @@ interface PlayerInputProps<T extends BasePlayer> {
   playerDetails?: T;
   openOnFocus?: boolean;
   allowAnonymous?: boolean;
+  invalid?: boolean;
 }
 
 const splitName = (name: string): { firstName: string; lastName: string } => {
@@ -49,6 +50,7 @@ const PlayerInput = <T extends BasePlayer>({
   playerDetails,
   openOnFocus = true,
   allowAnonymous = false,
+  invalid = false,
 }: PlayerInputProps<T>) => {
   const getPlayerInfo = (playerDetails?: T) => {
     if (!playerDetails || !playerDetails.firstName) return;
@@ -198,6 +200,7 @@ const PlayerInput = <T extends BasePlayer>({
               onFocus={openOnFocus ? () => setOpen(true) : undefined}
               className={cn("pl-9", allowAnonymous && "pr-10")}
               role="combobox"
+              aria-invalid={invalid}
               aria-expanded={open}
               aria-controls={listboxId}
               aria-autocomplete="list"

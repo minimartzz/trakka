@@ -34,9 +34,11 @@ const RatingBadge = ({ rating }: { rating: string }) => {
 const BGGSearchBar = ({
   onSelect,
   initialGame,
+  invalid = false,
 }: {
   onSelect: (item: BGGDetailsInterface) => void;
   initialGame?: BGGDetailsInterface | null;
+  invalid?: boolean;
 }) => {
   const [query, setQuery] = useState(initialGame?.title ?? "");
   const [exactMatch, setExactMatch] = useState(false);
@@ -143,6 +145,7 @@ const BGGSearchBar = ({
           onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
           placeholder="Search for a board game..."
           className="pl-9 pr-9"
+          aria-invalid={invalid}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           {loading ? (
