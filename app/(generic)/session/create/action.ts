@@ -172,7 +172,9 @@ export async function submitNewSession(payload: SessionLogInput[]) {
 
   // All rows in a single session belong to the same tribe.
   // Caller must be a member of that tribe to write to it.
-  const affectedGroupIds = Array.from(new Set(payload.map((log) => log.groupId)));
+  const affectedGroupIds = Array.from(
+    new Set(payload.map((log) => log.groupId)),
+  );
   try {
     for (const groupId of affectedGroupIds) {
       await requireTribeMembership(groupId);
@@ -184,7 +186,7 @@ export async function submitNewSession(payload: SessionLogInput[]) {
   try {
     // Anonymous profile creation and game log inserts must all succeed
     // together, or a retried submit could strand half-created players.
-    await db.transaction(async (tx) => {
+    const affectedProfileIds = await db.transaction(async (tx) => {
       const logs: CompGameLog[] = [];
 
       for (const { anonymousPlayer, ...log } of payload) {
@@ -224,10 +226,7 @@ export async function submitNewSession(payload: SessionLogInput[]) {
         logs.push({ ...log, profileId: anonProfile.id });
       }
 
-      const result = await tx
-        .insert(compGameLogTable)
-        .values(logs)
-        .returning();
+      const result = await tx.insert(compGameLogTable).values(logs).returning();
       if (result.length === 0) {
         throw new Error("Game log insert returned no rows");
       }
@@ -257,10 +256,18 @@ export async function submitNewSession(payload: SessionLogInput[]) {
             latestSession: sql`EXCLUDED.latest_session`,
           },
         });
+
+      // Returns a list of profile_ids that need their cache invalidated
+      return Array.from(new Set(logs.map((log) => log.profileId)));
     });
 
+    // Invalidate the cache of tribes and profiles
     for (const groupId of affectedGroupIds) {
       updateTag(`tribe:${groupId}`);
+    }
+
+    for (const profileId of affectedProfileIds) {
+      updateTag(`recent-games:${profileId}`);
     }
 
     return { success: true };

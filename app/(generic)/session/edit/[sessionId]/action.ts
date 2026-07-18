@@ -231,6 +231,15 @@ export async function updateSession(
       updateTag(`tribe:${groupId}`);
     }
 
+    // Invalidate recent-games cache for every player touched by the edit
+    const affectedProfileIds = new Set([
+      ...newPayload.map((log) => log.profileId),
+      ...oldRows.map((row) => row.profileId),
+    ]);
+    for (const profileId of affectedProfileIds) {
+      updateTag(`recent-games:${profileId}`);
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Failed to update session:", error);
