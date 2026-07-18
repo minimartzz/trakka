@@ -15,6 +15,7 @@ import SessionForm, {
 import { SessionTribe } from "@/components/GroupSearchBar";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import {
+  computePositions,
   getDateInfo,
   getFirstPlay,
   getScore,
@@ -98,20 +99,35 @@ const EditSessionPage = () => {
         name: firstRow.tribeName!,
       };
 
+      // Team mode is recorded on the session; when set, reconstruct team
+      // membership by grouping rows that share the same position.
+      const teamMode = firstRow.teamMode ?? false;
+      const positionToTeamId = new Map<number, string>();
+
       // Build players list sorted by position
-      const players: Player[] = rows.map((row, idx) => ({
-        id: String(idx + 1),
-        profileId: row.profileId!,
-        firstName: row.firstName!,
-        lastName: row.lastName!,
-        username: row.username!,
-        profilePic: row.profilePic ?? "",
-        groupId: row.groupId,
-        isAnonymous: row.isAnonymous ?? false,
-        score: row.victoryPoints,
-        isWinner: row.isWinner,
-        isTie: row.isTie,
-      }));
+      const players: Player[] = rows.map((row, idx) => {
+        let teamId: string | null = null;
+        if (teamMode) {
+          if (!positionToTeamId.has(row.position)) {
+            positionToTeamId.set(row.position, crypto.randomUUID());
+          }
+          teamId = positionToTeamId.get(row.position)!;
+        }
+        return {
+          id: String(idx + 1),
+          profileId: row.profileId!,
+          firstName: row.firstName!,
+          lastName: row.lastName!,
+          username: row.username!,
+          profilePic: row.profilePic ?? "",
+          groupId: row.groupId,
+          isAnonymous: row.isAnonymous ?? false,
+          score: row.victoryPoints,
+          isWinner: row.isWinner,
+          isTie: row.isTie,
+          teamId,
+        };
+      });
 
       const datePlayed = new Date(firstRow.datePlayed + "T00:00:00");
 
@@ -120,6 +136,7 @@ const EditSessionPage = () => {
         gameDetails,
         tribe,
         players,
+        teamMode,
       });
 
       setLoading(false);
@@ -141,8 +158,15 @@ const EditSessionPage = () => {
     gameDetails: BGGDetailsInterface;
     tribe: SessionTribe;
     players: Player[];
+    teamMode: boolean;
   }) => {
-    const { date, gameDetails, tribe, players: submittingPlayers } = data;
+    const {
+      date,
+      gameDetails,
+      tribe,
+      players: submittingPlayers,
+      teamMode,
+    } = data;
 
     // Validation
     if (!gameDetails) {
@@ -185,24 +209,14 @@ const EditSessionPage = () => {
     const isVp = true;
     const dateInfo = getDateInfo(date);
 
+    // Rank by team (each regular player is a team of one), so teammates share
+    // position and victory points.
+    const positionedPlayers = computePositions(submittingPlayers);
+
     let payload = null;
     try {
-      const promises = submittingPlayers.map(async (player, idx, array) => {
-        let position: number;
-        if (idx === 0) {
-          position = 1;
-        } else if (
-          player.score === array[idx - 1].score &&
-          player.isTie &&
-          player.isTie === array[idx - 1].isTie
-        ) {
-          const firstMatch = array.findIndex((p) => p.score === player.score);
-          position = firstMatch + 1;
-        } else {
-          position = idx + 1;
-        }
-
-        const victoryPoints = player.score;
+      const promises = positionedPlayers.map(async (player) => {
+        const { position, teamVictoryPoints } = player;
         const score = getScore(
           position,
           numPlayers,
@@ -218,7 +232,7 @@ const EditSessionPage = () => {
           profileId: player.profileId,
           groupId,
           isVp,
-          victoryPoints,
+          victoryPoints: teamVictoryPoints,
           isWinner: player.isWinner,
           position,
           winContrib: getWinContrib(numPlayers, player.isWinner),
@@ -227,6 +241,7 @@ const EditSessionPage = () => {
           ...dateInfo,
           isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
+          teamMode,
           createdBy: user!.id,
         };
       });

@@ -9,6 +9,7 @@ import SessionForm, { Player } from "@/components/SessionForm";
 import { SessionTribe } from "@/components/GroupSearchBar";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import {
+  computePositions,
   generateSessionId,
   getDateInfo,
   getFirstPlay,
@@ -35,8 +36,15 @@ const Page = () => {
     gameDetails: BGGDetailsInterface;
     tribe: SessionTribe;
     players: Player[];
+    teamMode: boolean;
   }) => {
-    const { date, gameDetails, tribe, players: submittingPlayers } = data;
+    const {
+      date,
+      gameDetails,
+      tribe,
+      players: submittingPlayers,
+      teamMode,
+    } = data;
 
     // Initial Checks
     if (!gameDetails) {
@@ -79,24 +87,13 @@ const Page = () => {
     const isVp = true;
     const dateInfo = getDateInfo(date);
 
+    // Each team is considered as a "player"
+    const positionedPlayers = computePositions(submittingPlayers);
+
     let payload = null;
     try {
-      const promises = submittingPlayers.map(async (player, idx, array) => {
-        let position: number;
-        if (idx === 0) {
-          position = 1;
-        } else if (
-          player.score === array[idx - 1].score &&
-          player.isTie &&
-          player.isTie === array[idx - 1].isTie
-        ) {
-          const firstMatch = array.findIndex((p) => p.score === player.score);
-          position = firstMatch + 1;
-        } else {
-          position = idx + 1;
-        }
-
-        const victoryPoints = player.score;
+      const promises = positionedPlayers.map(async (player) => {
+        const { position, teamVictoryPoints } = player;
         const score = getScore(
           position,
           numPlayers,
@@ -118,7 +115,7 @@ const Page = () => {
             : undefined,
           groupId,
           isVp,
-          victoryPoints: victoryPoints,
+          victoryPoints: teamVictoryPoints,
           isWinner: player.isWinner,
           position: position,
           winContrib: getWinContrib(numPlayers, player.isWinner),
@@ -129,6 +126,7 @@ const Page = () => {
             ? true
             : await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
+          teamMode,
           createdBy: user!.id,
         };
       });

@@ -49,6 +49,7 @@ export const compGameLogTable = pgTable(
       .notNull(),
     isFirstPlay: boolean("is_first_play").notNull(),
     isTie: boolean("is_tie").notNull(),
+    teamMode: boolean("team_mode").notNull().default(false),
     rating: smallint("rating"),
   },
   (t) => [check("rating_check", sql`${t.rating} >= 0 AND ${t.rating} <= 5`)],

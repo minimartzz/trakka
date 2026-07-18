@@ -78,6 +78,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         highScore: compGameLogTable.highScore,
         isTie: compGameLogTable.isTie,
         isFirstPlay: compGameLogTable.isFirstPlay,
+        teamMode: compGameLogTable.teamMode,
         createdBy: compGameLogTable.createdBy,
         // Player details
         profileId: playerDetails.id,

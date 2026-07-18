@@ -18,6 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import { format } from "date-fns";
@@ -36,6 +37,8 @@ export interface Player extends selectablePlayersType {
   score: number | null;
   isWinner: boolean;
   isTie: boolean;
+  // UI-only grouping key for team mode; null/undefined means a regular row.
+  teamId?: string | null;
 }
 
 export interface SessionFormInitialData {
@@ -43,6 +46,7 @@ export interface SessionFormInitialData {
   gameDetails?: BGGDetailsInterface | null;
   tribe?: SessionTribe | null;
   players?: Player[];
+  teamMode?: boolean;
 }
 
 interface SessionFormProps {
@@ -56,6 +60,7 @@ interface SessionFormProps {
     gameDetails: BGGDetailsInterface;
     tribe: SessionTribe;
     players: Player[];
+    teamMode: boolean;
   }) => Promise<void>;
 }
 
@@ -70,6 +75,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
   const firstUpdate = useRef(!initialData?.tribe);
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
+  const [teamMode, setTeamMode] = useState(initialData?.teamMode ?? false);
 
   // Calendar controls
   const [date, setDate] = useState<Date | undefined>(
@@ -159,6 +165,18 @@ const SessionForm: React.FC<SessionFormProps> = ({
     }
   };
 
+  // Toggling team mode doesn't drop entries in player data. It expands based on the
+  // current players position
+  const handleTeamModeChange = (enabled: boolean) => {
+    setTeamMode(enabled);
+    setSubmittingPlayers((prev) =>
+      prev.map((player) => ({
+        ...player,
+        teamId: enabled ? crypto.randomUUID() : null,
+      })),
+    );
+  };
+
   const handleFormSubmit = async () => {
     setSubmitted(true);
 
@@ -175,6 +193,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
       gameDetails,
       tribe,
       players: submittingPlayers,
+      teamMode,
     });
   };
 
@@ -250,16 +269,33 @@ const SessionForm: React.FC<SessionFormProps> = ({
 
               {/* Player Selection */}
               <div className="space-y-2">
-                <Label>Players</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Players</Label>
+                  <div className="flex items-center gap-2">
+                    <Label
+                      htmlFor="team-mode"
+                      className="text-sm font-normal text-muted-foreground cursor-pointer"
+                    >
+                      Team mode
+                    </Label>
+                    <Switch
+                      id="team-mode"
+                      checked={teamMode}
+                      onCheckedChange={handleTeamModeChange}
+                    />
+                  </div>
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  Select player from the dropdown if they have an account.
-                  Position follows order.
+                  {teamMode
+                    ? "Group players into teams. Each team shares one score and position."
+                    : "Select player from the dropdown if they have an account. Position follows order."}
                 </div>
                 <PlayerSessionSelection
                   selectablePlayers={selectablePlayers}
                   players={submittingPlayers}
                   setPlayers={setSubmittingPlayers}
                   submitted={submitted}
+                  teamMode={teamMode}
                 />
               </div>
             </Form>
