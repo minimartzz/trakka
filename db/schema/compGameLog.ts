@@ -50,7 +50,7 @@ export const compGameLogTable = pgTable(
       .notNull(),
     isFirstPlay: boolean("is_first_play").notNull(),
     isTie: boolean("is_tie").notNull(),
-    teamMode: boolean("team_mode").notNull().default(false),
+    teamId: smallint("team_id"),
     coop: boolean("coop").notNull().default(false),
     rating: smallint("rating"),
   },

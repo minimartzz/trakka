@@ -99,35 +99,25 @@ const EditSessionPage = () => {
         name: firstRow.tribeName!,
       };
 
-      // Team mode is recorded on the session; when set, reconstruct team
-      // membership by grouping rows that share the same position.
-      const teamMode = firstRow.teamMode ?? false;
-      const positionToTeamId = new Map<number, string>();
+      // team_id represents the team the player was in for team mode. If null,
+      // means game mode was regular
+      const teamMode = firstRow.teamId !== null;
 
       // Build players list sorted by position
-      const players: Player[] = rows.map((row, idx) => {
-        let teamId: string | null = null;
-        if (teamMode) {
-          if (!positionToTeamId.has(row.position)) {
-            positionToTeamId.set(row.position, crypto.randomUUID());
-          }
-          teamId = positionToTeamId.get(row.position)!;
-        }
-        return {
-          id: String(idx + 1),
-          profileId: row.profileId!,
-          firstName: row.firstName!,
-          lastName: row.lastName!,
-          username: row.username!,
-          profilePic: row.profilePic ?? "",
-          groupId: row.groupId,
-          isAnonymous: row.isAnonymous ?? false,
-          score: row.victoryPoints,
-          isWinner: row.isWinner,
-          isTie: row.isTie,
-          teamId,
-        };
-      });
+      const players: Player[] = rows.map((row, idx) => ({
+        id: String(idx + 1),
+        profileId: row.profileId!,
+        firstName: row.firstName!,
+        lastName: row.lastName!,
+        username: row.username!,
+        profilePic: row.profilePic ?? "",
+        groupId: row.groupId,
+        isAnonymous: row.isAnonymous ?? false,
+        score: row.victoryPoints,
+        isWinner: row.isWinner,
+        isTie: row.isTie,
+        teamId: row.teamId !== null ? `team-${row.teamId}` : null,
+      }));
 
       const datePlayed = new Date(firstRow.datePlayed + "T00:00:00");
 
@@ -213,6 +203,17 @@ const EditSessionPage = () => {
     // position and victory points.
     const positionedPlayers = computePositions(submittingPlayers);
 
+    // Team numbers represents which team the player was in
+    const teamNumbers = new Map<string, number>();
+    if (teamMode) {
+      for (const player of submittingPlayers) {
+        const key = player.teamId ?? player.id;
+        if (!teamNumbers.has(key)) teamNumbers.set(key, teamNumbers.size + 1);
+      }
+    }
+    const teamNumberFor = (player: (typeof submittingPlayers)[number]) =>
+      teamMode ? (teamNumbers.get(player.teamId ?? player.id) ?? null) : null;
+
     let payload = null;
     try {
       const promises = positionedPlayers.map(async (player) => {
@@ -241,7 +242,7 @@ const EditSessionPage = () => {
           ...dateInfo,
           isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
-          teamMode,
+          teamId: teamNumberFor(player),
           createdBy: user!.id,
         };
       });

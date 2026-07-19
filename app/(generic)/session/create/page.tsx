@@ -90,6 +90,18 @@ const Page = () => {
     // Each team is considered as a "player"
     const positionedPlayers = computePositions(submittingPlayers);
 
+    // In team mode, map each team's client key to a stable 1-based team number
+    // persisted as team_id. Non-team games store null.
+    const teamNumbers = new Map<string, number>();
+    if (teamMode) {
+      for (const player of submittingPlayers) {
+        const key = player.teamId ?? player.id;
+        if (!teamNumbers.has(key)) teamNumbers.set(key, teamNumbers.size + 1);
+      }
+    }
+    const teamNumberFor = (player: (typeof submittingPlayers)[number]) =>
+      teamMode ? (teamNumbers.get(player.teamId ?? player.id) ?? null) : null;
+
     let payload = null;
     try {
       const promises = positionedPlayers.map(async (player) => {
@@ -126,7 +138,7 @@ const Page = () => {
             ? true
             : await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
-          teamMode,
+          teamId: teamNumberFor(player),
           createdBy: user!.id,
         };
       });

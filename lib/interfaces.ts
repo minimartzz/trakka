@@ -27,6 +27,7 @@ export interface SessionDataInterface {
   profilePic: string;
   isVp: boolean;
   coop: boolean;
+  teamId: number | null;
   victoryPoints: number | null;
   position: number;
   isWinner: boolean;
@@ -46,6 +47,7 @@ export interface SessionPlayer {
   lastName: string;
   username: string;
   profilePic: string;
+  teamId: number | null;
   victoryPoints: number | null;
   position: number;
   isWinner: boolean;
@@ -68,6 +70,7 @@ export interface GroupedSession {
   players: SessionPlayer[];
   isVp: boolean;
   coop: boolean;
+  isTeamGame: boolean;
   // Calculated fields
   isPlayer: boolean;
   isWinner: boolean;

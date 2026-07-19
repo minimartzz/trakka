@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { GroupedSession } from "@/lib/interfaces";
+import { GroupedSession, SessionPlayer } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { format } from "date-fns";
@@ -39,6 +39,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     tribe,
     coop,
     isVp,
+    isTeamGame,
   },
   canEdit = false,
 }) => {
@@ -84,6 +85,133 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
   const formatGameDate = (dateString: string) =>
     format(new Date(dateString), "dd MMM yyyy");
+
+  // Winner/tie marker — icon-backed, color-vision safe. Shared by per-player
+  // rows (regular mode) and per-team header rows (team mode).
+  const ResultMarker = ({
+    isWinner,
+    isTie,
+  }: {
+    isWinner: boolean;
+    isTie: boolean;
+  }) => (
+    <div className="flex w-12 shrink-0 items-center justify-end gap-1 sm:w-24">
+      {isWinner && (
+        <span
+          title="Winner"
+          className="inline-flex items-center gap-1 rounded-full bg-accent-1/25 px-1.5 py-0.5 text-[oklch(40%_0.09_156)] dark:text-accent-1"
+        >
+          <Crown className="size-3.5" />
+          <span className="hidden text-xs font-semibold sm:inline">Winner</span>
+        </span>
+      )}
+      {isTie && (
+        <span
+          title="Tied"
+          className="inline-flex items-center gap-1 rounded-full bg-accent-2/25 px-1.5 py-0.5 text-[oklch(45%_0.08_203)] dark:text-accent-2"
+        >
+          <Handshake className="size-3.5" />
+          <span className="hidden text-xs font-semibold sm:inline">Tied</span>
+        </span>
+      )}
+    </div>
+  );
+
+  const PlayerIdentity = ({
+    player,
+    highlight,
+    compact = false,
+  }: {
+    player: SessionPlayer;
+    highlight: boolean;
+    // Compact = smaller avatar + name and username on a single line (team mode).
+    compact?: boolean;
+  }) => (
+    <>
+      {/* Avatar */}
+      <div
+        className={cn(
+          "relative shrink-0 overflow-hidden rounded-full bg-muted",
+          compact ? "size-6" : "size-7 sm:size-8",
+        )}
+      >
+        {player.profilePic ? (
+          <Image
+            src={player.profilePic}
+            alt={`${player.firstName}'s avatar`}
+            fill
+            sizes={compact ? "24px" : "32px"}
+            className="object-cover"
+          />
+        ) : (
+          <span className="flex size-full items-center justify-center text-xs font-semibold text-muted-foreground">
+            {player.firstName.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      {/* Name + username */}
+      {compact ? (
+        <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
+          <span
+            className={cn(
+              "truncate font-medium text-foreground",
+              highlight && "font-semibold text-primary",
+            )}
+          >
+            {player.firstName}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            (@{player.username})
+          </span>
+        </div>
+      ) : (
+        <div className="min-w-0 flex-1">
+          <span
+            className={cn(
+              "block truncate font-medium text-foreground",
+              highlight && "font-semibold text-primary",
+            )}
+          >
+            {player.firstName}
+          </span>
+          <span className="block truncate text-xs text-muted-foreground">
+            @{player.username}
+          </span>
+        </div>
+      )}
+    </>
+  );
+
+  // Team games: group players by teamId, preserving first-appearance (position)
+  // order. Each team shares position / result / victory points, so those are
+  // shown once per team
+  const teams = (() => {
+    if (!isTeamGame) return [];
+    const order: number[] = [];
+    const byTeam = new Map<number, SessionPlayer[]>();
+    for (const player of players) {
+      const key = player.teamId!;
+      if (!byTeam.has(key)) {
+        byTeam.set(key, []);
+        order.push(key);
+      }
+      byTeam.get(key)!.push(player);
+    }
+    return order.map((key) => {
+      const members = byTeam.get(key)!;
+      const rep = members[0];
+      return {
+        teamId: key,
+        members,
+        position: rep.position,
+        isWinner: rep.isWinner,
+        isTie: rep.isTie,
+        victoryPoints: rep.victoryPoints,
+        hasCurrentUser: members.some((m) => m.profileId === userId),
+      };
+    });
+  })();
 
   return (
     <Card
@@ -154,6 +282,12 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 <CalendarDays className="size-3.5" />
                 {formatGameDate(datePlayed)}
               </span>
+              {isTeamGame && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/6 px-2 py-0.5 text-xs font-medium">
+                  <Users className="size-3.5" />
+                  Teams
+                </span>
+              )}
             </div>
           </div>
 
@@ -170,96 +304,106 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
         </div>
 
         {/* ── Standings ────────────────────────────────────────────────── */}
-        <ul className="divide-y divide-border/60">
-          {players.map((player) => {
-            const isCurrentUser = player.profileId === userId;
-            return (
+        {isTeamGame ? (
+          // Team mode
+          <ul className="divide-y divide-border/60">
+            {teams.map((team) => (
               <li
-                key={player.profileId}
+                key={team.teamId}
                 className={cn(
-                  "flex items-center gap-2.5 px-4 py-2.5 text-sm sm:gap-3 sm:px-5",
-                  isCurrentUser && "bg-primary/12 dark:bg-primary/18",
+                  "flex items-stretch",
+                  team.hasCurrentUser && "bg-primary/12 dark:bg-primary/18",
                 )}
               >
-                {/* Rank */}
-                <span
-                  className={cn(
-                    "font-display w-6 shrink-0 text-center text-lg font-bold tabular-nums",
-                    player.isWinner
-                      ? "text-foreground"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {player.position}
-                </span>
-
-                {/* Avatar */}
-                <div className="relative size-7 shrink-0 overflow-hidden rounded-full bg-muted sm:size-8">
-                  {player.profilePic ? (
-                    <Image
-                      src={player.profilePic}
-                      alt={`${player.firstName}'s avatar`}
-                      fill
-                      sizes="32px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="flex size-full items-center justify-center text-xs font-semibold text-muted-foreground">
-                      {player.firstName.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-
-                {/* Name + username */}
-                <div className="min-w-0 flex-1">
+                {/* Shared position — vertically centered across the team */}
+                <div className="flex w-11 shrink-0 items-center justify-center border-r border-border/60 sm:w-12">
                   <span
                     className={cn(
-                      "block truncate font-medium text-foreground",
-                      isCurrentUser && "font-semibold text-primary",
+                      "font-display text-xl font-bold tabular-nums",
+                      team.isWinner
+                        ? "text-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
-                    {player.firstName}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    @{player.username}
+                    {team.position}
                   </span>
                 </div>
 
-                {/* Winner / tie marker — icon-backed, color-vision safe, same
-                    vocabulary on mobile and desktop. */}
-                <div className="flex w-12 shrink-0 items-center justify-end gap-1 sm:w-24">
-                  {player.isWinner && (
-                    <span
-                      title="Winner"
-                      className="inline-flex items-center gap-1 rounded-full bg-accent-1/25 px-1.5 py-0.5 text-[oklch(40%_0.09_156)] dark:text-accent-1"
+                {/* Members: identity per row; result + score on the first row */}
+                <ul className="min-w-0 flex-1">
+                  {team.members.map((player, memberIdx) => (
+                    <li
+                      key={player.profileId}
+                      className="flex items-center gap-2.5 py-2 pl-3 pr-4 text-sm sm:gap-3 sm:pr-5"
                     >
-                      <Crown className="size-3.5" />
-                      <span className="hidden text-xs font-semibold sm:inline">
-                        Winner
-                      </span>
-                    </span>
-                  )}
-                  {player.isTie && (
-                    <span
-                      title="Tied"
-                      className="inline-flex items-center gap-1 rounded-full bg-accent-2/25 px-1.5 py-0.5 text-[oklch(45%_0.08_203)] dark:text-accent-2"
-                    >
-                      <Handshake className="size-3.5" />
-                      <span className="hidden text-xs font-semibold sm:inline">
-                        Tied
-                      </span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Victory points */}
-                <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                  {player.victoryPoints ?? "—"}
-                </span>
+                      <PlayerIdentity
+                        player={player}
+                        highlight={player.profileId === userId}
+                        compact
+                      />
+                      {/* Team-level result + score, only on the first member */}
+                      {memberIdx === 0 ? (
+                        <>
+                          <ResultMarker
+                            isWinner={team.isWinner}
+                            isTie={team.isTie}
+                          />
+                          <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
+                            {team.victoryPoints ?? "—"}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 shrink-0 sm:w-24" />
+                          <span className="w-12 shrink-0 sm:w-16" />
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        ) : (
+          <ul className="divide-y divide-border/60">
+            {players.map((player) => {
+              const isCurrentUser = player.profileId === userId;
+              return (
+                <li
+                  key={player.profileId}
+                  className={cn(
+                    "flex items-center gap-2.5 px-4 py-2.5 text-sm sm:gap-3 sm:px-5",
+                    isCurrentUser && "bg-primary/12 dark:bg-primary/18",
+                  )}
+                >
+                  {/* Rank */}
+                  <span
+                    className={cn(
+                      "font-display w-6 shrink-0 text-center text-lg font-bold tabular-nums",
+                      player.isWinner
+                        ? "text-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {player.position}
+                  </span>
+
+                  <PlayerIdentity player={player} highlight={isCurrentUser} />
+
+                  <ResultMarker
+                    isWinner={player.isWinner}
+                    isTie={player.isTie}
+                  />
+
+                  {/* Victory points */}
+                  <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
+                    {player.victoryPoints ?? "—"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );
