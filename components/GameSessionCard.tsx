@@ -14,10 +14,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import {
-  Handshake as HandshakeFill,
-  Sword as SwordFill,
-} from "@phosphor-icons/react";
+import { HandshakeIcon, SwordIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -108,13 +105,13 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
           the content and are non-interactive. Purely reinforce the neutral
           card distinction. */}
       {coop ? (
-        <HandshakeFill
+        <HandshakeIcon
           aria-hidden
           weight="fill"
           className="pointer-events-none absolute -bottom-5 -right-4 z-0 size-28 text-foreground/5 sm:size-32"
         />
       ) : (
-        <SwordFill
+        <SwordIcon
           aria-hidden
           weight="fill"
           className="pointer-events-none absolute -bottom-5 -right-4 z-0 size-28 text-foreground/5 sm:size-32"
