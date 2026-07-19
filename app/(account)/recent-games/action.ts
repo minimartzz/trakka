@@ -70,6 +70,7 @@ async function querySessionsByProfile(profileId: number) {
       username: userDetails.username,
       profilePic: userDetails.profilePic,
       isVp: compGameLogTable.isVp,
+      coop: compGameLogTable.coop,
       victoryPoints: compGameLogTable.victoryPoints,
       position: compGameLogTable.position,
       isWinner: compGameLogTable.isWinner,
@@ -114,6 +115,8 @@ export async function fetchSessions(profileId: number) {
 
 export interface RecentGamesFilters {
   result: "all" | "won" | "lost" | "tie";
+  gameType: "all" | "competitive" | "cooperative";
+  rating: "all" | "rated" | "unrated";
   gameIds: number[];
   tribeIds: string[];
   from?: string;
@@ -169,6 +172,7 @@ function playerRowsForSessions(sessionIds: string[]) {
       username: userDetails.username,
       profilePic: userDetails.profilePic,
       isVp: compGameLogTable.isVp,
+      coop: compGameLogTable.coop,
       victoryPoints: compGameLogTable.victoryPoints,
       position: compGameLogTable.position,
       isWinner: compGameLogTable.isWinner,
@@ -205,9 +209,28 @@ async function queryRecentGamesPage(
           ? eq(compGameLogTable.isTie, true)
           : undefined;
 
+  // Game-type predicate: coop = true is cooperative, false is competitive.
+  const gameTypeWhere =
+    filters.gameType === "cooperative"
+      ? eq(compGameLogTable.coop, true)
+      : filters.gameType === "competitive"
+        ? eq(compGameLogTable.coop, false)
+        : undefined;
+
+  // Rating predicate: is_vp = true means the game is rated (victory points
+  // tracked), false means unrated.
+  const ratingWhere =
+    filters.rating === "rated"
+      ? eq(compGameLogTable.isVp, true)
+      : filters.rating === "unrated"
+        ? eq(compGameLogTable.isVp, false)
+        : undefined;
+
   const filterWhere = and(
     eq(compGameLogTable.profileId, profileId),
     resultWhere,
+    gameTypeWhere,
+    ratingWhere,
     filters.gameIds.length > 0
       ? inArray(compGameLogTable.gameId, filters.gameIds)
       : undefined,

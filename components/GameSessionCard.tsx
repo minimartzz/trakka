@@ -14,6 +14,10 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import {
+  Handshake as HandshakeFill,
+  Sword as SwordFill,
+} from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -36,6 +40,8 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     isLoser,
     players,
     tribe,
+    coop,
+    isVp,
   },
   canEdit = false,
 }) => {
@@ -85,8 +91,37 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     format(new Date(dateString), "dd MMM yyyy");
 
   return (
-    <Card className="overflow-hidden py-0 transition-colors hover:border-primary/40">
-      <CardContent className="p-0">
+    <Card
+      className={cn(
+        "relative overflow-hidden py-0 transition-colors",
+        // Competitive vs cooperative are equal-weight categories, not a
+        // highlight. Both sit on a low-chroma neutral fill from the same axis,
+        // distinguished by tone/depth rather than hue — brand blue is avoided
+        // here because it reads as "selected" elsewhere in the app.
+        coop
+          ? "border-accent bg-accent/50 hover:border-accent/80"
+          : "bg-muted/50 hover:border-foreground/20",
+      )}
+    >
+      {/* Corner watermark: sword for competitive, handshake for cooperative.
+          Filled Phosphor glyphs that bleed off the bottom-right, sit behind
+          the content and are non-interactive. Purely reinforce the neutral
+          card distinction. */}
+      {coop ? (
+        <HandshakeFill
+          aria-hidden
+          weight="fill"
+          className="pointer-events-none absolute -bottom-5 -right-4 z-0 size-28 text-foreground/5 sm:size-32"
+        />
+      ) : (
+        <SwordFill
+          aria-hidden
+          weight="fill"
+          className="pointer-events-none absolute -bottom-5 -right-4 z-0 size-28 text-foreground/5 sm:size-32"
+        />
+      )}
+
+      <CardContent className="relative z-10 p-0">
         {/* ── Header: game image + title + meta + result ───────────────── */}
         <div className="flex items-start gap-3 border-b p-4 sm:gap-4 sm:p-5">
           {/* Game thumbnail */}
@@ -134,8 +169,18 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
             </div>
           </div>
 
-          {/* Headline result */}
-          <div className="shrink-0">{getResultBadge()}</div>
+          {/* Headline result + optional unrated marker beneath it */}
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {getResultBadge()}
+            {/* Only unrated games carry a marker; rated is the norm and stays
+                unlabeled. Muted + outline so it never competes with the
+                position badge above it. */}
+            {!isVp && (
+              <span className="rounded-full border border-border px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">
+                Unrated
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ── Standings ────────────────────────────────────────────────── */}
@@ -147,7 +192,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 key={player.profileId}
                 className={cn(
                   "flex items-center gap-2.5 px-4 py-2.5 text-sm sm:gap-3 sm:px-5",
-                  isCurrentUser && "bg-primary/8 dark:bg-primary/12",
+                  isCurrentUser && "bg-primary/12 dark:bg-primary/18",
                 )}
               >
                 {/* Rank */}

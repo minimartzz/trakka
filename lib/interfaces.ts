@@ -26,6 +26,7 @@ export interface SessionDataInterface {
   username: string;
   profilePic: string;
   isVp: boolean;
+  coop: boolean;
   victoryPoints: number | null;
   position: number;
   isWinner: boolean;
@@ -34,6 +35,8 @@ export interface SessionDataInterface {
   isHighScore: boolean;
   rating: number | null;
 }
+// NOTE: SessionDataInterface.coop / GroupedSession.coop added for the
+// competitive-vs-cooperative card distinction on the recent-games page.
 
 // Formatted player in each session
 export interface SessionPlayer {
@@ -64,6 +67,7 @@ export interface GroupedSession {
   tribeId: string;
   players: SessionPlayer[];
   isVp: boolean;
+  coop: boolean;
   // Calculated fields
   isPlayer: boolean;
   isWinner: boolean;

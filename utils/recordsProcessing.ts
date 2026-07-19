@@ -26,6 +26,7 @@ export const filterSessionData = (
         tribeId: record.tribeId,
         players: [],
         isVp: record.isVp,
+        coop: record.coop,
         isPlayer: false,
         isWinner: false,
         isTied: false,

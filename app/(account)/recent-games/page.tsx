@@ -36,6 +36,8 @@ const ITEMS_PER_PAGE = 10;
 
 const DEFAULT_FILTERS: RecentGamesFilterState = {
   result: "all",
+  gameType: "all",
+  rating: "all",
   gameIds: [],
   tribeIds: [],
   dateRange: undefined,
@@ -53,6 +55,8 @@ const toFilterArgs = (
   };
   return {
     result: filters.result,
+    gameType: filters.gameType,
+    rating: filters.rating,
     gameIds: filters.gameIds,
     tribeIds: filters.tribeIds,
     from: from ? toIsoDay(from) : undefined,
@@ -101,6 +105,8 @@ const Page = () => {
 
   const isDefault =
     filters.result === "all" &&
+    filters.gameType === "all" &&
+    filters.rating === "all" &&
     filters.gameIds.length === 0 &&
     filters.tribeIds.length === 0 &&
     filters.dateRange === undefined;
@@ -255,11 +261,26 @@ const Page = () => {
   return (
     <div className="space-y-6 p-4 sm:p-8 mb-10">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">My Recent Games</h1>
-        <p className="mt-2 text-muted-foreground">
-          Your latest game sessions and results
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div>
+          <h1 className="text-3xl font-bold">My Recent Games</h1>
+          <p className="mt-2 text-muted-foreground">
+            Your latest game sessions and results
+          </p>
+        </div>
+
+        {/* Quiet legend: swatches mirror the card treatment so the coop tint is
+            learnable without a loud callout. */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm border border-border bg-muted/50" />
+            Competitive
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm border border-accent bg-accent/50" />
+            Cooperative
+          </span>
+        </div>
       </div>
 
       {/* Filters */}
@@ -272,6 +293,10 @@ const Page = () => {
         shownCount={totalSessions}
         totalCount={filterCounts.numGames}
         onResultChange={(result) => setFilters((f) => ({ ...f, result }))}
+        onGameTypeChange={(gameType) =>
+          setFilters((f) => ({ ...f, gameType }))
+        }
+        onRatingChange={(rating) => setFilters((f) => ({ ...f, rating }))}
         onToggleGame={(gameId) =>
           setFilters((f) => ({
             ...f,

@@ -28,9 +28,13 @@ import React, { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 export type ResultFilter = "all" | "won" | "lost" | "tie";
+export type GameTypeFilter = "all" | "competitive" | "cooperative";
+export type RatingFilter = "all" | "rated" | "unrated";
 
 export interface RecentGamesFilterState {
   result: ResultFilter;
+  gameType: GameTypeFilter;
+  rating: RatingFilter;
   gameIds: number[];
   tribeIds: string[];
   dateRange: DateRange | undefined;
@@ -41,6 +45,58 @@ interface ResultChip {
   label: string;
   count: number;
   dotClass: string;
+}
+
+// A quiet segmented toggle for small mutually-exclusive option sets (game type,
+// rating). Deliberately plainer than the Result chips — no dots, no counts — so
+// it reads as a secondary control.
+interface SegmentedFilterProps<K extends string> {
+  label: string;
+  ariaLabel: string;
+  value: K;
+  options: { key: K; label: string }[];
+  onChange: (value: K) => void;
+}
+
+function SegmentedFilter<K extends string>({
+  label,
+  ariaLabel,
+  value,
+  options,
+  onChange,
+}: SegmentedFilterProps<K>) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <div
+        role="group"
+        aria-label={ariaLabel}
+        className="inline-flex rounded-md border p-0.5"
+      >
+        {options.map((option) => {
+          const active = value === option.key;
+          return (
+            <button
+              key={option.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(option.key)}
+              className={cn(
+                "rounded-[0.3rem] px-3 py-1 text-sm font-medium transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // A single option in a multi-select list.
@@ -204,6 +260,8 @@ interface RecentGamesFiltersProps {
   shownCount: number;
   totalCount: number;
   onResultChange: (result: ResultFilter) => void;
+  onGameTypeChange: (gameType: GameTypeFilter) => void;
+  onRatingChange: (rating: RatingFilter) => void;
   onToggleGame: (gameId: number) => void;
   onClearGames: () => void;
   onToggleTribe: (tribeId: string) => void;
@@ -230,6 +288,8 @@ const RecentGamesFilters: React.FC<RecentGamesFiltersProps> = ({
   shownCount,
   totalCount,
   onResultChange,
+  onGameTypeChange,
+  onRatingChange,
   onToggleGame,
   onClearGames,
   onToggleTribe,
@@ -312,6 +372,32 @@ const RecentGamesFilters: React.FC<RecentGamesFiltersProps> = ({
               );
             })}
           </div>
+        </div>
+
+        {/* Game Type — competitive/coop + rated/unrated */}
+        <div className="flex flex-wrap gap-x-8 gap-y-4">
+          <SegmentedFilter
+            label="Game type"
+            ariaLabel="Filter by game type"
+            value={filters.gameType}
+            onChange={onGameTypeChange}
+            options={[
+              { key: "all", label: "All" },
+              { key: "competitive", label: "Competitive" },
+              { key: "cooperative", label: "Cooperative" },
+            ]}
+          />
+          <SegmentedFilter
+            label="Rating"
+            ariaLabel="Filter by rating"
+            value={filters.rating}
+            onChange={onRatingChange}
+            options={[
+              { key: "all", label: "All" },
+              { key: "rated", label: "Rated" },
+              { key: "unrated", label: "Unrated" },
+            ]}
+          />
         </div>
 
         {/* Row 2 — Tribe + game + date */}
