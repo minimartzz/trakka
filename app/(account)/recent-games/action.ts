@@ -5,7 +5,18 @@ import { groupTable } from "@/db/schema/group";
 import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
 import { cacheLife, cacheTag } from "next/cache";
-import { desc, eq, inArray } from "drizzle-orm";
+import {
+  and,
+  countDistinct,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lte,
+  max,
+} from "drizzle-orm";
+import { AvailableGame, AvailableTribe } from "@/utils/recordsProcessing";
+import { FilteredCounts, SessionDataInterface } from "@/lib/interfaces";
 
 async function querySessionsByProfile(profileId: number) {
   "use cache";
@@ -94,6 +105,237 @@ export async function fetchSessions(profileId: number) {
     return {
       success: false,
       message: "Failed to retrieve sessions from profile ID",
+    };
+  }
+}
+
+// ── Paginated recent-games ────────────────────────────────────────────────
+// The recent-games page previously pulled every row of every session the user
+// appeared in and paginated client-side. These actions push filtering,
+// counting and pagination into SQL: the driver query walks only the user's OWN
+// rows (one per session), then a second query fetches the full player list for
+// just the page's sessions so the standings can still render.
+
+export interface RecentGamesFilters {
+  result: "all" | "won" | "lost" | "tie";
+  gameIds: number[];
+  tribeIds: string[];
+  from?: string; // inclusive, YYYY-MM-DD
+  to?: string; // inclusive, YYYY-MM-DD
+}
+
+export interface RecentGamesPage {
+  sessions: SessionDataInterface[]; // raw player rows for this page's sessions
+  totalSessions: number; // filtered session count, for pagination
+  counts: FilteredCounts; // over the user's whole history (unfiltered)
+  availableGames: AvailableGame[]; // over the user's whole history (unfiltered)
+  availableTribes: AvailableTribe[]; // over the user's whole history (unfiltered)
+}
+
+// SELECT that returns the full raw player rows for a set of sessions, shaped to
+// match SessionDataInterface / what fetchSessions returns (thumbnail preferred).
+function playerRowsForSessions(sessionIds: string[]) {
+  const userDetails = db
+    .select({
+      id: profileTable.id,
+      firstName: profileTable.firstName,
+      lastName: profileTable.lastName,
+      username: profileTable.username,
+      profilePic: profileTable.image,
+    })
+    .from(profileTable)
+    .as("userDetails");
+
+  const tribeDetails = db
+    .select({ id: groupTable.id, name: groupTable.name })
+    .from(groupTable)
+    .as("tribeDetails");
+
+  return db
+    .select({
+      sessionId: compGameLogTable.sessionId,
+      datePlayed: compGameLogTable.datePlayed,
+      gameTitle: compGameLogTable.gameTitle,
+      gameId: compGameLogTable.gameId,
+      gameImage: gameTable.imageUrl,
+      gameThumbnail: gameTable.thumbnail,
+      createdAt: compGameLogTable.createdAt,
+      numPlayers: compGameLogTable.numPlayers,
+      rowId: compGameLogTable.id,
+      tribeId: tribeDetails.id,
+      tribeName: tribeDetails.name,
+      profileId: userDetails.id,
+      firstName: userDetails.firstName,
+      lastName: userDetails.lastName,
+      username: userDetails.username,
+      profilePic: userDetails.profilePic,
+      isVp: compGameLogTable.isVp,
+      victoryPoints: compGameLogTable.victoryPoints,
+      position: compGameLogTable.position,
+      isWinner: compGameLogTable.isWinner,
+      isTie: compGameLogTable.isTie,
+      isFirstPlay: compGameLogTable.isFirstPlay,
+      isHighScore: compGameLogTable.highScore,
+      rating: compGameLogTable.rating,
+    })
+    .from(compGameLogTable)
+    .innerJoin(userDetails, eq(compGameLogTable.profileId, userDetails.id))
+    .innerJoin(tribeDetails, eq(compGameLogTable.groupId, tribeDetails.id))
+    .leftJoin(gameTable, eq(compGameLogTable.gameId, gameTable.id))
+    .where(inArray(compGameLogTable.sessionId, sessionIds))
+    .orderBy(desc(compGameLogTable.datePlayed));
+}
+
+async function queryRecentGamesPage(
+  profileId: number,
+  page: number,
+  pageSize: number,
+  filters: RecentGamesFilters,
+): Promise<RecentGamesPage> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`recent-games:${profileId}`);
+
+  // Result-filter predicate, from the user's own row only.
+  const resultWhere =
+    filters.result === "won"
+      ? eq(compGameLogTable.isWinner, true)
+      : filters.result === "lost"
+        ? eq(compGameLogTable.isWinner, false)
+        : filters.result === "tie"
+          ? eq(compGameLogTable.isTie, true)
+          : undefined;
+
+  const filterWhere = and(
+    eq(compGameLogTable.profileId, profileId),
+    resultWhere,
+    filters.gameIds.length > 0
+      ? inArray(compGameLogTable.gameId, filters.gameIds)
+      : undefined,
+    filters.tribeIds.length > 0
+      ? inArray(compGameLogTable.groupId, filters.tribeIds)
+      : undefined,
+    filters.from ? gte(compGameLogTable.datePlayed, filters.from) : undefined,
+    filters.to ? lte(compGameLogTable.datePlayed, filters.to) : undefined,
+  );
+
+  // 1. Page of DISTINCT sessions the user played in, filtered + ordered.
+  //    Grouping by session_id is required because a user can hold more than one
+  //    row in a session (e.g. team mode) — paginating raw rows would let one
+  //    session eat multiple page slots yet render as a single card, producing
+  //    short and empty pages. max(created_at) breaks date ties per session.
+  const pageRows = await db
+    .select({
+      sessionId: compGameLogTable.sessionId,
+      datePlayed: max(compGameLogTable.datePlayed),
+      createdAt: max(compGameLogTable.createdAt),
+    })
+    .from(compGameLogTable)
+    .where(filterWhere)
+    .groupBy(compGameLogTable.sessionId)
+    .orderBy(
+      desc(max(compGameLogTable.datePlayed)),
+      desc(max(compGameLogTable.createdAt)),
+    )
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+
+  // Count distinct sessions so the page count matches the grouped rows above.
+  const [{ total }] = await db
+    .select({ total: countDistinct(compGameLogTable.sessionId) })
+    .from(compGameLogTable)
+    .where(filterWhere);
+
+  // 2. Full player rows for just this page's sessions (for standings).
+  const sessionIds = pageRows.map((r) => r.sessionId);
+  const rawRows =
+    sessionIds.length > 0 ? await playerRowsForSessions(sessionIds) : [];
+  const sessions = rawRows.map(({ gameThumbnail, ...row }) => ({
+    ...row,
+    gameImage: gameThumbnail ?? row.gameImage,
+  }));
+
+  // 3. Counts + filter options over the user's WHOLE history (unfiltered), so
+  //    the result chips and dropdowns never shrink to the current page/filter.
+  const historyRows = await db
+    .select({
+      sessionId: compGameLogTable.sessionId,
+      gameId: compGameLogTable.gameId,
+      gameTitle: compGameLogTable.gameTitle,
+      gameImage: gameTable.imageUrl,
+      gameThumbnail: gameTable.thumbnail,
+      tribeId: compGameLogTable.groupId,
+      tribeName: groupTable.name,
+      isWinner: compGameLogTable.isWinner,
+      isTie: compGameLogTable.isTie,
+    })
+    .from(compGameLogTable)
+    .innerJoin(groupTable, eq(compGameLogTable.groupId, groupTable.id))
+    .leftJoin(gameTable, eq(compGameLogTable.gameId, gameTable.id))
+    .where(eq(compGameLogTable.profileId, profileId));
+
+  const counts: FilteredCounts = {
+    numGames: 0,
+    numWins: 0,
+    numLoss: 0,
+    numTied: 0,
+  };
+  const gamesMap = new Map<number, AvailableGame>();
+  const tribesMap = new Map<string, AvailableTribe>();
+  // Count once per session, not per row: a user can hold multiple rows in one
+  // session (team mode), which would otherwise inflate the win/loss tallies and
+  // desync numGames from totalSessions.
+  const countedSessions = new Set<string>();
+  for (const r of historyRows) {
+    if (!countedSessions.has(r.sessionId)) {
+      countedSessions.add(r.sessionId);
+      if (r.isWinner) counts.numWins += 1;
+      else counts.numLoss += 1;
+      if (r.isTie) counts.numTied += 1;
+    }
+    if (!gamesMap.has(r.gameId)) {
+      gamesMap.set(r.gameId, {
+        gameId: r.gameId,
+        gameTitle: r.gameTitle,
+        gameImage: r.gameThumbnail ?? r.gameImage,
+      });
+    }
+    if (!tribesMap.has(r.tribeId)) {
+      tribesMap.set(r.tribeId, { tribeId: r.tribeId, tribeName: r.tribeName });
+    }
+  }
+  counts.numGames = counts.numWins + counts.numLoss;
+
+  const availableGames = [...gamesMap.values()].sort((a, b) =>
+    a.gameTitle.localeCompare(b.gameTitle),
+  );
+  const availableTribes = [...tribesMap.values()].sort((a, b) =>
+    a.tribeName.localeCompare(b.tribeName),
+  );
+
+  return {
+    sessions,
+    totalSessions: total,
+    counts,
+    availableGames,
+    availableTribes,
+  };
+}
+
+export async function fetchRecentGamesPage(
+  profileId: number,
+  page: number,
+  pageSize: number,
+  filters: RecentGamesFilters,
+) {
+  try {
+    const data = await queryRecentGamesPage(profileId, page, pageSize, filters);
+    return { success: true, data };
+  } catch (error) {
+    console.error("Failed to retrieve paginated recent games", error);
+    return {
+      success: false,
+      message: "Failed to retrieve recent games",
     };
   }
 }
