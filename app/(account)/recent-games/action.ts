@@ -109,32 +109,29 @@ export async function fetchSessions(profileId: number) {
   }
 }
 
-// ── Paginated recent-games ────────────────────────────────────────────────
-// The recent-games page previously pulled every row of every session the user
-// appeared in and paginated client-side. These actions push filtering,
-// counting and pagination into SQL: the driver query walks only the user's OWN
-// rows (one per session), then a second query fetches the full player list for
-// just the page's sessions so the standings can still render.
+// Pagination for recent games: Pulls session data page by page using a page
+// variable to track the offset
 
 export interface RecentGamesFilters {
   result: "all" | "won" | "lost" | "tie";
   gameIds: number[];
   tribeIds: string[];
-  from?: string; // inclusive, YYYY-MM-DD
-  to?: string; // inclusive, YYYY-MM-DD
+  from?: string;
+  to?: string;
 }
 
 export interface RecentGamesPage {
-  sessions: SessionDataInterface[]; // raw player rows for this page's sessions
-  totalSessions: number; // filtered session count, for pagination
-  counts: FilteredCounts; // over the user's whole history (unfiltered)
-  availableGames: AvailableGame[]; // over the user's whole history (unfiltered)
-  availableTribes: AvailableTribe[]; // over the user's whole history (unfiltered)
+  sessions: SessionDataInterface[];
+  totalSessions: number;
+  counts: FilteredCounts; // All games the user has played
+  availableGames: AvailableGame[];
+  availableTribes: AvailableTribe[];
 }
 
-// SELECT that returns the full raw player rows for a set of sessions, shaped to
-// match SessionDataInterface / what fetchSessions returns (thumbnail preferred).
+// SELECT that returns the full raw player rows for a set of sessions based on the
+// found session IDs of the current user
 function playerRowsForSessions(sessionIds: string[]) {
+  // 1. Get user details
   const userDetails = db
     .select({
       id: profileTable.id,
@@ -146,11 +143,13 @@ function playerRowsForSessions(sessionIds: string[]) {
     .from(profileTable)
     .as("userDetails");
 
+  // 2. Get tribe details
   const tribeDetails = db
     .select({ id: groupTable.id, name: groupTable.name })
     .from(groupTable)
     .as("tribeDetails");
 
+  // 3. Get the sessions based on the IDs and hydrate with user and tribe details
   return db
     .select({
       sessionId: compGameLogTable.sessionId,
@@ -220,10 +219,6 @@ async function queryRecentGamesPage(
   );
 
   // 1. Page of DISTINCT sessions the user played in, filtered + ordered.
-  //    Grouping by session_id is required because a user can hold more than one
-  //    row in a session (e.g. team mode) — paginating raw rows would let one
-  //    session eat multiple page slots yet render as a single card, producing
-  //    short and empty pages. max(created_at) breaks date ties per session.
   const pageRows = await db
     .select({
       sessionId: compGameLogTable.sessionId,
@@ -234,6 +229,7 @@ async function queryRecentGamesPage(
     .where(filterWhere)
     .groupBy(compGameLogTable.sessionId)
     .orderBy(
+      // Sort by date played first; fall back to session create time
       desc(max(compGameLogTable.datePlayed)),
       desc(max(compGameLogTable.createdAt)),
     )
@@ -246,7 +242,7 @@ async function queryRecentGamesPage(
     .from(compGameLogTable)
     .where(filterWhere);
 
-  // 2. Full player rows for just this page's sessions (for standings).
+  // 2. Full player rows for just this page's sessions.
   const sessionIds = pageRows.map((r) => r.sessionId);
   const rawRows =
     sessionIds.length > 0 ? await playerRowsForSessions(sessionIds) : [];
