@@ -47,8 +47,6 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
   const positionWithSuffix =
     position !== undefined ? positionOrdinalSuffix(position) : null;
 
-  // The user's headline result chip: outcome color + a non-color icon/label so
-  // win/loss/tie never relies on hue alone (Color-Vision Safe Rule).
   const getResultBadge = () => {
     if (isPlayer && isWinner) {
       return (
@@ -91,19 +89,12 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     <Card
       className={cn(
         "relative overflow-hidden py-0 transition-colors",
-        // Competitive vs cooperative are equal-weight categories, not a
-        // highlight. Both sit on a low-chroma neutral fill from the same axis,
-        // distinguished by tone/depth rather than hue — brand blue is avoided
-        // here because it reads as "selected" elsewhere in the app.
         coop
           ? "border-accent bg-accent/50 hover:border-accent/80"
           : "bg-muted/50 hover:border-foreground/20",
       )}
     >
-      {/* Corner watermark: sword for competitive, handshake for cooperative.
-          Filled Phosphor glyphs that bleed off the bottom-right, sit behind
-          the content and are non-interactive. Purely reinforce the neutral
-          card distinction. */}
+      {/* Coop vs Comp watermark in bottom right hand corner */}
       {coop ? (
         <HandshakeIcon
           aria-hidden
@@ -169,9 +160,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
           {/* Headline result + optional unrated marker beneath it */}
           <div className="flex shrink-0 flex-col items-end gap-1">
             {getResultBadge()}
-            {/* Only unrated games carry a marker; rated is the norm and stays
-                unlabeled. Muted + outline so it never competes with the
-                position badge above it. */}
+            {/* Unrated games are marked with a tag */}
             {!isVp && (
               <span className="rounded-full border border-border px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">
                 Unrated
