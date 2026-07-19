@@ -23,6 +23,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         lastName: profileTable.lastName,
         username: profileTable.username,
         profilePic: profileTable.image,
+        isAnonymous: profileTable.isAnonymous,
       })
       .from(profileTable)
       .as("playerDetails");
@@ -77,6 +78,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         highScore: compGameLogTable.highScore,
         isTie: compGameLogTable.isTie,
         isFirstPlay: compGameLogTable.isFirstPlay,
+        teamId: compGameLogTable.teamId,
         createdBy: compGameLogTable.createdBy,
         // Player details
         profileId: playerDetails.id,
@@ -84,6 +86,7 @@ export async function fetchSessionForEdit(sessionId: string) {
         lastName: playerDetails.lastName,
         username: playerDetails.username,
         profilePic: playerDetails.profilePic,
+        isAnonymous: playerDetails.isAnonymous,
         // Tribe details
         tribeName: tribeDetails.name,
         // Game details
@@ -226,6 +229,15 @@ export async function updateSession(
 
     for (const groupId of affectedGroupIds) {
       updateTag(`tribe:${groupId}`);
+    }
+
+    // Invalidate recent-games cache for every player touched by the edit
+    const affectedProfileIds = new Set([
+      ...newPayload.map((log) => log.profileId),
+      ...oldRows.map((row) => row.profileId),
+    ]);
+    for (const profileId of affectedProfileIds) {
+      updateTag(`recent-games:${profileId}`);
     }
 
     return { success: true };

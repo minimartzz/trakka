@@ -9,6 +9,7 @@ import SessionForm, { Player } from "@/components/SessionForm";
 import { SessionTribe } from "@/components/GroupSearchBar";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import {
+  computePositions,
   generateSessionId,
   getDateInfo,
   getFirstPlay,
@@ -35,8 +36,15 @@ const Page = () => {
     gameDetails: BGGDetailsInterface;
     tribe: SessionTribe;
     players: Player[];
+    teamMode: boolean;
   }) => {
-    const { date, gameDetails, tribe, players: submittingPlayers } = data;
+    const {
+      date,
+      gameDetails,
+      tribe,
+      players: submittingPlayers,
+      teamMode,
+    } = data;
 
     // Initial Checks
     if (!gameDetails) {
@@ -79,24 +87,25 @@ const Page = () => {
     const isVp = true;
     const dateInfo = getDateInfo(date);
 
+    // Each team is considered as a "player"
+    const positionedPlayers = computePositions(submittingPlayers);
+
+    // In team mode, map each team's client key to a stable 1-based team number
+    // persisted as team_id. Non-team games store null.
+    const teamNumbers = new Map<string, number>();
+    if (teamMode) {
+      for (const player of submittingPlayers) {
+        const key = player.teamId ?? player.id;
+        if (!teamNumbers.has(key)) teamNumbers.set(key, teamNumbers.size + 1);
+      }
+    }
+    const teamNumberFor = (player: (typeof submittingPlayers)[number]) =>
+      teamMode ? (teamNumbers.get(player.teamId ?? player.id) ?? null) : null;
+
     let payload = null;
     try {
-      const promises = submittingPlayers.map(async (player, idx, array) => {
-        let position: number;
-        if (idx === 0) {
-          position = 1;
-        } else if (
-          player.score === array[idx - 1].score &&
-          player.isTie &&
-          player.isTie === array[idx - 1].isTie
-        ) {
-          const firstMatch = array.findIndex((p) => p.score === player.score);
-          position = firstMatch + 1;
-        } else {
-          position = idx + 1;
-        }
-
-        const victoryPoints = player.score;
+      const promises = positionedPlayers.map(async (player) => {
+        const { position, teamVictoryPoints } = player;
         const score = getScore(
           position,
           numPlayers,
@@ -104,23 +113,32 @@ const Page = () => {
           parseFloat(bgg.gameWeight),
         );
 
+        // New anonymous players have no profile yet; the server creates it
+        const isNewAnonymous = player.isAnonymous && player.profileId === 0;
+
         return {
           sessionId,
           datePlayed,
           ...bgg,
           numPlayers,
-          profileId: player.profileId,
+          profileId: isNewAnonymous ? null : player.profileId,
+          anonymousPlayer: isNewAnonymous
+            ? { firstName: player.firstName, lastName: player.lastName }
+            : undefined,
           groupId,
           isVp,
-          victoryPoints: victoryPoints,
+          victoryPoints: teamVictoryPoints,
           isWinner: player.isWinner,
           position: position,
           winContrib: getWinContrib(numPlayers, player.isWinner),
           score: score,
           highScore: false,
           ...dateInfo,
-          isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
+          isFirstPlay: isNewAnonymous
+            ? true
+            : await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
+          teamId: teamNumberFor(player),
           createdBy: user!.id,
         };
       });
@@ -150,18 +168,26 @@ const Page = () => {
           );
         } else {
           try {
-            const sessionNotification = payload.map((player) => ({
-              type: "new_session",
-              data: {
-                gameImageUrl: gameDetails.thumbnail,
-                gameTitle: gameDetails.title,
-                tribeName: tribe.name,
-                groupId: tribe.id,
-              },
-              isRead: false,
-              profileId: player.profileId,
-            }));
-            await notifyPlayersOfSession(sessionNotification);
+            // Anonymous players have no account to read notifications with
+            const sessionNotification = payload
+              .filter(
+                (player): player is typeof player & { profileId: number } =>
+                  player.profileId !== null,
+              )
+              .map((player) => ({
+                type: "new_session",
+                data: {
+                  gameImageUrl: gameDetails.thumbnail,
+                  gameTitle: gameDetails.title,
+                  tribeName: tribe.name,
+                  groupId: tribe.id,
+                },
+                isRead: false,
+                profileId: player.profileId,
+              }));
+            if (sessionNotification.length > 0) {
+              await notifyPlayersOfSession(sessionNotification);
+            }
           } catch {
             console.error("Failed to notify players of new session");
           }

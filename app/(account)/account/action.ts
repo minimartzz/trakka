@@ -63,3 +63,36 @@ export async function updateProfile(formData: FormData) {
     return { success: false, message: "Failed to update profile" };
   }
 }
+
+/**
+ * Persists a new profile picture on its own — used by the header avatar's
+ * click-to-edit dialog, which shouldn't require entering the full profile
+ * edit form just to change a photo.
+ */
+export async function updateProfileImage(image: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Unauthorized" };
+
+  const [profile] = await db
+    .select({ id: profileTable.id })
+    .from(profileTable)
+    .where(eq(profileTable.uuid, user.id));
+
+  if (!profile) return { success: false, message: "Unauthorized" };
+  if (!image) return { success: false, message: "No image provided" };
+
+  try {
+    await db
+      .update(profileTable)
+      .set({ image })
+      .where(eq(profileTable.id, profile.id));
+
+    revalidatePath("/account");
+
+    return { success: true, message: "Profile picture updated" };
+  } catch (error) {
+    console.error("Failed to update profile picture in Database:", error);
+    return { success: false, message: "Failed to update profile picture" };
+  }
+}

@@ -280,7 +280,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
         transition={{ duration: 0.3 }}
         className="flex flex-col sm:flex-row sm:items-center gap-3"
       >
-        <div className="flex items-center gap-0.5 rounded-lg border bg-muted/30 p-1">
+        <div className="flex items-center gap-0.5 self-start rounded-lg border bg-muted/30 p-1">
           {(
             Object.entries(TIMEFRAME_LABELS) as [
               Exclude<Timeframe, "custom">,
@@ -372,11 +372,11 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                     <p className="text-sm">No sessions in this period</p>
                   </div>
                 ) : (
-                  <div className="max-h-[420px] overflow-y-auto overflow-x-auto no-scrollbar">
+                  <div className="max-h-105 overflow-y-auto overflow-x-auto no-scrollbar">
                     <Table>
                       <TableHeader className="sticky top-0 z-10 bg-card">
                         <TableRow>
-                          <TableHead className="w-[80px]">Date</TableHead>
+                          <TableHead className="w-20">Date</TableHead>
                           <TableHead>Game</TableHead>
                           <TableHead>Tribe</TableHead>
                           <TableHead className="hidden sm:table-cell text-center">
@@ -405,14 +405,14 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                               </TableCell>
                               <TableCell>
                                 <span
-                                  className="font-medium truncate max-w-[140px] block"
+                                  className="font-medium truncate max-w-35 block"
                                   title={session.gameTitle}
                                 >
                                   {session.gameTitle}
                                 </span>
                               </TableCell>
                               <TableCell>
-                                <span className="text-sm text-muted-foreground truncate max-w-[80px] sm:max-w-none block">
+                                <span className="text-sm text-muted-foreground truncate max-w-20 sm:max-w-none block">
                                   {session.tribe}
                                 </span>
                               </TableCell>
@@ -479,7 +479,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                                     <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
                                       <DotsIcon
                                         value={session.players.length}
-                                        className="[&_[data-dot]]:bg-current"
+                                        className="**:data-dot:bg-current"
                                       />
                                       {posText}
                                     </Badge>
@@ -500,7 +500,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                                     >
                                       <DotsIcon
                                         value={session.players.length}
-                                        className="[&_[data-dot]]:bg-current"
+                                        className="**:data-dot:bg-current"
                                       />
                                       {posText}
                                     </Badge>
@@ -614,15 +614,13 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                       <TableRow>
                         <TableHead className="w-10 text-center">#</TableHead>
                         <TableHead>Game</TableHead>
-                        <TableHead className="text-center w-[100px]">
+                        <TableHead className="text-center w-25">
                           Played
                         </TableHead>
-                        <TableHead className="hidden sm:table-cell w-[200px]">
+                        <TableHead className="hidden sm:table-cell w-50">
                           W / L
                         </TableHead>
-                        <TableHead className="text-right w-[80px]">
-                          Win %
-                        </TableHead>
+                        <TableHead className="text-right w-20">Win %</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -632,7 +630,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
                             {idx + 1}
                           </TableCell>
                           <TableCell>
-                            <span className="font-medium truncate max-w-[180px] block">
+                            <span className="font-medium truncate max-w-45 block">
                               {game.game.gameTitle}
                             </span>
                           </TableCell>

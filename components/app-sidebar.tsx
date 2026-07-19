@@ -70,7 +70,11 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const tribeRequestCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const n of notifications) {
-      if (n.type !== "join_request" || n.isRead) continue;
+      if (
+        (n.type !== "join_request" && n.type !== "claim_request") ||
+        n.isRead
+      )
+        continue;
       const groupId = (n.data as { group_id?: string }).group_id;
       if (typeof groupId === "string") {
         counts[groupId] = (counts[groupId] ?? 0) + 1;

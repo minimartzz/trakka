@@ -1,5 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
+  AnyPgColumn,
+  boolean,
   integer,
   pgTable,
   text,
@@ -23,6 +25,16 @@ export const profileTable = pgTable("profile", {
   description: text("description").notNull(),
   gender: varchar("gender", { enum: ["Male", "Female", "Others"] }).notNull(),
   image: text("image").notNull(),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
+  claimCode: varchar("claim_code").unique(),
+  // Pending-claim lock: set to the claiming user's profile id while a claim
+  // request is awaiting SuperAdmin approval (null = available to claim). Only
+  // one user can hold the lock at a time. Self-referential FK — the claimer
+  // always has a profile row by the time this is written.
+  claimRequestedBy: integer("claim_requested_by").references(
+    (): AnyPgColumn => profileTable.id,
+  ),
+  claimRequestedAt: timestamp("claim_requested_at"),
 });
 
 export const profileRelations = relations(profileTable, ({ many, one }) => ({

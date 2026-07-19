@@ -1,107 +1,77 @@
-import LoadingSpinner from "@/components/icons/LoadingSpinner";
-import { Button } from "@/components/ui/button";
+import AccountPageClient from "@/components/account/AccountPageClient";
+import AccountPageSkeleton from "@/components/account/AccountPageSkeleton";
+import { groupTable } from "@/db/schema/group";
+import { profileGroupTable } from "@/db/schema/profileGroup";
+import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
+import { db } from "@/utils/db";
 import fetchUser from "@/utils/fetchServerUser";
 import { format } from "date-fns";
-import { SquarePen } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { and, eq } from "drizzle-orm";
 import { Suspense } from "react";
 
 const formatDate = (dateStr: string): string => {
   return format(new Date(dateStr), "dd MMM yyyy");
 };
 
+const GENERIC_IMAGE_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/images/avatars/generic_profile.png`;
+
+const getTribesForAccount = async (profileId: number) => {
+  const rows = await db
+    .select({
+      id: groupTable.id,
+      name: groupTable.name,
+      image: groupTable.image,
+      roleId: profileGroupTable.roleId,
+      sessionsPlayed: rollingPlayerStatsTable.sessionsPlayed,
+    })
+    .from(profileGroupTable)
+    .innerJoin(groupTable, eq(profileGroupTable.groupId, groupTable.id))
+    .leftJoin(
+      rollingPlayerStatsTable,
+      and(
+        eq(rollingPlayerStatsTable.groupId, groupTable.id),
+        eq(rollingPlayerStatsTable.profileId, profileId),
+      ),
+    )
+    .where(eq(profileGroupTable.profileId, profileId));
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    image: row.image,
+    roleId: row.roleId,
+    sessionsPlayed: row.sessionsPlayed ?? 0,
+  }));
+};
+
 const AccountContent = async () => {
   const user = await fetchUser();
+  const tribes = await getTribesForAccount(user.id);
 
   return (
-    <>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-center">
-        <div className="relative">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
-            <Image
-              src={user.image}
-              alt="Profile picture"
-              layout="fill"
-              objectFit="cover"
-            />
-          </div>
-          <Button
-            className="sm:hidden absolute top-0 right-20 dark:text-background text-foreground ml-auto font-semibold bg-gray-500 hover:bg-gray-600 p-2"
-            asChild
-          >
-            <Link href="/account/edit">
-              <SquarePen className="w-2 h-2" />
-            </Link>
-          </Button>
-        </div>
-        <div className="text-center md:text-left mt-5 md:mt-0 md:ml-10 space-y-2">
-          <h1 className="text-3xl font-bold">
-            {user.first_name} {user.last_name}
-          </h1>
-          <h2 className="text-xl text-muted-foreground">@{user.username}</h2>
-          <p className="text-sm text-gray-600">
-            Last Seen: {formatDate(user.updated_at)}
-          </p>
-          <p className="text-sm text-gray-600">
-            Member Since: {formatDate(user.confirmed_at)}
-          </p>
-        </div>
-        <Button
-          className="hidden md:block text-white ml-auto self-start font-semibold bg-gray-500 hover:bg-gray-600"
-          asChild
-        >
-          <Link href="/account/edit">
-            <span className="flex items-center gap-x-2">
-              <SquarePen className="h-4 w-4" />
-              <p className="hidden lg:block">Edit Profile</p>
-            </span>
-          </Link>
-        </Button>
-      </div>
-      <p className="pl-4 mt-8 italic">{`"${user.description}"`}</p>
-      <hr />
-
-      {/* Account Details */}
-      <h1 className="text-2xl font-bold">Profile</h1>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex-col">
-          <p className="font-semibold text-lg mb-0.5">First Name:</p>
-          <p className="text-lg">{user.first_name}</p>
-        </div>
-        <div className="flex-col">
-          <p className="font-semibold text-lg mb-0.5">Last Name:</p>
-          <p className="text-lg">{user.last_name}</p>
-        </div>
-        <div className="col-span-2">
-          <p className="font-semibold text-lg mb-0.5">Email:</p>
-          <p className="text-lg">{user.email}</p>
-        </div>
-        <div className="col-span-2">
-          <p className="font-semibold text-lg mb-0.5">Gender:</p>
-          <p className="text-lg">{user.gender}</p>
-        </div>
-      </div>
-
-      {/* TODO: Linked Accounts, Interests, Favourite Games, etc. */}
-    </>
+    <AccountPageClient
+      user={{
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username,
+        email: user.email,
+        gender: user.gender,
+        description: user.description,
+        image: user.image,
+      }}
+      memberSince={formatDate(user.confirmed_at)}
+      tribes={tribes}
+      defaultImageUrl={GENERIC_IMAGE_URL}
+    />
   );
 };
 
-const AccountFallback = () => (
-  <div className="flex justify-center items-center h-64">
-    <LoadingSpinner />
-  </div>
-);
-
 const Page = () => {
   return (
-    <div className="p-12 space-y-6">
-      <Suspense fallback={<AccountFallback />}>
-        <AccountContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<AccountPageSkeleton />}>
+      <AccountContent />
+    </Suspense>
   );
 };
 

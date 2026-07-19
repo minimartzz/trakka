@@ -12,40 +12,44 @@ import React from "react";
 import { useFormStatus } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 
-interface PlayerControllerProps {
-  players: Player[];
-  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+interface CountStepperProps {
+  count: number;
+  onAdd: () => void;
+  onRemove: () => void;
+  addLabel: string;
+  removeLabel: string;
 }
 
 interface PlayerSessionSelectionProps {
   selectablePlayers: Awaited<ReturnType<typeof getSelectablePlayers>>[number][];
   players: Player[];
   setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+  submitted?: boolean;
+  teamMode?: boolean;
 }
 
-const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
-  const handleReducePlayer = () => {
-    if (players.length > 1) {
-      setPlayers(players.slice(0, -1));
-    }
-  };
+const makeBlankPlayer = (teamId?: string | null): Player => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+  profileId: 0,
+  firstName: "",
+  lastName: "",
+  username: "",
+  groupId: "",
+  profilePic: "",
+  isAnonymous: false,
+  score: null,
+  isWinner: false,
+  isTie: false,
+  teamId: teamId ?? null,
+});
 
-  const handleAddPlayer = () => {
-    const newPlayer: Player = {
-      id: Date.now().toString(),
-      profileId: 0,
-      firstName: "",
-      lastName: "",
-      username: "",
-      groupId: "",
-      profilePic: "",
-      score: null,
-      isWinner: false,
-      isTie: false,
-    };
-    setPlayers([...players, newPlayer]);
-  };
-
+const CountStepper = ({
+  count,
+  onAdd,
+  onRemove,
+  addLabel,
+  removeLabel,
+}: CountStepperProps) => {
   return (
     <div className="inline-flex w-fit -space-x-px rounded-md shadow-xs rtl:space-x-reverse">
       <Button
@@ -53,24 +57,24 @@ const PlayerController = ({ players, setPlayers }: PlayerControllerProps) => {
         type="button"
         size="icon"
         className="rounded-none rounded-l-md shadow-none focus-visible:z-10"
-        onClick={handleReducePlayer}
-        disabled={players.length <= 1}
+        onClick={onRemove}
+        disabled={count <= 1}
       >
         <Minus className="w-4 h-4" />
-        <span className="sr-only">Remove Player</span>
+        <span className="sr-only">{removeLabel}</span>
       </Button>
       <span className="bg-background dark:border-input dark:bg-input/30 flex items-center border px-3 text-sm font-medium">
-        {players.length}
+        {count}
       </span>
       <Button
         variant="outline"
         type="button"
         size="icon"
         className="rounded-none rounded-r-md shadow-none focus-visible:z-10"
-        onClick={handleAddPlayer}
+        onClick={onAdd}
       >
         <Plus className="w-4 h-4" />
-        <span className="sr-only">Add Player</span>
+        <span className="sr-only">{addLabel}</span>
       </Button>
     </div>
   );
@@ -80,6 +84,8 @@ const PlayerSessionSelection = ({
   selectablePlayers,
   players,
   setPlayers,
+  submitted = false,
+  teamMode = false,
 }: PlayerSessionSelectionProps) => {
   const { pending } = useFormStatus();
   const pathname = usePathname();
@@ -88,24 +94,19 @@ const PlayerSessionSelection = ({
 
   // Functions
   const handleAddPlayer = () => {
-    const newPlayer: Player = {
-      id: Date.now().toString(),
-      profileId: 0,
-      firstName: "",
-      lastName: "",
-      username: "",
-      groupId: "",
-      profilePic: "",
-      score: null,
-      isWinner: false,
-      isTie: false,
-    };
-    setPlayers([...players, newPlayer]);
+    setPlayers([...players, makeBlankPlayer()]);
   };
 
   const handleReducePlayer = (id: string) => {
     if (players.length > 1) {
       setPlayers(players.filter((player) => player.id !== id));
+    }
+  };
+
+  // Stepper "-" in regular mode drops the last player row.
+  const handleReduceLastPlayer = () => {
+    if (players.length > 1) {
+      setPlayers(players.slice(0, -1));
     }
   };
 
@@ -117,11 +118,108 @@ const PlayerSessionSelection = ({
     );
   };
 
+  // Shared score/winner/tie controls write to every member of a team.
+  const handleUpdateTeam = (teamId: string, updates: Partial<Player>) => {
+    setPlayers((prev) =>
+      prev.map((player) =>
+        player.teamId === teamId ? { ...player, ...updates } : player,
+      ),
+    );
+  };
+
+  const handleAddMemberToTeam = (teamId: string) => {
+    setPlayers((prev) => {
+      const rep = prev.find((p) => p.teamId === teamId);
+      const member = makeBlankPlayer(teamId);
+      if (rep) {
+        member.score = rep.score;
+        member.isWinner = rep.isWinner;
+        member.isTie = rep.isTie;
+      }
+      let lastIdx = -1;
+      prev.forEach((p, i) => {
+        if (p.teamId === teamId) lastIdx = i;
+      });
+      const next = [...prev];
+      next.splice(lastIdx + 1, 0, member);
+      return next;
+    });
+  };
+
+  const handleAddTeam = () => {
+    setPlayers([...players, makeBlankPlayer(crypto.randomUUID())]);
+  };
+
+  const handleRemoveTeam = (teamId: string) => {
+    setPlayers((prev) => {
+      const remaining = prev.filter((p) => p.teamId !== teamId);
+      return remaining.length > 0 ? remaining : prev;
+    });
+  };
+
+  // Group players into teams for team-mode rendering, preserving order.
+  const teamOrder: string[] = [];
+  const teamMap = new Map<string, Player[]>();
+  for (const player of players) {
+    const key = player.teamId ?? player.id;
+    if (!teamMap.has(key)) {
+      teamMap.set(key, []);
+      teamOrder.push(key);
+    }
+    teamMap.get(key)!.push(player);
+  }
+
+  // Stepper "-" in team mode drops the last team (and all its members).
+  const handleRemoveLastTeam = () => {
+    if (teamOrder.length <= 1) return;
+    const lastTeamId = teamOrder[teamOrder.length - 1];
+    setPlayers((prev) => prev.filter((p) => p.teamId !== lastTeamId));
+  };
+
+  // Player-name combobox shared by both modes; filters out accounts already
+  // picked in other rows so the same profile can't be selected twice.
+  const renderPlayerNameInput = (player: Player) => {
+    const selectedProfileIds = new Set(
+      players
+        .filter((p) => p.id !== player.id && p.profileId !== 0)
+        .map((p) => p.profileId),
+    );
+    const availablePlayers = selectablePlayers.filter(
+      (p) => !selectedProfileIds.has(p.profileId),
+    );
+    return (
+      <PlayerInput
+        selectablePlayers={availablePlayers}
+        playerId={player.id}
+        playerSelect={handleUpdates}
+        playerDetails={player.profileId !== 0 ? player : undefined}
+        allowAnonymous={!isEdit}
+        invalid={submitted && player.firstName === ""}
+      />
+    );
+  };
+
   return (
     <div>
       {/* Control Section */}
       <div className="flex justify-between items-center">
-        <PlayerController players={players} setPlayers={setPlayers} />
+        {teamMode ? (
+          <CountStepper
+            count={teamOrder.length}
+            onAdd={handleAddTeam}
+            onRemove={handleRemoveLastTeam}
+            addLabel="Add Team"
+            removeLabel="Remove Team"
+          />
+        ) : (
+          <CountStepper
+            count={players.length}
+            onAdd={handleAddPlayer}
+            onRemove={handleReduceLastPlayer}
+            addLabel="Add Player"
+            removeLabel="Remove Player"
+          />
+        )}
         <div className="flex items-center gap-2">
           {isEdit && (
             <Button
@@ -157,17 +255,151 @@ const PlayerSessionSelection = ({
       </div>
 
       {/* Player Details */}
-      <div className="flex flex-col gap-2 mt-3">
-        {players.map((player, idx) => {
-          const selectedProfileIds = new Set(
-            players
-              .filter((p) => p.id !== player.id && p.profileId !== 0)
-              .map((p) => p.profileId),
-          );
-          const availablePlayers = selectablePlayers.filter(
-            (p) => !selectedProfileIds.has(p.profileId),
-          );
-          return (
+      {teamMode ? (
+        <div className="flex flex-col gap-3 mt-3">
+          {teamOrder.map((teamId, teamIdx) => {
+            const members = teamMap.get(teamId)!;
+            const teamRep = members[0];
+            return (
+              <Card
+                key={teamId}
+                className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
+              >
+                {/* Team Position */}
+                <div
+                  className="pointer-events-none absolute left-2 top-1 z-0 select-none text-4xl leading-none text-muted-foreground/30"
+                  aria-hidden="true"
+                >
+                  {teamIdx + 1}
+                </div>
+
+                {/* Remove Team */}
+                <Button
+                  variant="ghost"
+                  type="button"
+                  size="icon"
+                  className="absolute right-2 top-1 z-20 h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => handleRemoveTeam(teamId)}
+                  disabled={teamOrder.length <= 1}
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Remove team</span>
+                </Button>
+
+                <CardContent className="relative z-10 py-3 px-10">
+                  <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+                    {/* Roster: label + member rows + add player */}
+                    <div className="w-full min-w-0 md:flex-1">
+                      <Label className="text-muted-foreground mb-2">
+                        Players
+                      </Label>
+                      <div className="flex flex-col gap-2">
+                        {members.map((player) => (
+                          <div
+                            key={player.id}
+                            className="flex items-center gap-1.5"
+                          >
+                            <div className="min-w-0 flex-1">
+                              {renderPlayerNameInput(player)}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => handleReducePlayer(player.id)}
+                              disabled={players.length <= 1}
+                            >
+                              <X className="h-4 w-4" />
+                              <span className="sr-only">Remove player</span>
+                            </Button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => handleAddMemberToTeam(teamId)}
+                          className="mt-0.5 inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add player
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Shared score + winner/tie — pinned to the first
+                        player row on desktop */}
+                    <div className="flex items-end gap-4 md:shrink-0 md:self-start md:pr-2">
+                      <div>
+                        <Label className="text-muted-foreground mb-2">
+                          Score
+                        </Label>
+                        <div className="flex h-9 items-center gap-1.5">
+                          <div className="w-20">
+                            <ScoreInput
+                              key={`${teamId}-score`}
+                              playerId={teamId}
+                              updateScore={(_id, updates) =>
+                                handleUpdateTeam(teamId, updates)
+                              }
+                              initialValue={teamRep.score}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
+                            pts
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <Label
+                          htmlFor={`team-winner-${teamIdx}`}
+                          className="text-muted-foreground mb-2"
+                        >
+                          Winner
+                        </Label>
+                        <div className="flex h-9 items-center">
+                          <Checkbox
+                            id={`team-winner-${teamIdx}`}
+                            className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
+                            checked={teamRep.isWinner}
+                            onCheckedChange={(checked) =>
+                              handleUpdateTeam(teamId, {
+                                isWinner: checked as boolean,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <Label
+                          htmlFor={`team-tied-${teamIdx}`}
+                          className="text-muted-foreground mb-2"
+                        >
+                          Tied
+                        </Label>
+                        <div className="flex h-9 items-center">
+                          <Checkbox
+                            id={`team-tied-${teamIdx}`}
+                            className="h-7 w-7 border-2 data-[state=checked]:bg-accent-3 dark:data-[state=checked]:bg-accent-3 data-[state=checked]:border-blue-500 rounded-full"
+                            checked={teamRep.isTie}
+                            onCheckedChange={(checked) =>
+                              handleUpdateTeam(teamId, {
+                                isTie: checked as boolean,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 mt-3">
+          {players.map((player, idx) => (
             <Card
               key={player.id}
               className="group relative w-full overflow-hidden border-muted-foreground/20 bg-card/50 backdrop-blur-sm transition-all hover:border-muted-foreground/50 rounded-md shadow-none"
@@ -198,27 +430,27 @@ const PlayerSessionSelection = ({
                     <Label className="text-muted-foreground mb-2">
                       Player Name
                     </Label>
-                    <PlayerInput
-                      selectablePlayers={availablePlayers}
-                      playerId={player.id}
-                      playerSelect={handleUpdates}
-                      playerDetails={
-                        player.profileId !== 0 ? player : undefined
-                      }
-                    />
+                    {renderPlayerNameInput(player)}
                   </div>
 
                   <div className="flex items-center space-x-4 mr-4">
                     {/* Score Input */}
-                    <div className="w-20 -left-1">
+                    <div className="-left-1">
                       <Label className="text-muted-foreground mb-2">
                         Score
                       </Label>
-                      <ScoreInput
-                        playerId={player.id}
-                        updateScore={handleUpdates}
-                        initialValue={player.score}
-                      />
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-20">
+                          <ScoreInput
+                            playerId={player.id}
+                            updateScore={handleUpdates}
+                            initialValue={player.score}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold uppercase tracking-[0.04em] text-muted-foreground">
+                          pts
+                        </span>
+                      </div>
                     </div>
 
                     {/* Winner and Tie checkboxes */}
@@ -262,21 +494,23 @@ const PlayerSessionSelection = ({
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Add Players Button - at Bottom */}
+      {/* Bottom add FAB — adds a player in regular mode, a team in team mode */}
       <div className="flex w-full items-center justify-center mt-4">
         <Button
           variant="ghost"
           type="button"
           size="icon"
           className="rounded-full bg-primary/80 hover:bg-primary dark:hover:bg-primary"
-          onClick={handleAddPlayer}
+          onClick={teamMode ? handleAddTeam : handleAddPlayer}
         >
           <Plus className="w-6 h-6 text-white" />
-          <span className="sr-only">Add Player</span>
+          <span className="sr-only">
+            {teamMode ? "Add Team" : "Add Player"}
+          </span>
         </Button>
       </div>
     </div>

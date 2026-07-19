@@ -26,6 +26,8 @@ export interface SessionDataInterface {
   username: string;
   profilePic: string;
   isVp: boolean;
+  coop: boolean;
+  teamId: number | null;
   victoryPoints: number | null;
   position: number;
   isWinner: boolean;
@@ -34,6 +36,8 @@ export interface SessionDataInterface {
   isHighScore: boolean;
   rating: number | null;
 }
+// NOTE: SessionDataInterface.coop / GroupedSession.coop added for the
+// competitive-vs-cooperative card distinction on the recent-games page.
 
 // Formatted player in each session
 export interface SessionPlayer {
@@ -43,6 +47,7 @@ export interface SessionPlayer {
   lastName: string;
   username: string;
   profilePic: string;
+  teamId: number | null;
   victoryPoints: number | null;
   position: number;
   isWinner: boolean;
@@ -64,6 +69,8 @@ export interface GroupedSession {
   tribeId: string;
   players: SessionPlayer[];
   isVp: boolean;
+  coop: boolean;
+  isTeamGame: boolean;
   // Calculated fields
   isPlayer: boolean;
   isWinner: boolean;
@@ -104,6 +111,32 @@ export interface TribeRequest {
     group_name: string;
     request_id: string;
     requester_id: number;
+  };
+  isRead: boolean;
+}
+
+// For Anonymous-user Claim Requests (shown in the SuperAdmin Inbox alongside
+// join requests). Written by requestClaim in account/claim/action.ts.
+export interface ClaimRequest {
+  id: string;
+  profileId: number;
+  type: string;
+  data: {
+    group_id: string;
+    group_name: string;
+    anon_profile_id: number;
+    anon: {
+      first_name: string;
+      last_name: string;
+      username: string;
+    };
+    claimer_id: number;
+    claimer: {
+      first_name: string;
+      last_name: string;
+      username: string;
+      image: string;
+    };
   };
   isRead: boolean;
 }

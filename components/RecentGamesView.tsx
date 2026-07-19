@@ -18,6 +18,8 @@ import RecentGamesFilters, {
 
 const DEFAULT_FILTERS: RecentGamesFilterState = {
   result: "all",
+  gameType: "all",
+  rating: "all",
   gameIds: [],
   tribeIds: [],
   dateRange: undefined,
@@ -63,6 +65,8 @@ const RecentGamesView: React.FC<RecentGamesViewProps> = ({
 
   const isDefault =
     filters.result === "all" &&
+    filters.gameType === "all" &&
+    filters.rating === "all" &&
     filters.gameIds.length === 0 &&
     filters.tribeIds.length === 0 &&
     filters.dateRange === undefined;
@@ -72,6 +76,14 @@ const RecentGamesView: React.FC<RecentGamesViewProps> = ({
       if (filters.result === "won" && !session.isWinner) return false;
       if (filters.result === "lost" && session.isWinner) return false;
       if (filters.result === "tie" && !session.isTied) return false;
+
+      // Game type: coop true = cooperative, false = competitive
+      if (filters.gameType === "cooperative" && !session.coop) return false;
+      if (filters.gameType === "competitive" && session.coop) return false;
+
+      // Rating: isVp true = rated, false = unrated
+      if (filters.rating === "rated" && !session.isVp) return false;
+      if (filters.rating === "unrated" && session.isVp) return false;
 
       if (
         filters.gameIds.length > 0 &&
@@ -144,6 +156,10 @@ const RecentGamesView: React.FC<RecentGamesViewProps> = ({
         shownCount={filteredSessions.length}
         totalCount={sessions.length}
         onResultChange={(result) => setFilters((f) => ({ ...f, result }))}
+        onGameTypeChange={(gameType) =>
+          setFilters((f) => ({ ...f, gameType }))
+        }
+        onRatingChange={(rating) => setFilters((f) => ({ ...f, rating }))}
         onToggleGame={(gameId) =>
           setFilters((f) => ({
             ...f,

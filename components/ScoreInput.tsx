@@ -8,9 +8,15 @@ interface ScoreInputProps {
   playerId: string;
   updateScore: (id: string, updates: Partial<Player>) => void;
   initialValue?: number | null;
+  className?: string;
 }
 
-const ScoreInput = ({ playerId, updateScore, initialValue }: ScoreInputProps) => {
+const ScoreInput = ({
+  playerId,
+  updateScore,
+  initialValue,
+  className,
+}: ScoreInputProps) => {
   const [input, setInput] = useState(initialValue != null ? String(initialValue) : "");
   // const [isValid, setIsValid] = useState(true);
 
@@ -38,7 +44,8 @@ const ScoreInput = ({ playerId, updateScore, initialValue }: ScoreInputProps) =>
         value={input}
         onChange={handleChange}
         className={cn(
-          !isValid && "border-destructive focus-visible:ring-destructive"
+          !isValid && "border-destructive focus-visible:ring-destructive",
+          className
         )}
         placeholder="-"
       />

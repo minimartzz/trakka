@@ -1,18 +1,11 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  FilteredCounts,
-  GroupedSession,
-  SessionDataInterface,
-} from "@/lib/interfaces";
+import React, { useEffect, useRef, useState } from "react";
+import { FilteredCounts, GroupedSession } from "@/lib/interfaces";
 import Link from "next/link";
 import {
   AvailableGame,
   AvailableTribe,
   filterSessionData,
-  getAvailableGames,
-  getAvailableTribes,
-  getFilteredCounts,
 } from "@/utils/recordsProcessing";
 import { Play, Search, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,8 +23,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 import useAuth from "@/app/hooks/useAuth";
-import { fetchSessions } from "@/app/(account)/recent-games/action";
+import {
+  fetchRecentGamesPage,
+  RecentGamesFilters as RecentGamesFilterArgs,
+} from "@/app/(account)/recent-games/action";
 import { getUserTribeRoles } from "@/app/(generic)/session/edit/[sessionId]/action";
 import { toast } from "sonner";
 
@@ -39,25 +36,33 @@ const ITEMS_PER_PAGE = 10;
 
 const DEFAULT_FILTERS: RecentGamesFilterState = {
   result: "all",
+  gameType: "all",
+  rating: "all",
   gameIds: [],
   tribeIds: [],
   dateRange: undefined,
 };
 
-const fetchSessionsByProfile = async (
-  id: number,
-): Promise<SessionDataInterface[]> => {
-  try {
-    const response = await fetchSessions(id);
-    if (!response.success) {
-      toast.error(response.message);
-      return [];
-    }
-    return response.data ?? [];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+// The date range is compared as YYYY-MM-DD strings against the date column.
+const toFilterArgs = (
+  filters: RecentGamesFilterState,
+): RecentGamesFilterArgs => {
+  const { from, to } = filters.dateRange ?? {};
+  const toIsoDay = (d: Date) => {
+    const day = new Date(d);
+    day.setHours(0, 0, 0, 0);
+    return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+  };
+  return {
+    result: filters.result,
+    gameType: filters.gameType,
+    rating: filters.rating,
+    gameIds: filters.gameIds,
+    tribeIds: filters.tribeIds,
+    from: from ? toIsoDay(from) : undefined,
+    // "to" optional = single day; fall back to "from" so a single-day pick works
+    to: from ? toIsoDay(to ?? from) : undefined,
+  };
 };
 
 // Build a visible page-number window so long lists don't render 50 links.
@@ -76,7 +81,10 @@ const getPageWindow = (current: number, total: number): (number | "...")[] => {
 };
 
 const Page = () => {
+  // `loading`: Applies on first load only
+  // `refetching`: Renders every subsequent page
   const [loading, setLoading] = useState(true);
+  const [refetching, setRefetching] = useState(false);
   const [filters, setFilters] =
     useState<RecentGamesFilterState>(DEFAULT_FILTERS);
   const [gameSessions, setGameSessions] = useState<GroupedSession[]>([]);
@@ -97,94 +105,88 @@ const Page = () => {
 
   const isDefault =
     filters.result === "all" &&
+    filters.gameType === "all" &&
+    filters.rating === "all" &&
     filters.gameIds.length === 0 &&
     filters.tribeIds.length === 0 &&
     filters.dateRange === undefined;
 
-  // Initial Mount - Load
+  const [totalSessions, setTotalSessions] = useState(0);
+
+  // Editable tribe IDs don't change with filters/page, so load them once.
   useEffect(() => {
-    if (authLoading || !user) {
-      return;
-    }
+    if (authLoading || !user) return;
 
-    const getData = async () => {
-      const [sessionData, tribeRoles] = await Promise.all([
-        fetchSessionsByProfile(user.id),
-        getUserTribeRoles(user.id),
-      ]);
-      const groupedSessions = filterSessionData(user.id, sessionData).filter(
-        (session) => session.isPlayer,
+    getUserTribeRoles(user.id).then((tribeRoles) => {
+      // Tribe IDs where user is SuperAdmin (1) or Admin (2)
+      setEditableTribeIds(
+        new Set(
+          tribeRoles
+            .filter((r) => r.roleId === 1 || r.roleId === 2)
+            .map((r) => r.groupId),
+        ),
       );
-
-      // Build set of tribe IDs where user is SuperAdmin (1) or Admin (2)
-      const editableIds = new Set(
-        tribeRoles
-          .filter((r) => r.roleId === 1 || r.roleId === 2)
-          .map((r) => r.groupId),
-      );
-
-      setGameSessions(groupedSessions);
-      setFilterCounts(getFilteredCounts(groupedSessions));
-      setAvailableGames(getAvailableGames(groupedSessions));
-      setAvailableTribes(getAvailableTribes(groupedSessions));
-      setEditableTribeIds(editableIds);
-      setLoading(false);
-    };
-
-    getData();
-  }, [user, authLoading]);
-
-  // Apply all filters together (result + games + date)
-  const filteredSessions = useMemo(() => {
-    return gameSessions.filter((session) => {
-      // Result
-      if (filters.result === "won" && !session.isWinner) return false;
-      if (filters.result === "lost" && session.isWinner) return false;
-      if (filters.result === "tie" && !session.isTied) return false;
-
-      // Games (empty = all)
-      if (
-        filters.gameIds.length > 0 &&
-        !filters.gameIds.includes(session.gameId)
-      ) {
-        return false;
-      }
-
-      // Tribes (empty = all)
-      if (
-        filters.tribeIds.length > 0 &&
-        !filters.tribeIds.includes(session.tribeId)
-      ) {
-        return false;
-      }
-
-      // Date range (inclusive of both ends; "to" optional = single day)
-      const { from, to } = filters.dateRange ?? {};
-      if (from) {
-        const sessionDay = new Date(session.datePlayed);
-        sessionDay.setHours(0, 0, 0, 0);
-        const start = new Date(from);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(to ?? from);
-        end.setHours(0, 0, 0, 0);
-        if (sessionDay < start || sessionDay > end) return false;
-      }
-
-      return true;
     });
-  }, [gameSessions, filters]);
+  }, [user, authLoading]);
 
   // Reset to first page whenever the filter set changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
 
-  const totalPages = Math.ceil(filteredSessions.length / ITEMS_PER_PAGE);
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const currentSessions = filteredSessions.slice(
-    indexOfLastItem - ITEMS_PER_PAGE,
-    indexOfLastItem,
-  );
+  // Fetch a single page of sessions from the server whenever the user,
+  // filters or page changes. Filtering/counting/pagination all happen in SQL;
+  // only this page's rows come back, then filterSessionData groups them.
+  const hasLoadedOnce = useRef(false);
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    let cancelled = false;
+    // First load shows the full skeleton; later refetches keep the page up.
+    if (hasLoadedOnce.current) setRefetching(true);
+
+    fetchRecentGamesPage(
+      user.id,
+      currentPage,
+      ITEMS_PER_PAGE,
+      toFilterArgs(filters),
+    ).then((response) => {
+      if (cancelled) return;
+      if (!response.success || !response.data) {
+        toast.error(response.message ?? "Failed to load recent games");
+        setLoading(false);
+        setRefetching(false);
+        return;
+      }
+
+      const {
+        sessions,
+        totalSessions,
+        counts,
+        availableGames,
+        availableTribes,
+      } = response.data;
+      const groupedSessions = filterSessionData(user.id, sessions).filter(
+        (session) => session.isPlayer,
+      );
+
+      setGameSessions(groupedSessions);
+      setTotalSessions(totalSessions);
+      setFilterCounts(counts);
+      setAvailableGames(availableGames);
+      setAvailableTribes(availableTribes);
+      setLoading(false);
+      setRefetching(false);
+      hasLoadedOnce.current = true;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading, filters, currentPage]);
+
+  const totalPages = Math.ceil(totalSessions / ITEMS_PER_PAGE);
+  const currentSessions = gameSessions;
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -259,11 +261,26 @@ const Page = () => {
   return (
     <div className="space-y-6 p-4 sm:p-8 mb-10">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">My Recent Games</h1>
-        <p className="mt-2 text-muted-foreground">
-          Your latest game sessions and results
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div>
+          <h1 className="text-3xl font-bold">My Recent Games</h1>
+          <p className="mt-2 text-muted-foreground">
+            Your latest game sessions and results
+          </p>
+        </div>
+
+        {/* Quiet legend: swatches mirror the card treatment so the coop tint is
+            learnable without a loud callout. */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm border border-border bg-muted/50" />
+            Competitive
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm border border-accent bg-accent/50" />
+            Cooperative
+          </span>
+        </div>
       </div>
 
       {/* Filters */}
@@ -273,9 +290,13 @@ const Page = () => {
         availableGames={availableGames}
         availableTribes={availableTribes}
         isDefault={isDefault}
-        shownCount={filteredSessions.length}
-        totalCount={gameSessions.length}
+        shownCount={totalSessions}
+        totalCount={filterCounts.numGames}
         onResultChange={(result) => setFilters((f) => ({ ...f, result }))}
+        onGameTypeChange={(gameType) =>
+          setFilters((f) => ({ ...f, gameType }))
+        }
+        onRatingChange={(rating) => setFilters((f) => ({ ...f, rating }))}
         onToggleGame={(gameId) =>
           setFilters((f) => ({
             ...f,
@@ -301,7 +322,7 @@ const Page = () => {
       />
 
       {/* Game Sessions */}
-      {gameSessions.length === 0 ? (
+      {filterCounts.numGames === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <Trophy className="mx-auto mb-4 size-12 text-muted-foreground" />
@@ -317,7 +338,7 @@ const Page = () => {
             </Button>
           </CardContent>
         </Card>
-      ) : filteredSessions.length === 0 ? (
+      ) : totalSessions === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <Search className="mx-auto mb-4 size-12 text-muted-foreground" />
@@ -330,7 +351,12 @@ const Page = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6 sm:space-y-8">
+        <div
+          className={cn(
+            "space-y-6 transition-opacity sm:space-y-8",
+            refetching && "pointer-events-none opacity-50",
+          )}
+        >
           {currentSessions.map((session) => (
             <GameSessionCard
               key={session.sessionId}

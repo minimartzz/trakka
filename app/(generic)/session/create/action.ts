@@ -18,9 +18,25 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
+import { customAlphabet } from "nanoid";
 
 type Notification = typeof notificationsTable.$inferInsert;
 type CompGameLog = typeof compGameLogTable.$inferInsert;
+
+// Game log entry as submitted by the client. Anonymous players have no
+// profile yet: profileId is null and anonymousPlayer carries their name.
+export type SessionLogInput = Omit<CompGameLog, "profileId"> & {
+  profileId: number | null;
+  anonymousPlayer?: { firstName: string; lastName: string };
+};
+
+const generateAnonId = customAlphabet(
+  "0123456789abcdefghijklmnopqrstuvwxyz",
+  10,
+);
+
+const getDefaultAvatar = () =>
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/profile/default_${Math.floor(Math.random() * 8) + 1}.png`;
 
 export async function notifyPlayersOfSession(notification: Notification[]) {
   try {
@@ -128,6 +144,7 @@ export async function getSelectablePlayers(tribeId: string) {
         lastName: playerDetails.lastName,
         username: playerDetails.username,
         profilePic: playerDetails.image,
+        isAnonymous: playerDetails.isAnonymous,
       })
       .from(profileGroupTable)
       .innerJoin(
@@ -148,14 +165,16 @@ export async function getSelectablePlayers(tribeId: string) {
 }
 
 // Submit Session
-export async function submitNewSession(payload: CompGameLog[]) {
+export async function submitNewSession(payload: SessionLogInput[]) {
   if (payload.length === 0) {
     return { success: false };
   }
 
   // All rows in a single session belong to the same tribe.
   // Caller must be a member of that tribe to write to it.
-  const affectedGroupIds = Array.from(new Set(payload.map((log) => log.groupId)));
+  const affectedGroupIds = Array.from(
+    new Set(payload.map((log) => log.groupId)),
+  );
   try {
     for (const groupId of affectedGroupIds) {
       await requireTribeMembership(groupId);
@@ -165,43 +184,90 @@ export async function submitNewSession(payload: CompGameLog[]) {
   }
 
   try {
-    const result = await db
-      .insert(compGameLogTable)
-      .values(payload)
-      .returning();
+    // Anonymous profile creation and game log inserts must all succeed
+    // together, or a retried submit could strand half-created players.
+    const affectedProfileIds = await db.transaction(async (tx) => {
+      const logs: CompGameLog[] = [];
 
-    // For rolling statistics
-    const rollingStats = payload.map((log) => ({
-      profileId: log.profileId,
-      groupId: log.groupId,
-      rollingScore: log.score!,
-      sessionsPlayed: 1,
-      sessionsWon: log.isWinner ? 1 : 0,
-      latestSession: log.datePlayed,
-    }));
+      for (const { anonymousPlayer, ...log } of payload) {
+        if (log.profileId !== null) {
+          logs.push({ ...log, profileId: log.profileId });
+          continue;
+        }
 
-    const rolling = await db
-      .insert(rollingPlayerStatsTable)
-      .values(rollingStats)
-      .onConflictDoUpdate({
-        target: [
-          rollingPlayerStatsTable.profileId,
-          rollingPlayerStatsTable.groupId,
-        ],
-        set: {
-          rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
-          sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + 1`,
-          sessionsWon: sql`${rollingPlayerStatsTable.sessionsWon} + EXCLUDED.sessions_won`,
-          latestSession: sql`EXCLUDED.latest_session`,
-        },
-      });
+        if (!anonymousPlayer?.firstName) {
+          throw new Error("Anonymous player is missing a name");
+        }
 
-    if (result.length === 0) {
-      return { success: false };
-    }
+        // Create the anonymous profile. It keeps a null auth uuid until the
+        // player signs up and claims it with the generated claim code.
+        const [anonProfile] = await tx
+          .insert(profileTable)
+          .values({
+            firstName: anonymousPlayer.firstName,
+            lastName: anonymousPlayer.lastName,
+            email: "",
+            username: `anon_${generateAnonId()}`,
+            description: "",
+            gender: "Others",
+            image: getDefaultAvatar(),
+            isAnonymous: true,
+            claimCode: generateAnonId(),
+          })
+          .returning({ id: profileTable.id });
 
+        // Anonymous players join the tribe as regular members (role 3)
+        await tx.insert(profileGroupTable).values({
+          profileId: anonProfile.id,
+          groupId: log.groupId,
+          roleId: 3,
+        });
+
+        logs.push({ ...log, profileId: anonProfile.id });
+      }
+
+      const result = await tx.insert(compGameLogTable).values(logs).returning();
+      if (result.length === 0) {
+        throw new Error("Game log insert returned no rows");
+      }
+
+      // For rolling statistics
+      const rollingStats = logs.map((log) => ({
+        profileId: log.profileId,
+        groupId: log.groupId,
+        rollingScore: log.score!,
+        sessionsPlayed: 1,
+        sessionsWon: log.isWinner ? 1 : 0,
+        latestSession: log.datePlayed,
+      }));
+
+      await tx
+        .insert(rollingPlayerStatsTable)
+        .values(rollingStats)
+        .onConflictDoUpdate({
+          target: [
+            rollingPlayerStatsTable.profileId,
+            rollingPlayerStatsTable.groupId,
+          ],
+          set: {
+            rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
+            sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + 1`,
+            sessionsWon: sql`${rollingPlayerStatsTable.sessionsWon} + EXCLUDED.sessions_won`,
+            latestSession: sql`EXCLUDED.latest_session`,
+          },
+        });
+
+      // Returns a list of profile_ids that need their cache invalidated
+      return Array.from(new Set(logs.map((log) => log.profileId)));
+    });
+
+    // Invalidate the cache of tribes and profiles
     for (const groupId of affectedGroupIds) {
       updateTag(`tribe:${groupId}`);
+    }
+
+    for (const profileId of affectedProfileIds) {
+      updateTag(`recent-games:${profileId}`);
     }
 
     return { success: true };

@@ -2,6 +2,29 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.4.0] Anonymous Users - 2026-07-19
+
+### Added
+
+- Create anonymous user when adding new sessions. Anonymous users are tagged to each tribe
+- Ability to claim anonymous users by existing members
+- Ability to record sessions where there is a team variant
+
+### Changed:
+
+- Redesigned Tribe settings page with anonymous user management
+- Redesigned player Accounts page including placeholder features
+- Removed Settings from player context menu
+- Team mode games render with different design on recent games
+- Added new filters for competitive vs. cooperative games and rated vs unrated games (note: no function to input cooperative games or unrated games at the moment yet)
+
+### Fixed
+
+- Field indicators when user does not enter details during session creation
+- Newly added sessions do not immediately show up on the Recent Games page due to cache invalidation error
+- Changed pagination data pulling logic on Recent Games to improve performance
+- UI fix for dashboard view on mobile: Timeframe container no longer spills over
+
 ## [0.3.0] Landing Page - 2026-07-01
 
 ### Added

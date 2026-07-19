@@ -24,7 +24,6 @@ import {
   LogOut,
   Moon,
   RefreshCcw,
-  Settings,
   Sun,
   User,
 } from "lucide-react";
@@ -62,11 +61,6 @@ const SidebarUser = ({
       icon: RefreshCcw,
       label: "Sync with BoardGameGeek",
       action: () => console.log("Sync"),
-    },
-    {
-      icon: Settings,
-      label: "Settings",
-      action: () => console.log("Settings"),
     },
   ];
 

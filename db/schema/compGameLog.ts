@@ -11,6 +11,7 @@ import {
   real,
   timestamp,
   check,
+  index,
 } from "drizzle-orm/pg-core";
 import { profileTable } from "./profile";
 import { groupTable } from "./group";
@@ -49,9 +50,21 @@ export const compGameLogTable = pgTable(
       .notNull(),
     isFirstPlay: boolean("is_first_play").notNull(),
     isTie: boolean("is_tie").notNull(),
+    teamId: smallint("team_id"),
+    coop: boolean("coop").notNull().default(false),
     rating: smallint("rating"),
   },
-  (t) => [check("rating_check", sql`${t.rating} >= 0 AND ${t.rating} <= 5`)],
+  (t) => [
+    check("rating_check", sql`${t.rating} >= 0 AND ${t.rating} <= 5`),
+    // Recent-games driver: filter by profile, order by date. Turns the per-user
+    // page query into an index range scan instead of a table scan.
+    index("comp_game_log_profile_date_idx").on(
+      t.profileId,
+      t.datePlayed.desc(),
+    ),
+    // Fetching all players for a page's sessions (standings) joins on session_id.
+    index("comp_game_log_session_idx").on(t.sessionId),
+  ],
 );
 
 export const compGameLogTableRelations = relations(

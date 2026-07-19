@@ -42,3 +42,9 @@ export const requireTribeAdmin = cache(async (groupId: string) => {
   if (![1, 2].includes(membership.roleId)) throw new Error("Forbidden");
   return membership;
 });
+
+export const requireTribeSuperAdmin = cache(async (groupId: string) => {
+  const membership = await requireTribeMembership(groupId);
+  if (membership.roleId !== 1) throw new Error("Forbidden");
+  return membership;
+});
