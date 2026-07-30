@@ -1,12 +1,22 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
   // update user's auth session
-  let response = await updateSession(request);
+  const { response, user } = await updateSession(request);
+
+  const { pathname } = request.nextUrl;
+
+  // Signed-in users skip the landing page entirely, so they never paint it
+  // before being sent on. The authoritative auth check still lives in the
+  // account layout — this is a UX redirect, not a security boundary.
+  if (user && pathname === "/") {
+    const dashboardUrl = request.nextUrl.clone();
+    dashboardUrl.pathname = "/dashboard";
+    return NextResponse.redirect(dashboardUrl, { headers: response.headers });
+  }
 
   // Add invite link to cookies on /join
-  const { pathname } = request.nextUrl;
   if (pathname.startsWith("/join")) {
     const segments = pathname.split("/");
     const inviteCode = segments[2];

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import AuthRedirect from "@/components/landing/auth-redirect";
 import Creators from "@/components/landing/creators";
 import Features from "@/components/landing/features";
 import FinalCta from "@/components/landing/final-cta";
@@ -10,7 +9,6 @@ import ResultsTickerServer from "@/components/landing/ticker-server";
 const Index = () => {
   return (
     <>
-      <AuthRedirect />
       <main className="overflow-x-clip">
         <Hero />
         <ResultsTickerServer />
