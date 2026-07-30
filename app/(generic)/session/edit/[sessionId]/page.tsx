@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 
-import useAuth from "@/app/hooks/useAuth";
+import { useUser } from "@/components/UserProvider";
 import SessionForm, {
   Player,
   SessionFormInitialData,
@@ -28,7 +28,8 @@ const EditSessionPage = () => {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const router = useRouter();
-  const { user, authLoading } = useAuth();
+  // The session layout gates on auth server-side, so the user is always present.
+  const user = useUser();
 
   const [initialData, setInitialData] = useState<SessionFormInitialData | null>(
     null,
@@ -39,7 +40,6 @@ const EditSessionPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading || !user) return;
 
     const loadSession = async () => {
       const result = await fetchSessionForEdit(sessionId);
@@ -134,9 +134,9 @@ const EditSessionPage = () => {
     };
 
     loadSession();
-  }, [user, authLoading, sessionId]);
+  }, [user, sessionId]);
 
-  if (authLoading || !user || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -244,7 +244,7 @@ const EditSessionPage = () => {
           isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
           isTie: player.isTie,
           teamId: teamNumberFor(player),
-          createdBy: user!.id,
+          createdBy: user.id,
         };
       });
       payload = await Promise.all(promises);

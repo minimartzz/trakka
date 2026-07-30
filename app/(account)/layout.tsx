@@ -6,6 +6,7 @@ import GlobalSearchBar from "@/components/GlobalSearchBar";
 import AccountShellSkeleton from "@/components/tribes/AccountShellSkeleton";
 import { NotificationsProvider } from "@/components/NotificationsProvider";
 import ShareButton from "@/components/ShareButton";
+import { UserProvider } from "@/components/UserProvider";
 import { Button } from "@/components/ui/button";
 import {
   SidebarInset,
@@ -43,11 +44,7 @@ function LayoutFallback() {
   return <AccountShellSkeleton />;
 }
 
-async function AuthenticatedShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+async function AuthenticatedShell({ children }: { children: React.ReactNode }) {
   // For persisted state in sidebar
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";

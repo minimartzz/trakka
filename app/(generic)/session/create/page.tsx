@@ -4,7 +4,7 @@ import {
   submitNewSession,
   upsertGameDetails,
 } from "@/app/(generic)/session/create/action";
-import useAuth from "@/app/hooks/useAuth";
+import { useUser } from "@/components/UserProvider";
 import SessionForm, { Player } from "@/components/SessionForm";
 import { SessionTribe } from "@/components/GroupSearchBar";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
@@ -26,11 +26,8 @@ export type { Player } from "@/components/SessionForm";
 
 const Page = () => {
   const router = useRouter();
-  const { user, authLoading } = useAuth();
-
-  if (authLoading || !user) {
-    return;
-  }
+  // The session layout gates on auth server-side, so the user is always present.
+  const user = useUser();
 
   const handleSubmit = async (data: {
     date: Date;
