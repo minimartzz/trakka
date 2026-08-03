@@ -125,15 +125,12 @@ const JoinContent = async ({
     );
   }
 
+  // Signed out: this visitor is about to sign up, and the onboarding flow now
+  // opens with this tribe already on their list — so the invite headline would
+  // only say twice what the next screen says better.
   return (
     <div className="flex min-h-screen justify-center items-center bg-background">
-      <div className="flex flex-col gap-y-10">
-        <HeaderContent
-          inviteeFirstName={profile.firstName}
-          inviteeGroupName={group.name}
-        />
-        <InviteLoginClient />
-      </div>
+      <InviteLoginClient />
     </div>
   );
 };

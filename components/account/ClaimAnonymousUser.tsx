@@ -125,11 +125,7 @@ const ClaimRow = ({ onRequested }: { onRequested: () => void }) => {
             disabled={pending || !code.trim()}
             className="w-28 shrink-0"
           >
-            {pending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Verify"
-            )}
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
           </Button>
         )}
       </div>
@@ -209,24 +205,37 @@ const ClaimRow = ({ onRequested }: { onRequested: () => void }) => {
   );
 };
 
-const ClaimAnonymousUser = () => {
+const ClaimAnonymousUser = ({
+  showHeader = true,
+  onRequested,
+}: {
+  // Off when the surrounding surface already titles the section (onboarding)
+  showHeader?: boolean;
+  onRequested?: () => void;
+} = {}) => {
   // Each verified request appends a new empty row so more codes can be claimed.
   const [rowKeys, setRowKeys] = useState<number[]>([0]);
 
-  const addRow = () =>
+  const addRow = () => {
     setRowKeys((prev) => [...prev, (prev[prev.length - 1] ?? 0) + 1]);
+    onRequested?.();
+  };
 
   return (
     <section>
-      <h2 className="flex items-center gap-2 text-lg font-semibold">
-        <KeyRound className="h-4 w-4 text-muted-foreground" />
-        Claim an Anonymous User
-      </h2>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Enter a claim code to link an anonymous player&apos;s past sessions to
-        your account. Verify it, then send a request to the tribe&apos;s admin
-        to approve.
-      </p>
+      {showHeader && (
+        <>
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <KeyRound className="h-4 w-4 text-muted-foreground" />
+            Claim an Anonymous User
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Enter a claim code to link an anonymous player&apos;s past sessions
+            to your account. Verify it, then send a request to the tribe&apos;s
+            admin to approve.
+          </p>
+        </>
+      )}
       <div className="flex flex-col gap-3">
         {rowKeys.map((key) => (
           <ClaimRow key={key} onRequested={addRow} />

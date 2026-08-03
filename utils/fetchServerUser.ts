@@ -26,6 +26,13 @@ export default cache(async function fetchUser() {
     redirect("/onboarding");
   }
 
+  // The failover: a profile row exists but the user never finished onboarding
+  // (closed the tab, switched device). Every authenticated surface sends them
+  // back to pick up where they left off.
+  if (!profileInfo.onboarding_completed_at) {
+    redirect("/onboarding");
+  }
+
   const profile = {
     ...user,
     ...profileInfo,

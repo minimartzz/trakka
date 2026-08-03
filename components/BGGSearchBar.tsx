@@ -35,10 +35,16 @@ const BGGSearchBar = ({
   onSelect,
   initialGame,
   invalid = false,
+  showPreview = true,
+  clearOnSelect = false,
 }: {
   onSelect: (item: BGGDetailsInterface) => void;
   initialGame?: BGGDetailsInterface | null;
   invalid?: boolean;
+  /** Off when the caller renders its own view of the picked game(s). */
+  showPreview?: boolean;
+  /** Reset the input after each pick, for multi-select callers. */
+  clearOnSelect?: boolean;
 }) => {
   const [query, setQuery] = useState(initialGame?.title ?? "");
   const [exactMatch, setExactMatch] = useState(false);
@@ -108,8 +114,14 @@ const BGGSearchBar = ({
 
   const handleSelect = (result: BGGDetailsInterface) => {
     setIsDropdownOpen(false);
-    setQuery(result.title);
-    setSelectedGame(result);
+    if (clearOnSelect) {
+      setQuery("");
+      setAllResults([]);
+      setSelectedGame(null);
+    } else {
+      setQuery(result.title);
+      setSelectedGame(result);
+    }
     onSelect(result);
   };
 
@@ -253,7 +265,7 @@ const BGGSearchBar = ({
       </div>
 
       {/* Selected Game - Desktop / Tablet */}
-      <div className="hidden sm:block">
+      <div className={showPreview ? "hidden sm:block" : "hidden"}>
         {selectedGame && (
           <Card className="flex flex-row justify-between shadow-none rounded-lg p-4 border-primary/20">
             <div className="flex gap-4">
@@ -298,7 +310,7 @@ const BGGSearchBar = ({
       </div>
 
       {/* Selected Game - Mobile */}
-      <div className="sm:hidden">
+      <div className={showPreview ? "sm:hidden" : "hidden"}>
         {selectedGame && (
           <Card className="shadow-none rounded-lg p-4 border-primary/20">
             <div className="flex items-center gap-3 mb-3">

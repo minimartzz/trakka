@@ -98,6 +98,15 @@ const LoginClient = () => {
             </CardDescription>
           </CardHeader>
 
+          {/* Confirmation links are single use. New users are redirected back
+          to onboarding when they log in */}
+          {searchParams.get("reason") === "link_used" && (
+            <div className="mx-6 rounded-md border p-3 text-sm text-muted-foreground">
+              You&apos;ve already verified your email. Sign in below and
+              you&apos;ll pick up right where you left off.
+            </div>
+          )}
+
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="bg-transparent w-full mb-4">
               <TabsTrigger
