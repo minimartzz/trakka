@@ -1,7 +1,14 @@
-import WipOverlay from "@/components/account/WipOverlay";
+"use client";
+
 import ClaimAnonymousUser from "@/components/account/ClaimAnonymousUser";
-import { Trophy, History } from "lucide-react";
-import React from "react";
+import WipOverlay from "@/components/account/WipOverlay";
+import AddFavouriteGameCard from "@/components/account/games/AddFavouriteGameCard";
+import FavouriteGameCard from "@/components/account/games/FavouriteGameCard";
+import type { FavouriteGame } from "@/db/schema/profile";
+import { History, Trophy } from "lucide-react";
+import { useState } from "react";
+
+const MAX_FAVOURITE_GAMES = 5;
 
 const PlaceholderGameCards = () => (
   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -17,7 +24,23 @@ const PlaceholderGameCards = () => (
   </div>
 );
 
-const GamesTab = () => {
+interface GamesTabProps {
+  favouriteGames: FavouriteGame[];
+}
+
+const GamesTab = ({ favouriteGames }: GamesTabProps) => {
+  const [games, setGames] = useState(favouriteGames);
+  const [tappedId, setTappedId] = useState<number | null>(null);
+
+  const handleAdded = (game: FavouriteGame) => {
+    setGames((prev) => [...prev, game]);
+  };
+
+  const handleRemoved = (bggId: number) => {
+    setGames((prev) => prev.filter((g) => g.bggId !== bggId));
+    setTappedId((prev) => (prev === bggId ? null : prev));
+  };
+
   return (
     <div className="flex flex-col gap-8 py-6">
       <section>
@@ -26,11 +49,24 @@ const GamesTab = () => {
           Favourite Games
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          The games you play the most.
+          Your favourite games displayed on your profile.
         </p>
-        <WipOverlay>
-          <PlaceholderGameCards />
-        </WipOverlay>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {games.map((game) => (
+            <FavouriteGameCard
+              key={game.bggId}
+              game={game}
+              onRemoved={handleRemoved}
+              tapped={tappedId === game.bggId}
+              onToggleTapped={() =>
+                setTappedId((prev) => (prev === game.bggId ? null : game.bggId))
+              }
+            />
+          ))}
+          {games.length < MAX_FAVOURITE_GAMES && (
+            <AddFavouriteGameCard onAdded={handleAdded} />
+          )}
+        </div>
       </section>
 
       <section>

@@ -23,7 +23,9 @@ import { notificationsTable } from "@/db/schema/notifications";
 export type FavouriteGame = {
   bggId: number;
   title: string;
-  thumbnail: string | null;
+  // Full BGG image, not the thumbnail — the account page renders these at
+  // card size, where a thumbnail would upscale visibly.
+  image: string | null;
 };
 
 // Tribes user requested to join, but not sent out yet

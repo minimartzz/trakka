@@ -181,9 +181,9 @@ export const PlayerCard = ({ state, glow, className }: PlayerCardProps) => {
                     className="relative size-7 overflow-hidden rounded-md border bg-muted"
                     title={game.title}
                   >
-                    {game.thumbnail && (
+                    {game.image && (
                       <Image
-                        src={game.thumbnail}
+                        src={game.image}
                         alt={game.title}
                         fill
                         sizes="28px"

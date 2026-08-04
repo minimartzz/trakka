@@ -38,7 +38,7 @@ const FavouriteGamesStep = ({ games, onChange }: FavouriteGamesStepProps) => {
               {
                 bggId,
                 title: game.title,
-                thumbnail: game.thumbnail || null,
+                image: game.image || null,
               },
             ]);
           }}
@@ -73,9 +73,9 @@ const FavouriteGamesStep = ({ games, onChange }: FavouriteGamesStepProps) => {
             return (
               <li key={game.bggId} className="group relative">
                 <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
-                  {game.thumbnail && (
+                  {game.image && (
                     <Image
-                      src={game.thumbnail}
+                      src={game.image}
                       alt={game.title}
                       fill
                       sizes="(min-width: 640px) 20vw, 33vw"

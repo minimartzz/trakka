@@ -1,5 +1,6 @@
 import AccountPageClient from "@/components/account/AccountPageClient";
 import AccountPageSkeleton from "@/components/account/AccountPageSkeleton";
+import type { FavouriteGame } from "@/db/schema/profile";
 import { groupTable } from "@/db/schema/group";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
@@ -48,6 +49,9 @@ const AccountContent = async () => {
   const user = await fetchUser();
   const tribes = await getTribesForAccount(user.id);
 
+  // Favourite games
+  const favouriteGames: FavouriteGame[] = user.favourite_games ?? [];
+
   return (
     <AccountPageClient
       user={{
@@ -63,6 +67,7 @@ const AccountContent = async () => {
       memberSince={formatDate(user.confirmed_at)}
       tribes={tribes}
       defaultImageUrl={GENERIC_IMAGE_URL}
+      favouriteGames={favouriteGames}
     />
   );
 };

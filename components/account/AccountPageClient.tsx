@@ -7,6 +7,7 @@ import GamesTab from "@/components/account/GamesTab";
 import ProfileTab from "@/components/account/ProfileTab";
 import SocialsTab from "@/components/account/SocialsTab";
 import { TribeGridCardData } from "@/components/account/TribeGridCard";
+import type { FavouriteGame } from "@/db/schema/profile";
 import React, { useState } from "react";
 
 interface AccountUser {
@@ -25,6 +26,7 @@ interface AccountPageClientProps {
   memberSince: string;
   tribes: TribeGridCardData[];
   defaultImageUrl: string;
+  favouriteGames: FavouriteGame[];
 }
 
 const AccountPageClient = ({
@@ -32,6 +34,7 @@ const AccountPageClient = ({
   memberSince,
   tribes,
   defaultImageUrl,
+  favouriteGames,
 }: AccountPageClientProps) => {
   const [activeTab, setActiveTab] = useState("profile");
   const [editMode, setEditMode] = useState(false);
@@ -65,7 +68,7 @@ const AccountPageClient = ({
           />
         }
         socialsContent={<SocialsTab tribes={tribes} />}
-        gamesContent={<GamesTab />}
+        gamesContent={<GamesTab favouriteGames={favouriteGames} />}
         accountsContent={<AccountsTab />}
       />
     </div>
