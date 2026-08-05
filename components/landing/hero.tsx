@@ -18,11 +18,7 @@ const TAGLINES = [
   "Prove it wasn't a fluke. Again. And again.",
 ];
 
-/**
- * Showcase screenshot pairs. Each entry is one carousel slide: `browser` and
- * `phone` advance together. Add as many pairs as you like — paste image URLs
- * (or /public paths) here.
- */
+// Showcase screenshots for both browser and mobile
 const SHOWCASE_PAIRS: { browser: string; phone: string }[] = [
   {
     browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/homepage.png`,
@@ -87,8 +83,16 @@ const Hero = () => {
 
       <div className="container mx-auto">
         <div className="mx-auto max-w-4xl text-center">
+          {/* The animated line is decorative; the H1 carries the actual topic
+              for crawlers. aria-hidden on the visual copy avoids a double read. */}
           <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[-0.01em] text-[clamp(3rem,9vw,5.75rem)]">
-            <span className="inline-flex items-baseline justify-center gap-[0.22em] flex-wrap">
+            <span className="sr-only">
+              Trakka — the board game tracker for your group
+            </span>
+            <span
+              aria-hidden
+              className="inline-flex items-baseline justify-center gap-[0.22em] flex-wrap"
+            >
               {/* Rotating word — fixed width so the rest of the line doesn't shift */}
               <span
                 className="relative inline-block overflow-hidden"
@@ -112,7 +116,7 @@ const Hero = () => {
             </span>
           </h1>
 
-          <p className="mx-auto mt-7 max-w-2xl text-pretty text-xl font-semibold text-foreground sm:text-2xl">
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-xl font-semibold text-foreground sm:text-2xl">
             &ldquo;{tagline}&rdquo;
           </p>
 
@@ -139,6 +143,11 @@ const Hero = () => {
 
           <p className="mt-5 text-sm text-muted-foreground">
             Free to use. No credit card required.
+          </p>
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
+            Track board game sessions, create gaming groups, and compare
+            head-to-head stats for your whole group. With one cross-game rating
+            that settles who&rsquo;s actually best.
           </p>
         </div>
 

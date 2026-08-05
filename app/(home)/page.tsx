@@ -1,10 +1,18 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import { SITE_DESCRIPTION } from "@/lib/seo";
 import Creators from "@/components/landing/creators";
 import Features from "@/components/landing/features";
 import FinalCta from "@/components/landing/final-cta";
 import Hero from "@/components/landing/hero";
 import ProfileDemoServer from "@/components/landing/profile-demo-server";
 import ResultsTickerServer from "@/components/landing/ticker-server";
+
+export const metadata: Metadata = {
+  title: "Board Game Tracker & Stats for Your Group",
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+};
 
 const Index = () => {
   return (

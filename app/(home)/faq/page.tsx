@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { absoluteUrl } from "@/lib/seo";
 import FaqContent from "./FaqContent";
+import { faqSchema } from "./faqSchema";
 
 export const metadata: Metadata = {
   title: "FAQ & About",
@@ -26,7 +27,15 @@ const AuthenticatedFaq = async () => {
 const Page = () => {
   return (
     <main>
-      <Suspense fallback={<FaqContent isAuthenticated={false} />}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      {/* No FaqContent in the fallback: it would stream a second full copy of
+          the page, duplicating the H1 and every answer in the delivered HTML.
+          The auth check only toggles a "Back to dashboard" link, so rendering
+          nothing until it resolves costs the crawler nothing. */}
+      <Suspense>
         <AuthenticatedFaq />
       </Suspense>
     </main>
