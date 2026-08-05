@@ -3,6 +3,27 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import posthog from "posthog-js";
+
+const posthogProjectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+
+if (posthogProjectToken && posthogHost) {
+  posthog.init(posthogProjectToken, {
+    api_host: posthogHost,
+    defaults: "2026-01-30",
+    capture_exceptions: true,
+    debug: process.env.NODE_ENV === "development",
+  });
+} else if (process.env.NODE_ENV === "development") {
+  const missingVariable = posthogProjectToken
+    ? "NEXT_PUBLIC_POSTHOG_HOST"
+    : "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN";
+
+  throw new Error(
+    `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once ${missingVariable} is configured`,
+  );
+}
 
 Sentry.init({
   dsn: "https://1793c4e46d5642936b640d1902dfe899@o4509785292079104.ingest.us.sentry.io/4511347401818112",

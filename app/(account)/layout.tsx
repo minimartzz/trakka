@@ -76,7 +76,14 @@ async function AuthenticatedShell({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <NotificationsProvider profileId={user.id}>
+      <NotificationsProvider
+        profileId={user.id}
+        personProperties={{
+          email: user.email,
+          name: `${user.first_name} ${user.last_name}`,
+          username: user.username,
+        }}
+      >
         <AppSidebar
           user={{
             id: user.id,

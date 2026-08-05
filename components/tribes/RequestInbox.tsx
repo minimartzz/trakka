@@ -13,6 +13,7 @@ import { Check, Inbox, KeyRound, User, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { ClaimRequest, TribeRequest } from "@/lib/interfaces";
+import posthog from "posthog-js";
 
 const RequestInbox = ({
   tribeId,
@@ -73,6 +74,9 @@ const RequestInbox = ({
             : n,
         ),
       );
+      posthog.capture("anonymous_player_claim_resolved", {
+        decision,
+      });
       toast.success(result.message);
     } else {
       toast.error(result.message || "Something went wrong");
@@ -111,6 +115,9 @@ const RequestInbox = ({
           return n;
         }),
       );
+      posthog.capture("tribe_join_request_resolved", {
+        decision: status,
+      });
       toast.success(result.message);
     } else {
       toast.error(result.message || "Something went wrong");

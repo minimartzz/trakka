@@ -15,6 +15,7 @@ import { MessageSquareText } from "lucide-react";
 import Form from "next/form";
 import React from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 interface FeedbackProps {
   profileId: number;
@@ -28,6 +29,7 @@ const Feedback = ({ profileId }: FeedbackProps) => {
     const result = await submitFeedback(profileId, feedback);
 
     if (result.success) {
+      posthog.capture("feedback_submitted");
       toast.success(result.message);
     } else {
       toast.error(result.message);

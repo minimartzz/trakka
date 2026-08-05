@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "nextjs-toploader/app";
 import React, { useActionState, useState } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 const GENERIC_GROUP_URL = `https://${process.env.NEXT_PUBLIC_SUPABASE_HEADER}/storage/v1/object/public/avatars/tribe/default_tribe.png`;
 
@@ -64,6 +65,9 @@ const TribeSettingsPage = ({
     );
 
     if (result.success) {
+      posthog.capture("tribe_settings_saved", {
+        member_count: stagedMembers.length,
+      });
       toast.success(result.message);
       router.push(`/tribe/${tribe.id}`);
     } else {
