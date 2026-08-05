@@ -16,16 +16,24 @@ const Creators = () => (
           that started off as a hobby, but now we want to share the ability to
           prove why you're the best with the world.
         </p>
-        <Button asChild variant="outline" size="lg" className="mt-8">
-          <Link
-            href="https://github.com/minimartzz/trakka/blob/main/CHANGELOG.md"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read the changelog on GitHub
-            <ArrowUpRight aria-hidden />
-          </Link>
-        </Button>
+        <div className="flex gap-5 justify-center">
+          <Button asChild variant="outline" size="lg" className="mt-8">
+            <Link href="/faq">
+              Check out our FAQ
+              <ArrowUpRight aria-hidden />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="mt-8">
+            <Link
+              href="https://github.com/minimartzz/trakka/blob/main/CHANGELOG.md"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Read the changelog on GitHub
+              <ArrowUpRight aria-hidden />
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   </section>
