@@ -38,6 +38,7 @@ import PlayerInput from "@/components/PlayerInput";
 import Form from "next/form";
 import { format } from "date-fns";
 import { createTribe } from "@/components/actions/newGroup";
+import posthog from "posthog-js";
 
 interface SelectablePlayers {
   profileId: number;
@@ -352,6 +353,9 @@ const NewGroup: React.FC<NewGroupProps> = ({ user, className, label }) => {
         return fail();
       }
 
+      posthog.capture("tribe_created", {
+        initial_member_count: playersPayload.length,
+      });
       toast.success(`Tribe ${tribePayload.name} created successfully! 🎉`);
       setIsOpen(false);
       resetForm();

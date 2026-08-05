@@ -16,6 +16,7 @@ import {
 import { Loader2, Share, Share2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 interface ShareButtonProps {
   userId: number;
@@ -51,6 +52,8 @@ const ShareButton = ({ userId, tribes }: ShareButtonProps) => {
         toast.error(result.message);
         return;
       }
+
+      posthog.capture("tribe_invite_generated");
 
       // Create the invite link
       const baseUrl =

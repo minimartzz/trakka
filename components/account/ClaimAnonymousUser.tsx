@@ -10,6 +10,7 @@ import { Check, KeyRound, Loader2, Trophy, X } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 interface VerifiedAnon {
   anonProfileId: number;
@@ -73,6 +74,7 @@ const ClaimRow = ({ onRequested }: { onRequested: () => void }) => {
       return;
     }
 
+    posthog.capture("anonymous_player_claim_requested");
     toast.success("Claim request sent to the tribe's admin.");
     setLocked(true);
     onRequested();

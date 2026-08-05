@@ -22,6 +22,7 @@ import {
   getWinContrib,
 } from "@/utils/sessionLog";
 import { checkUserRole, fetchSessionForEdit, updateSession } from "./action";
+import posthog from "posthog-js";
 
 const EditSessionPage = () => {
   const params = useParams();
@@ -260,6 +261,12 @@ const EditSessionPage = () => {
         if (!result.success) {
           toast.error("Failed to update session. Please try again.");
         } else {
+          posthog.capture("game_session_updated", {
+            game_id: bgg.gameId,
+            tribe_id: groupId,
+            player_count: numPlayers,
+            team_mode: teamMode,
+          });
           toast.success(
             `Successfully updated session ${gameDetails.title}! 🎉`,
           );

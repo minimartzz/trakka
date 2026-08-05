@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 
 const SidebarUser = ({
   user,
@@ -168,7 +169,11 @@ const SidebarUser = ({
             <DropdownMenuSeparator />
             {/* Sign Out */}
             <DropdownMenuGroup key="sign-out">
-              <form action="/auth/signout" method="post">
+              <form
+                action="/auth/signout"
+                method="post"
+                onSubmit={() => posthog.reset()}
+              >
                 <DropdownMenuItem key="sign-out" asChild>
                   <button
                     type="submit"

@@ -1,6 +1,7 @@
 "use client";
 
 import createClient from "@/utils/supabase/client";
+import posthog from "posthog-js";
 import {
   createContext,
   Dispatch,
@@ -44,13 +45,23 @@ export function useNotifications() {
 
 export function NotificationsProvider({
   profileId,
+  personProperties,
   children,
 }: {
   profileId: number;
+  personProperties: {
+    email: string;
+    name: string;
+    username: string;
+  };
   children: ReactNode;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
+
+  useEffect(() => {
+    posthog.identify(String(profileId), personProperties);
+  }, [personProperties, profileId]);
 
   const refetch = useCallback(async () => {
     const { data, error } = await supabase

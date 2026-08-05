@@ -19,6 +19,7 @@ import {
 import { format } from "date-fns";
 import { useRouter } from "nextjs-toploader/app";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 // Re-export Player type for backwards compatibility
 export type { Player } from "@/components/SessionForm";
@@ -192,6 +193,12 @@ const Page = () => {
             console.error("Failed to notify players of new session");
           }
 
+          posthog.capture("game_session_created", {
+            game_id: bgg.gameId,
+            tribe_id: groupId,
+            player_count: numPlayers,
+            team_mode: teamMode,
+          });
           toast.success(
             `Successfully saved session ${gameDetails.title} on ${datePlayed}! 🎉`,
           );

@@ -3,6 +3,7 @@ import { submitSessionRating } from "@/components/actions/submitSessionRating";
 import { Star } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 interface StarRatingProps {
   profileId: number;
@@ -39,6 +40,9 @@ const StarRating = ({
       setIsSubmitting(false);
       toast.error("Failed to save rating. Please try again.");
     } else {
+      posthog.capture("session_rating_submitted", {
+        rating: newRating,
+      });
       toast.success("Rating successfully recorded!");
     }
   };
