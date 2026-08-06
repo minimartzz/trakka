@@ -3,12 +3,17 @@
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { profileTable } from "@/db/schema/profile";
 import { groupTable } from "@/db/schema/group";
+import { notificationsTable } from "@/db/schema/notifications";
 import { format } from "date-fns";
 import { db } from "@/utils/db";
-import { and, eq, ilike, inArray, notInArray, or } from "drizzle-orm";
+import { and, eq, ilike, inArray, notInArray, or, sql } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
 import { requireTribeSuperAdmin } from "@/utils/auth";
 import { Roles } from "@/lib/interfaces";
+
+// Notification types routed to every SuperAdmin of a tribe (see
+// requestClaim/RequestInbox); kept in sync with SuperAdmin membership below.
+const SUPERADMIN_NOTIFICATION_TYPES = ["join_request", "claim_request"];
 
 type ActionResult = { success: boolean; message: string };
 
@@ -140,8 +145,8 @@ export async function saveTribeSettings(
         }
       }
 
-      // Locked rows: the caller keeps their own role, anonymous members
-      // keep theirs — regardless of what the client submitted
+      // Caller maintains their own role, anonymous users maintain theirs
+      // even if submission was made
       const finalMembers = membersUpdate.map((m) => {
         const existing = currentById.get(m.profileId);
         if (m.profileId === caller.profileId)
@@ -165,8 +170,7 @@ export async function saveTribeSettings(
         })
         .where(eq(groupTable.id, groupId));
 
-      // Remove memberships absent from the submitted list; stats and game
-      // logs are keyed to the profile, so they are preserved
+      // Remove members that were deleted from the list
       await tx.delete(profileGroupTable).where(
         and(
           eq(profileGroupTable.groupId, groupId),
@@ -177,7 +181,7 @@ export async function saveTribeSettings(
         ),
       );
 
-      // Insert new members / apply role changes
+      // Insert new members/ apply role changes
       for (const member of finalMembers) {
         await tx
           .insert(profileGroupTable)
@@ -190,6 +194,78 @@ export async function saveTribeSettings(
             target: [profileGroupTable.groupId, profileGroupTable.profileId],
             set: { roleId: member.roleId },
           });
+      }
+
+      // Handling SuperAdmin role:
+      // New SuperAdmins get existing notifications
+      // Old SuperAdmins remove the notifications that they used to have
+      const wasSuperAdmin = (profileId: number) =>
+        currentById.get(profileId)?.roleId === Roles.SuperAdmin;
+      const isSuperAdmin = (profileId: number) =>
+        finalMembers.find((m) => m.profileId === profileId)?.roleId ===
+        Roles.SuperAdmin;
+
+      const previousSuperAdminIds = current
+        .filter((m) => m.roleId === Roles.SuperAdmin)
+        .map((m) => m.profileId);
+      const promoted = finalMembers
+        .filter((m) => isSuperAdmin(m.profileId) && !wasSuperAdmin(m.profileId))
+        .map((m) => m.profileId);
+      const demoted = current
+        .filter((m) => wasSuperAdmin(m.profileId) && !isSuperAdmin(m.profileId))
+        .map((m) => m.profileId);
+
+      if (promoted.length > 0 && previousSuperAdminIds.length > 0) {
+        const existingRequests = await tx
+          .select({
+            type: notificationsTable.type,
+            data: notificationsTable.data,
+          })
+          .from(notificationsTable)
+          .where(
+            and(
+              inArray(notificationsTable.profileId, previousSuperAdminIds),
+              eq(notificationsTable.isRead, false),
+              inArray(notificationsTable.type, SUPERADMIN_NOTIFICATION_TYPES),
+              sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
+            ),
+          );
+
+        // Every SuperAdmin is fanned out an identical (type, data) row per
+        // request, so dedupe before re-fanning out to the promoted members.
+        const toInherit = Array.from(
+          new Map(
+            existingRequests.map((n) => [
+              `${n.type}:${JSON.stringify(n.data)}`,
+              n,
+            ]),
+          ).values(),
+        );
+
+        if (toInherit.length > 0) {
+          await tx.insert(notificationsTable).values(
+            promoted.flatMap((profileId) =>
+              toInherit.map((n) => ({
+                type: n.type,
+                data: n.data,
+                isRead: false,
+                profileId,
+              })),
+            ),
+          );
+        }
+      }
+
+      if (demoted.length > 0) {
+        await tx
+          .delete(notificationsTable)
+          .where(
+            and(
+              inArray(notificationsTable.profileId, demoted),
+              inArray(notificationsTable.type, SUPERADMIN_NOTIFICATION_TYPES),
+              sql`${notificationsTable.data}->>'group_id' = ${groupId}`,
+            ),
+          );
       }
 
       return null;
