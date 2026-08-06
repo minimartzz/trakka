@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import { cache } from "react";
 
 export default cache(async function fetchUser() {
@@ -21,8 +20,6 @@ export default cache(async function fetchUser() {
     .eq("uuid", user.id)
     .single();
   if (error || !profileInfo) {
-    console.error("Error fetching profile:", error);
-    toast.error("Please set up your profile before proceeding");
     redirect("/onboarding");
   }
 
