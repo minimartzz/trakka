@@ -72,59 +72,61 @@ async function AuthenticatedShell({ children }: { children: React.ReactNode }) {
     }));
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <NotificationsProvider
-        profileId={user.id}
-        personProperties={{
-          email: user.email,
-          name: `${user.first_name} ${user.last_name}`,
-          username: user.username,
-        }}
-      >
-        <AppSidebar
-          user={{
-            id: user.id,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            username: user.username,
+    <UserProvider user={user}>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <NotificationsProvider
+          profileId={user.id}
+          personProperties={{
             email: user.email,
-            avatar: user.image,
+            name: `${user.first_name} ${user.last_name}`,
+            username: user.username,
           }}
-          tribes={groups}
-        />
-        <SidebarInset>
-          <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
-            <div className="flex items-center gap-2 sm:gap-10 px-4">
-              <SidebarTrigger className="-ml-1" />
-              <div className="flex items-center gap-3">
-                <GlobalSearchBar />
-                <ActivityLog />
+        >
+          <AppSidebar
+            user={{
+              id: user.id,
+              firstName: user.first_name,
+              lastName: user.last_name,
+              username: user.username,
+              email: user.email,
+              avatar: user.image,
+            }}
+            tribes={groups}
+          />
+          <SidebarInset>
+            <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
+              <div className="flex items-center gap-2 sm:gap-10 px-4">
+                <SidebarTrigger className="-ml-1" />
+                <div className="flex items-center gap-3">
+                  <GlobalSearchBar />
+                  <ActivityLog />
+                </div>
+              </div>
+              <div className="flex gap-x-4 items-center justify-center">
+                <ShareButton userId={user.id} tribes={groups} />
+                <Button
+                  className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-10 bg-[#1e4790] hover:bg-primary"
+                  asChild
+                >
+                  <Link href="/session/create">
+                    <Play className="text-white fill-white" />
+                    <span className="hidden sm:block font-semibold text-[16px] text-white">
+                      New Session
+                    </span>
+                  </Link>
+                </Button>
+              </div>
+            </header>
+            {children}
+            <div className="flex justify-end-safe">
+              <div className="fixed bottom-5 right-4 z-10">
+                <Feedback profileId={user.id} />
               </div>
             </div>
-            <div className="flex gap-x-4 items-center justify-center">
-              <ShareButton userId={user.id} tribes={groups} />
-              <Button
-                className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-10 bg-[#1e4790] hover:bg-primary"
-                asChild
-              >
-                <Link href="/session/create">
-                  <Play className="text-white fill-white" />
-                  <span className="hidden sm:block font-semibold text-[16px] text-white">
-                    New Session
-                  </span>
-                </Link>
-              </Button>
-            </div>
-          </header>
-          {children}
-          <div className="flex justify-end-safe">
-            <div className="fixed bottom-5 right-4 z-10">
-              <Feedback profileId={user.id} />
-            </div>
-          </div>
-          <Footer />
-        </SidebarInset>
-      </NotificationsProvider>
-    </SidebarProvider>
+            <Footer />
+          </SidebarInset>
+        </NotificationsProvider>
+      </SidebarProvider>
+    </UserProvider>
   );
 }
