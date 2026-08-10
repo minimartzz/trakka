@@ -24,6 +24,7 @@ const getTribesForAccount = async (profileId: number) => {
       image: groupTable.image,
       roleId: profileGroupTable.roleId,
       sessionsPlayed: rollingPlayerStatsTable.sessionsPlayed,
+      unratedSessionsPlayed: rollingPlayerStatsTable.unratedSessionsPlayed,
     })
     .from(profileGroupTable)
     .innerJoin(groupTable, eq(profileGroupTable.groupId, groupTable.id))
@@ -41,7 +42,10 @@ const getTribesForAccount = async (profileId: number) => {
     name: row.name,
     image: row.image,
     roleId: row.roleId,
-    sessionsPlayed: row.sessionsPlayed ?? 0,
+    // Total games = rated sessions + unrated sessions
+    // WPA only accounts for rated sessions
+    sessionsPlayed:
+      (row.sessionsPlayed ?? 0) + (row.unratedSessionsPlayed ?? 0),
   }));
 };
 

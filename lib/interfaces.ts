@@ -56,6 +56,13 @@ export interface SessionPlayer {
   isHighScore: boolean;
 }
 
+// An expansion played alongside the base game in a session.
+export interface SessionExpansion {
+  id: number;
+  name: string;
+  thumbnail: string | null;
+}
+
 // Final grouped session format
 export interface GroupedSession {
   sessionId: string;
@@ -71,6 +78,7 @@ export interface GroupedSession {
   isVp: boolean;
   coop: boolean;
   isTeamGame: boolean;
+  expansions: SessionExpansion[];
   // Calculated fields
   isPlayer: boolean;
   isWinner: boolean;

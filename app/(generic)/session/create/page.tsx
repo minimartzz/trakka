@@ -2,10 +2,12 @@
 import {
   notifyPlayersOfSession,
   submitNewSession,
+  upsertExpansionDetails,
   upsertGameDetails,
 } from "@/app/(generic)/session/create/action";
 import { useUser } from "@/components/UserProvider";
 import SessionForm, { Player } from "@/components/SessionForm";
+import { SelectedExpansion } from "@/components/ExpansionSelection";
 import { SessionTribe } from "@/components/GroupSearchBar";
 import { BGGDetailsInterface } from "@/utils/fetchBgg";
 import {
@@ -35,6 +37,10 @@ const Page = () => {
     tribe: SessionTribe;
     players: Player[];
     teamMode: boolean;
+    coop: boolean;
+    isVp: boolean;
+    sessionDescription: string | null;
+    expansions: SelectedExpansion[];
   }) => {
     const {
       date,
@@ -42,6 +48,10 @@ const Page = () => {
       tribe,
       players: submittingPlayers,
       teamMode,
+      coop,
+      isVp,
+      sessionDescription,
+      expansions,
     } = data;
 
     // Initial Checks
@@ -74,19 +84,39 @@ const Page = () => {
     // Get all the additional info
     const sessionId = generateSessionId();
     const datePlayed = format(date, "yyyy-MM-dd");
+
+    // Sessions weight is the average of base game + all expansions
+    const weights = [
+      parseFloat(gameDetails.weight),
+      ...expansions.map((expansion) => parseFloat(expansion.weight)),
+    ].filter((w) => !isNaN(w));
+    const averagedWeight =
+      weights.reduce((sum, w) => sum + w, 0) / weights.length;
+
+    // Game details from BGG
     const bgg = {
       gameId: parseInt(gameDetails.id),
       gameTitle: gameDetails.title,
-      gameWeight: gameDetails.weight,
+      gameWeight: String(averagedWeight),
       gameLength: parseInt(gameDetails.playingtime),
     };
+
+    // Remaining player + session details
     const numPlayers = submittingPlayers.length;
     const groupId = tribe.id;
-    const isVp = true;
     const dateInfo = getDateInfo(date);
 
-    // Each team is considered as a "player"
-    const positionedPlayers = computePositions(submittingPlayers);
+    // Expansion IDs for mapping
+    const expansionIds = expansions.map((expansion) => parseInt(expansion.id));
+
+    // Coop: Every player has the same position (1)
+    const positionedPlayers = coop
+      ? submittingPlayers.map((player) => ({
+          ...player,
+          position: 1,
+          teamVictoryPoints: player.score,
+        }))
+      : computePositions(submittingPlayers);
 
     // In team mode, map each team's client key to a stable 1-based team number
     // persisted as team_id. Non-team games store null.
@@ -125,6 +155,8 @@ const Page = () => {
             : undefined,
           groupId,
           isVp,
+          coop,
+          sessionDescription,
           victoryPoints: teamVictoryPoints,
           isWinner: player.isWinner,
           position: position,
@@ -135,9 +167,10 @@ const Page = () => {
           isFirstPlay: isNewAnonymous
             ? true
             : await getFirstPlay(String(bgg.gameId), player.profileId),
-          isTie: player.isTie,
+          isTie: coop ? false : player.isTie,
           teamId: teamNumberFor(player),
           createdBy: user!.id,
+          expansionIds,
         };
       });
       payload = await Promise.all(promises);
@@ -151,14 +184,23 @@ const Page = () => {
 
     if (payload) {
       try {
-        const [gameUpsertResponse, sessionResponse] = await Promise.all([
-          upsertGameDetails(gameDetails),
-          submitNewSession(payload),
-        ]);
-
+        // ORDER: Base Game -> Expansions -> Session expansion details (junction table)
+        // Base game insert
+        const gameUpsertResponse = await upsertGameDetails(gameDetails);
         if (!gameUpsertResponse.success) {
           console.error("Failed to upsert game details");
         }
+
+        // Expansions insert
+        const expansionUpsertResponse = await upsertExpansionDetails(
+          parseInt(gameDetails.id),
+          expansions,
+        );
+        if (!expansionUpsertResponse.success) {
+          console.error("Failed to upsert expansion details");
+        }
+
+        const sessionResponse = await submitNewSession(payload);
 
         if (!sessionResponse.success) {
           toast.error(

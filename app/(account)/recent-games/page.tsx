@@ -163,10 +163,13 @@ const Page = () => {
         counts,
         availableGames,
         availableTribes,
+        expansions,
       } = response.data;
-      const groupedSessions = filterSessionData(user.id, sessions).filter(
-        (session) => session.isPlayer,
-      );
+      const groupedSessions = filterSessionData(
+        user.id,
+        sessions,
+        expansions,
+      ).filter((session) => session.isPlayer);
 
       setGameSessions(groupedSessions);
       setTotalSessions(totalSessions);

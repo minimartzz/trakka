@@ -2,12 +2,14 @@ import {
   FilteredCounts,
   GroupedSession,
   SessionDataInterface,
+  SessionExpansion,
   SessionPlayer,
 } from "@/lib/interfaces";
 
 export const filterSessionData = (
   userId: number,
   data: SessionDataInterface[],
+  expansionsBySession: Record<string, SessionExpansion[]> = {},
 ): GroupedSession[] => {
   const sessionMap = new Map<string, GroupedSession>();
 
@@ -28,6 +30,7 @@ export const filterSessionData = (
         isVp: record.isVp,
         coop: record.coop,
         isTeamGame: record.teamId !== null,
+        expansions: expansionsBySession[record.sessionId] ?? [],
         isPlayer: false,
         isWinner: false,
         isTied: false,

@@ -16,7 +16,7 @@ interface BGGAPILink {
   };
 }
 
-interface BGGLinkInterface {
+export interface BGGLinkInterface {
   id: string;
   name: string;
 }
@@ -38,6 +38,7 @@ export interface BGGDetailsInterface extends BGGIdsInterface {
   categories: BGGLinkInterface[];
   mechanics: BGGLinkInterface[];
   families: BGGLinkInterface[];
+  expansions: BGGLinkInterface[];
   playingtime: string;
   yearPublished: string;
   rank: number; // BGG overall boardgame rank; 999999 = unranked
@@ -168,7 +169,8 @@ export const fetchBGGDetails = async (
       .map((param) => param.id)
       .slice(0, 20)
       .join(",");
-    const url = `https://boardgamegeek.com/xmlapi2/thing?id=${ids}&type=boardgame&stats=1`;
+    const type = params[0]?.type ?? "boardgame";
+    const url = `https://boardgamegeek.com/xmlapi2/thing?id=${ids}&type=${type}&stats=1`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -222,6 +224,7 @@ export const fetchBGGDetails = async (
       categories: extractBgTags(item["link"], "boardgamecategory"),
       mechanics: extractBgTags(item["link"], "boardgamemechanic"),
       families: extractBgTags(item["link"], "boardgamefamily"),
+      expansions: extractBgTags(item["link"], "boardgameexpansion"),
     });
 
     if (Array.isArray(games)) {

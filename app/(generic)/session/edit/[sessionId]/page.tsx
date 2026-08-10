@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
-import React, { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -12,8 +12,9 @@ import SessionForm, {
   Player,
   SessionFormInitialData,
 } from "@/components/SessionForm";
+import { SelectedExpansion } from "@/components/ExpansionSelection";
 import { SessionTribe } from "@/components/GroupSearchBar";
-import { BGGDetailsInterface } from "@/utils/fetchBgg";
+import { BGGDetailsInterface, fetchBGGDetails } from "@/utils/fetchBgg";
 import {
   computePositions,
   getDateInfo,
@@ -22,25 +23,29 @@ import {
   getWinContrib,
 } from "@/utils/sessionLog";
 import { checkUserRole, fetchSessionForEdit, updateSession } from "./action";
+import { upsertExpansionDetails } from "@/app/(generic)/session/create/action";
 import posthog from "posthog-js";
 
 const EditSessionPage = () => {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const router = useRouter();
-  // The session layout gates on auth server-side, so the user is always present.
   const user = useUser();
 
   const [initialData, setInitialData] = useState<SessionFormInitialData | null>(
     null,
   );
   const [oldRows, setOldRows] = useState<
-    { profileId: number; isWinner: boolean; score: number | null }[]
+    {
+      profileId: number;
+      isWinner: boolean;
+      score: number | null;
+      isVp: boolean;
+    }[]
   >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const loadSession = async () => {
       const result = await fetchSessionForEdit(sessionId);
 
@@ -67,10 +72,19 @@ const EditSessionPage = () => {
           profileId: r.profileId!,
           isWinner: r.isWinner,
           score: r.score,
+          isVp: r.isVp,
         })),
       );
 
-      // Build initial game details from stored game data
+      // An API call to BGG is still required because only selected expansion
+      // details are stored in the database. New expansions additional expansions
+      // a user might add still needs information from BGG
+      const expansionLinks = await fetchBGGDetails([
+        { type: "boardgame", id: String(firstRow.gameId) },
+      ])
+        .then((details) => details[0]?.expansions ?? [])
+        .catch(() => []);
+
       const gameDetails: BGGDetailsInterface = {
         id: String(firstRow.gameId),
         type: "boardgame",
@@ -93,6 +107,7 @@ const EditSessionPage = () => {
         categories: [],
         mechanics: [],
         families: [],
+        expansions: expansionLinks,
       };
 
       const tribe: SessionTribe = {
@@ -122,12 +137,27 @@ const EditSessionPage = () => {
 
       const datePlayed = new Date(firstRow.datePlayed + "T00:00:00");
 
+      const expansions: SelectedExpansion[] = (result.expansions ?? []).map(
+        (expansion) => ({
+          id: String(expansion.id),
+          title: expansion.title,
+          thumbnail: expansion.thumbnail ?? "",
+          image: expansion.image ?? "",
+          yearPublished: String(expansion.yearPublished ?? 0),
+          weight: String(expansion.weight ?? 0),
+        }),
+      );
+
       setInitialData({
         date: datePlayed,
         gameDetails,
         tribe,
         players,
         teamMode,
+        coop: firstRow.coop,
+        isVp: firstRow.isVp,
+        sessionDescription: firstRow.sessionDescription,
+        expansions,
       });
 
       setLoading(false);
@@ -150,6 +180,10 @@ const EditSessionPage = () => {
     tribe: SessionTribe;
     players: Player[];
     teamMode: boolean;
+    coop: boolean;
+    isVp: boolean;
+    sessionDescription: string | null;
+    expansions: SelectedExpansion[];
   }) => {
     const {
       date,
@@ -157,6 +191,10 @@ const EditSessionPage = () => {
       tribe,
       players: submittingPlayers,
       teamMode,
+      coop,
+      isVp,
+      sessionDescription,
+      expansions,
     } = data;
 
     // Validation
@@ -189,20 +227,33 @@ const EditSessionPage = () => {
 
     // Build payload
     const datePlayed = format(date, "yyyy-MM-dd");
+    // Sessions weight is the average of base game + all selected expansions
+    const weights = [
+      parseFloat(gameDetails.weight),
+      ...expansions.map((expansion) => parseFloat(expansion.weight)),
+    ].filter((w) => !isNaN(w));
+    const averagedWeight =
+      weights.reduce((sum, w) => sum + w, 0) / weights.length;
     const bgg = {
       gameId: parseInt(gameDetails.id),
       gameTitle: gameDetails.title,
-      gameWeight: gameDetails.weight,
+      gameWeight: String(averagedWeight),
       gameLength: parseInt(gameDetails.playingtime),
     };
     const numPlayers = submittingPlayers.length;
     const groupId = tribe.id;
-    const isVp = true;
     const dateInfo = getDateInfo(date);
+    const expansionIds = expansions.map((expansion) => parseInt(expansion.id));
 
-    // Rank by team (each regular player is a team of one), so teammates share
-    // position and victory points.
-    const positionedPlayers = computePositions(submittingPlayers);
+    // Team mode: All players in the team share the same position
+    // Coop: All players share the same position (1) and score
+    const positionedPlayers = coop
+      ? submittingPlayers.map((player) => ({
+          ...player,
+          position: 1,
+          teamVictoryPoints: player.score,
+        }))
+      : computePositions(submittingPlayers);
 
     // Team numbers represents which team the player was in
     const teamNumbers = new Map<string, number>();
@@ -234,6 +285,8 @@ const EditSessionPage = () => {
           profileId: player.profileId,
           groupId,
           isVp,
+          coop,
+          sessionDescription,
           victoryPoints: teamVictoryPoints,
           isWinner: player.isWinner,
           position,
@@ -242,7 +295,7 @@ const EditSessionPage = () => {
           highScore: false,
           ...dateInfo,
           isFirstPlay: await getFirstPlay(String(bgg.gameId), player.profileId),
-          isTie: player.isTie,
+          isTie: coop ? false : player.isTie,
           teamId: teamNumberFor(player),
           createdBy: user.id,
         };
@@ -256,7 +309,20 @@ const EditSessionPage = () => {
 
     if (payload) {
       try {
-        const result = await updateSession(sessionId, oldRows, payload);
+        const expansionUpsertResponse = await upsertExpansionDetails(
+          bgg.gameId,
+          expansions,
+        );
+        if (!expansionUpsertResponse.success) {
+          console.error("Failed to upsert expansion details");
+        }
+
+        const result = await updateSession(
+          sessionId,
+          oldRows,
+          payload,
+          expansionIds,
+        );
 
         if (!result.success) {
           toast.error("Failed to update session. Please try again.");

@@ -52,6 +52,7 @@ export const compGameLogTable = pgTable(
     isTie: boolean("is_tie").notNull(),
     teamId: smallint("team_id"),
     coop: boolean("coop").notNull().default(false),
+    sessionDescription: text("session_description"),
     rating: smallint("rating"),
   },
   (t) => [

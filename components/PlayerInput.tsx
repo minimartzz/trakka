@@ -8,9 +8,14 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Ghost, Search, UserPlus } from "lucide-react";
+import { Ghost, Search, UserPlus, X } from "lucide-react";
 import Image from "next/image";
-import React, { useRef, useState } from "react";
+import React, { useImperativeHandle, useRef, useState } from "react";
+
+export interface PlayerInputHandle {
+  markAnonymous: () => void;
+  clear: () => void;
+}
 
 interface BasePlayer {
   profileId: number;
@@ -43,15 +48,18 @@ const AnonBadge = () => (
   </span>
 );
 
-const PlayerInput = <T extends BasePlayer>({
-  selectablePlayers,
-  playerId,
-  playerSelect,
-  playerDetails,
-  openOnFocus = true,
-  allowAnonymous = false,
-  invalid = false,
-}: PlayerInputProps<T>) => {
+const PlayerInputInner = <T extends BasePlayer>(
+  {
+    selectablePlayers,
+    playerId,
+    playerSelect,
+    playerDetails,
+    openOnFocus = true,
+    allowAnonymous = false,
+    invalid = false,
+  }: PlayerInputProps<T>,
+  ref: React.ForwardedRef<PlayerInputHandle>,
+) => {
   const getPlayerInfo = (playerDetails?: T) => {
     if (!playerDetails || !playerDetails.firstName) return;
     return `${playerDetails.firstName} ${playerDetails.lastName} (${playerDetails.username})`;
@@ -61,6 +69,10 @@ const PlayerInput = <T extends BasePlayer>({
   const [activeIndex, setActiveIndex] = useState(0);
   // True while this row holds a new anonymous player (no profile yet)
   const [anonSelected, setAnonSelected] = useState(false);
+  // For X functionality - only true when a user/ anon user is selected
+  const [hasSelection, setHasSelection] = useState(
+    Boolean(playerDetails?.firstName),
+  );
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -82,8 +94,11 @@ const PlayerInput = <T extends BasePlayer>({
   const showAnonOption = allowAnonymous && input.trim().length > 0;
   const optionCount = filteredPlayers.length + (showAnonOption ? 1 : 0);
 
+  // Resets the row's selection state without touching the visible text
+  // NOTE: This is for the anonymous user manual selection button
   const clearAnonSelection = () => {
     setAnonSelected(false);
+    setHasSelection(false);
     playerSelect(playerId, {
       profileId: 0,
       isAnonymous: false,
@@ -94,13 +109,30 @@ const PlayerInput = <T extends BasePlayer>({
     });
   };
 
+  // Removes the selected player and text
+  const clearSelection = () => {
+    setInput("");
+    clearAnonSelection();
+    inputRef.current?.focus();
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInput(val);
     setActiveIndex(0);
-    // Editing the name invalidates a previous anonymous selection
+    // Editing the name invalidates any prior selection, anonymous or not
     if (anonSelected) {
       clearAnonSelection();
+    } else if (hasSelection) {
+      setHasSelection(false);
+      playerSelect(playerId, {
+        profileId: 0,
+        isAnonymous: false,
+        firstName: "",
+        lastName: "",
+        username: "",
+        profilePic: "",
+      });
     }
     setOpen(openOnFocus ? true : val.trim().length > 0);
   };
@@ -109,6 +141,7 @@ const PlayerInput = <T extends BasePlayer>({
     const displayString = `${player.firstName} ${player.lastName} (${player.username})`;
     setInput(displayString);
     setAnonSelected(false);
+    setHasSelection(true);
 
     playerSelect(playerId, {
       profileId: player.profileId,
@@ -134,6 +167,7 @@ const PlayerInput = <T extends BasePlayer>({
 
     setInput(`${name} (anonymous)`);
     setAnonSelected(true);
+    setHasSelection(true);
 
     playerSelect(playerId, {
       profileId: 0,
@@ -147,14 +181,10 @@ const PlayerInput = <T extends BasePlayer>({
     setOpen(false);
   };
 
-  const toggleAnonymous = () => {
-    if (anonSelected) {
-      setInput(input.replace(/\s*\(anonymous\)$/i, ""));
-      clearAnonSelection();
-    } else {
-      selectAnonymous();
-    }
-  };
+  useImperativeHandle(ref, () => ({
+    markAnonymous: selectAnonymous,
+    clear: clearSelection,
+  }));
 
   const listboxId = `player-options-${playerId}`;
 
@@ -176,7 +206,11 @@ const PlayerInput = <T extends BasePlayer>({
       if (open && activeIndex < filteredPlayers.length) {
         e.preventDefault();
         selectPlayer(filteredPlayers[activeIndex]);
-      } else if (open && showAnonOption && activeIndex === filteredPlayers.length) {
+      } else if (
+        open &&
+        showAnonOption &&
+        activeIndex === filteredPlayers.length
+      ) {
         e.preventDefault();
         selectAnonymous();
       }
@@ -198,7 +232,7 @@ const PlayerInput = <T extends BasePlayer>({
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onFocus={openOnFocus ? () => setOpen(true) : undefined}
-              className={cn("pl-9", allowAnonymous && "pr-10")}
+              className={cn("pl-9", hasSelection && "pr-9")}
               role="combobox"
               aria-invalid={invalid}
               aria-expanded={open}
@@ -210,29 +244,15 @@ const PlayerInput = <T extends BasePlayer>({
                   : undefined
               }
             />
-            {allowAnonymous && (
+            {hasSelection && (
               <button
                 type="button"
-                onClick={toggleAnonymous}
-                title={
-                  anonSelected
-                    ? "Unmark anonymous player"
-                    : "Mark as anonymous player"
-                }
-                aria-label={
-                  anonSelected
-                    ? "Unmark anonymous player"
-                    : "Mark as anonymous player"
-                }
-                aria-pressed={anonSelected}
-                className={cn(
-                  "absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md transition-colors",
-                  anonSelected
-                    ? "text-accent-5"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
+                onClick={clearSelection}
+                aria-label="Clear selected player"
+                title="Clear selected player"
+                className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground transition-colors hover:text-destructive"
               >
-                <Ghost className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -314,5 +334,13 @@ const PlayerInput = <T extends BasePlayer>({
     </div>
   );
 };
+
+type PlayerInputComponent = <T extends BasePlayer>(
+  props: PlayerInputProps<T> & { ref?: React.ForwardedRef<PlayerInputHandle> },
+) => React.ReactElement | null;
+
+const PlayerInput = React.forwardRef(
+  PlayerInputInner,
+) as unknown as PlayerInputComponent;
 
 export default PlayerInput;
