@@ -1,5 +1,13 @@
 import LoginClient from "@/components/LoginClient";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Log in or sign up",
+  description:
+    "Log in to Trakka to record board game sessions and track your group's stats. Free to create an account.",
+  alternates: { canonical: "/login" },
+};
 
 const LoadingFallback = () => (
   // Use a minimal version of your header and card as a loading state

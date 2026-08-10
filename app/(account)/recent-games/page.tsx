@@ -24,7 +24,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import useAuth from "@/app/hooks/useAuth";
+import { useUser } from "@/components/UserProvider";
 import {
   fetchRecentGamesPage,
   RecentGamesFilters as RecentGamesFilterArgs,
@@ -101,7 +101,9 @@ const Page = () => {
   );
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { user, authLoading } = useAuth();
+  // Resolved server-side by the account layout, so there's no auth round trip
+  // to wait on before fetching.
+  const user = useUser();
 
   const isDefault =
     filters.result === "all" &&
@@ -115,8 +117,6 @@ const Page = () => {
 
   // Editable tribe IDs don't change with filters/page, so load them once.
   useEffect(() => {
-    if (authLoading || !user) return;
-
     getUserTribeRoles(user.id).then((tribeRoles) => {
       // Tribe IDs where user is SuperAdmin (1) or Admin (2)
       setEditableTribeIds(
@@ -127,7 +127,7 @@ const Page = () => {
         ),
       );
     });
-  }, [user, authLoading]);
+  }, [user]);
 
   // Reset to first page whenever the filter set changes
   useEffect(() => {
@@ -139,8 +139,6 @@ const Page = () => {
   // only this page's rows come back, then filterSessionData groups them.
   const hasLoadedOnce = useRef(false);
   useEffect(() => {
-    if (authLoading || !user) return;
-
     let cancelled = false;
     // First load shows the full skeleton; later refetches keep the page up.
     if (hasLoadedOnce.current) setRefetching(true);
@@ -165,10 +163,13 @@ const Page = () => {
         counts,
         availableGames,
         availableTribes,
+        expansions,
       } = response.data;
-      const groupedSessions = filterSessionData(user.id, sessions).filter(
-        (session) => session.isPlayer,
-      );
+      const groupedSessions = filterSessionData(
+        user.id,
+        sessions,
+        expansions,
+      ).filter((session) => session.isPlayer);
 
       setGameSessions(groupedSessions);
       setTotalSessions(totalSessions);
@@ -183,7 +184,7 @@ const Page = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, filters, currentPage]);
+  }, [user, filters, currentPage]);
 
   const totalPages = Math.ceil(totalSessions / ITEMS_PER_PAGE);
   const currentSessions = gameSessions;
@@ -361,7 +362,7 @@ const Page = () => {
             <GameSessionCard
               key={session.sessionId}
               session={session}
-              userId={user!.id as number}
+              userId={user.id as number}
               canEdit={editableTribeIds.has(session.tribeId)}
             />
           ))}

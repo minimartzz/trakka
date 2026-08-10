@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
   redirectTo.searchParams.delete("token_hash");
   redirectTo.searchParams.delete("type");
 
-  if (token_hash && type) {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
+  if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({
       type,
       token_hash,
@@ -27,7 +27,27 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // If error happens
-  redirectTo.pathname = "/error";
+  // Confirmation links are single-use, so opening one twice — or on a second
+  // device — lands here. That isn't an error worth a dead end: if the visitor
+  // already has a session, just send them on.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profile")
+      .select("onboarding_completed_at")
+      .eq("uuid", user.id)
+      .single();
+
+    redirectTo.pathname = profile?.onboarding_completed_at
+      ? "/dashboard"
+      : "/onboarding";
+    return NextResponse.redirect(redirectTo);
+  }
+
+  redirectTo.pathname = "/login";
+  redirectTo.searchParams.set("reason", "link_used");
   return NextResponse.redirect(redirectTo);
 }

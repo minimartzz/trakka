@@ -1,5 +1,6 @@
 import AccountPageClient from "@/components/account/AccountPageClient";
 import AccountPageSkeleton from "@/components/account/AccountPageSkeleton";
+import type { FavouriteGame } from "@/db/schema/profile";
 import { groupTable } from "@/db/schema/group";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
@@ -23,6 +24,7 @@ const getTribesForAccount = async (profileId: number) => {
       image: groupTable.image,
       roleId: profileGroupTable.roleId,
       sessionsPlayed: rollingPlayerStatsTable.sessionsPlayed,
+      unratedSessionsPlayed: rollingPlayerStatsTable.unratedSessionsPlayed,
     })
     .from(profileGroupTable)
     .innerJoin(groupTable, eq(profileGroupTable.groupId, groupTable.id))
@@ -40,13 +42,19 @@ const getTribesForAccount = async (profileId: number) => {
     name: row.name,
     image: row.image,
     roleId: row.roleId,
-    sessionsPlayed: row.sessionsPlayed ?? 0,
+    // Total games = rated sessions + unrated sessions
+    // WPA only accounts for rated sessions
+    sessionsPlayed:
+      (row.sessionsPlayed ?? 0) + (row.unratedSessionsPlayed ?? 0),
   }));
 };
 
 const AccountContent = async () => {
   const user = await fetchUser();
   const tribes = await getTribesForAccount(user.id);
+
+  // Favourite games
+  const favouriteGames: FavouriteGame[] = user.favourite_games ?? [];
 
   return (
     <AccountPageClient
@@ -63,6 +71,7 @@ const AccountContent = async () => {
       memberSince={formatDate(user.confirmed_at)}
       tribes={tribes}
       defaultImageUrl={GENERIC_IMAGE_URL}
+      favouriteGames={favouriteGames}
     />
   );
 };

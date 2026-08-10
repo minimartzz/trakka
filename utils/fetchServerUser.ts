@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import { cache } from "react";
 
 export default cache(async function fetchUser() {
@@ -21,8 +20,13 @@ export default cache(async function fetchUser() {
     .eq("uuid", user.id)
     .single();
   if (error || !profileInfo) {
-    console.error("Error fetching profile:", error);
-    toast.error("Please set up your profile before proceeding");
+    redirect("/onboarding");
+  }
+
+  // The failover: a profile row exists but the user never finished onboarding
+  // (closed the tab, switched device). Every authenticated surface sends them
+  // back to pick up where they left off.
+  if (!profileInfo.onboarding_completed_at) {
     redirect("/onboarding");
   }
 

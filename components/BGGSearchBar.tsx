@@ -2,14 +2,16 @@
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   BGGDetailsInterface,
   fetchBGGDetails,
   fetchBGGIds,
 } from "@/utils/fetchBgg";
 import { Loader2, Search, Timer, Weight, X } from "lucide-react";
+import { HandshakeIcon, SwordIcon } from "@phosphor-icons/react";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const RatingBadge = ({ rating }: { rating: string }) => {
   const val = parseFloat(rating);
@@ -24,7 +26,7 @@ const RatingBadge = ({ rating }: { rating: string }) => {
 
   return (
     <div
-      className={`w-9 h-9 flex items-center justify-center rounded-md text-xs font-bold shrink-0 ${colorClass}`}
+      className={`w-11 h-11 flex items-center justify-center rounded-md text-md font-bold shrink-0 ${colorClass}`}
     >
       {rating.length > 3 ? rating.slice(0, 3) : rating}
     </div>
@@ -33,12 +35,23 @@ const RatingBadge = ({ rating }: { rating: string }) => {
 
 const BGGSearchBar = ({
   onSelect,
+  onClear,
   initialGame,
   invalid = false,
+  showPreview = true,
+  clearOnSelect = false,
+  coop,
 }: {
   onSelect: (item: BGGDetailsInterface) => void;
+  /** Called when the user clears the search box via the X button */
+  onClear?: () => void;
   initialGame?: BGGDetailsInterface | null;
   invalid?: boolean;
+  /** Off when the caller renders its own view of the picked games */
+  showPreview?: boolean;
+  /** Reset the input after each pick, for multi-select callers */
+  clearOnSelect?: boolean;
+  coop?: boolean;
 }) => {
   const [query, setQuery] = useState(initialGame?.title ?? "");
   const [exactMatch, setExactMatch] = useState(false);
@@ -54,7 +67,7 @@ const BGGSearchBar = ({
   const listRef = useRef<HTMLUListElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll: reveal 10 more results when sentinel enters view
+  // Infinite scroll: reveals 10 more results each time
   useEffect(() => {
     const sentinel = sentinelRef.current;
     const list = listRef.current;
@@ -108,8 +121,14 @@ const BGGSearchBar = ({
 
   const handleSelect = (result: BGGDetailsInterface) => {
     setIsDropdownOpen(false);
-    setQuery(result.title);
-    setSelectedGame(result);
+    if (clearOnSelect) {
+      setQuery("");
+      setAllResults([]);
+      setSelectedGame(null);
+    } else {
+      setQuery(result.title);
+      setSelectedGame(result);
+    }
     onSelect(result);
   };
 
@@ -119,6 +138,7 @@ const BGGSearchBar = ({
     setAllResults([]);
     setIsDropdownOpen(false);
     setLoading(false);
+    onClear?.();
   };
 
   const visibleResults = allResults.slice(0, visibleCount);
@@ -253,37 +273,60 @@ const BGGSearchBar = ({
       </div>
 
       {/* Selected Game - Desktop / Tablet */}
-      <div className="hidden sm:block">
+      <div className={showPreview ? "hidden sm:block" : "hidden"}>
         {selectedGame && (
-          <Card className="flex flex-row justify-between shadow-none rounded-lg p-4 border-primary/20">
-            <div className="flex gap-4">
+          <Card
+            className={cn(
+              "relative flex flex-row justify-between overflow-hidden rounded-lg p-5 shadow-none",
+              coop === undefined
+                ? "border-primary/20"
+                : coop
+                  ? "border-accent bg-accent/50"
+                  : "border-primary/20 bg-muted/50",
+            )}
+          >
+            {coop !== undefined &&
+              (coop ? (
+                <HandshakeIcon
+                  aria-hidden
+                  weight="fill"
+                  className="pointer-events-none absolute -bottom-6 -right-5 z-0 size-32 text-foreground/5"
+                />
+              ) : (
+                <SwordIcon
+                  aria-hidden
+                  weight="fill"
+                  className="pointer-events-none absolute -bottom-6 -right-5 z-0 size-32 text-foreground/5"
+                />
+              ))}
+            <div className="relative z-10 flex gap-5">
               <Image
                 src={selectedGame.image || "/missing_icon.png"}
-                height={120}
-                width={120}
+                height={144}
+                width={144}
                 alt={selectedGame.title}
                 className="rounded-lg object-cover shrink-0"
               />
-              <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-semibold leading-tight">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="font-display text-3xl font-bold leading-tight">
                   {selectedGame.title}
-                  <span className="text-muted-foreground font-normal text-base ml-1">
+                  <span className="text-muted-foreground font-normal text-lg ml-2">
                     ({selectedGame.yearPublished})
                   </span>
                 </h2>
-                <p className="text-xs text-muted-foreground line-clamp-4 w-3/4 mt-1">
+                <p className="text-sm text-muted-foreground line-clamp-4 w-3/4 mt-1">
                   {selectedGame.description}
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-3 ml-4 shrink-0">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="relative z-10 flex flex-col items-end gap-3 ml-4 shrink-0">
+              <div className="flex items-center gap-2 text-md">
                 <Timer className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">
                   {selectedGame.playingtime} min
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-md">
                 <Weight className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">
                   {selectedGame.weight.length > 4
@@ -298,19 +341,42 @@ const BGGSearchBar = ({
       </div>
 
       {/* Selected Game - Mobile */}
-      <div className="sm:hidden">
+      <div className={showPreview ? "sm:hidden" : "hidden"}>
         {selectedGame && (
-          <Card className="shadow-none rounded-lg p-4 border-primary/20">
-            <div className="flex items-center gap-3 mb-3">
+          <Card
+            className={cn(
+              "relative overflow-hidden rounded-lg p-4 shadow-none",
+              coop === undefined
+                ? "border-primary/20"
+                : coop
+                  ? "border-accent bg-accent/50"
+                  : "border-primary/20 bg-muted/50",
+            )}
+          >
+            {coop !== undefined &&
+              (coop ? (
+                <HandshakeIcon
+                  aria-hidden
+                  weight="fill"
+                  className="pointer-events-none absolute -bottom-5 -right-4 z-0 size-24 text-foreground/5"
+                />
+              ) : (
+                <SwordIcon
+                  aria-hidden
+                  weight="fill"
+                  className="pointer-events-none absolute -bottom-5 -right-4 z-0 size-24 text-foreground/5"
+                />
+              ))}
+            <div className="relative z-10 flex items-center gap-3">
               <Image
                 src={selectedGame.image || "/missing_icon.png"}
-                height={56}
-                width={56}
+                height={64}
+                width={64}
                 alt={selectedGame.title}
                 className="rounded-md object-cover shrink-0"
               />
               <div>
-                <h2 className="text-base font-semibold leading-tight">
+                <h2 className="font-display text-xl font-bold leading-tight">
                   {selectedGame.title}
                 </h2>
                 <p className="text-xs text-muted-foreground">
@@ -318,7 +384,7 @@ const BGGSearchBar = ({
                 </p>
               </div>
             </div>
-            <div className="flex justify-around pt-3 border-t border-border/40">
+            <div className="relative z-10 flex justify-around pt-3 border-t border-border/40">
               <div className="flex flex-col items-center gap-1">
                 <Timer className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold">
@@ -334,7 +400,6 @@ const BGGSearchBar = ({
                 </span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-xs text-muted-foreground">Rating</span>
                 <RatingBadge rating={selectedGame.rating} />
               </div>
             </div>

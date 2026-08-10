@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { BarChart3, Crown, Search } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/public/trakka_logo.png";
 import { Input } from "@/components/ui/input";
@@ -90,18 +91,18 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
         <div className="relative">
           {showCollapsedView ? (
             <SidebarMenuButton size="lg" className="ml-2" asChild>
-              <a href={"/dashboard"}>
+              <Link href={"/dashboard"}>
                 <Image src={Logo} alt="logo" width={30} />
                 <span className="font-brand text-2xl">TRAKKA</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           ) : (
             <SidebarMenuButton asChild>
               <div className="flex items-center hover:bg-transparent">
-                <a href={"/dashboard"} className="flex items-center gap-x-2">
+                <Link href={"/dashboard"} className="flex items-center gap-x-2">
                   <Image src={Logo} alt="logo" height={35} />
                   <span className="font-brand text-2xl">TRAKKA</span>
-                </a>
+                </Link>
               </div>
             </SidebarMenuButton>
           )}
@@ -119,10 +120,10 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                     className={pathname === item.url ? "bg-slate-700" : ""}
                     asChild
                   >
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.name}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -170,7 +171,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                   }
                   asChild
                 >
-                  <a
+                  <Link
                     href={`/tribe/${item.id}`}
                     className="flex justify-between items-center"
                   >
@@ -200,7 +201,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
                         </span>
                       )}
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}

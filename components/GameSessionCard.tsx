@@ -1,6 +1,16 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { GroupedSession, SessionPlayer } from "@/lib/interfaces";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  GroupedSession,
+  SessionExpansion,
+  SessionPlayer,
+} from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { format } from "date-fns";
@@ -11,13 +21,15 @@ import {
   Handshake,
   Medal,
   Pencil,
+  Puzzle,
   Trophy,
+  User,
   Users,
 } from "lucide-react";
 import { HandshakeIcon, SwordIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 
 interface GameSessionsCardProps {
   userId: number;
@@ -40,6 +52,8 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     coop,
     isVp,
     isTeamGame,
+    expansions,
+    numPlayers,
   },
   canEdit = false,
 }) => {
@@ -47,8 +61,37 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
   const position = playerDetails?.position;
   const positionWithSuffix =
     position !== undefined ? positionOrdinalSuffix(position) : null;
+  const isSolo = numPlayers === 1;
 
   const getResultBadge = () => {
+    // Coop + Solo: Won or Lost view only and a single score value
+    if (coop || isSolo) {
+      if (isPlayer && isWinner) {
+        return (
+          <Badge className="gap-1 rounded-full border-transparent bg-accent-1 px-2.5 py-1 font-semibold text-[oklch(25.3%_0.0321_265.95)]">
+            <Trophy className="size-3.5" />
+            Won
+          </Badge>
+        );
+      }
+      if (isPlayer) {
+        return (
+          <Badge className="gap-1 rounded-full border-transparent bg-destructive px-2.5 py-1 font-semibold text-white">
+            <Medal className="size-3.5" />
+            Lost
+          </Badge>
+        );
+      }
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 rounded-full px-2.5 py-1 font-semibold text-muted-foreground"
+        >
+          Not involved
+        </Badge>
+      );
+    }
+
     if (isPlayer && isWinner) {
       return (
         <Badge className="gap-1 rounded-full border-transparent bg-accent-1 px-2.5 py-1 font-semibold text-[oklch(25.3%_0.0321_265.95)]">
@@ -86,8 +129,40 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
   const formatGameDate = (dateString: string) =>
     format(new Date(dateString), "dd MMM yyyy");
 
-  // Winner/tie marker — icon-backed, color-vision safe. Shared by per-player
-  // rows (regular mode) and per-team header rows (team mode).
+  // Expansion thumbnails
+  const ExpansionThumb = ({ expansion }: { expansion: SessionExpansion }) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <Tooltip open={open} onOpenChange={setOpen}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setOpen((prev) => !prev);
+            }}
+            aria-label={expansion.name}
+            className="relative size-6 shrink-0 overflow-hidden rounded-sm bg-muted ring-1 ring-border transition-transform hover:scale-105 sm:size-9"
+          >
+            {expansion.thumbnail ? (
+              <Image
+                src={expansion.thumbnail}
+                alt=""
+                fill
+                sizes="(min-width: 640px) 48px, 36px"
+                className="object-cover"
+              />
+            ) : (
+              <Puzzle className="size-full p-1 text-muted-foreground sm:p-1.5" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{expansion.name}</TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  // Winner and Tie markers
   const ResultMarker = ({
     isWinner,
     isTie,
@@ -288,10 +363,16 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                   Teams
                 </span>
               )}
+              {isSolo && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/6 px-2 py-0.5 text-xs font-medium">
+                  <User className="size-3.5" />
+                  Solo
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Headline result + optional unrated marker beneath it */}
+          {/* Headline result + optional unrated marker + expansions played */}
           <div className="flex shrink-0 flex-col items-end gap-1">
             {getResultBadge()}
             {/* Unrated games are marked with a tag */}
@@ -299,6 +380,18 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
               <span className="rounded-full border border-border px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">
                 Unrated
               </span>
+            )}
+            {expansions.length > 0 && (
+              <div className="mt-2 flex flex-col items-end gap-1">
+                <span className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">
+                  Expansions
+                </span>
+                <div className="flex flex-wrap justify-end gap-1.5">
+                  {expansions.map((expansion) => (
+                    <ExpansionThumb key={expansion.id} expansion={expansion} />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -363,6 +456,57 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 </ul>
               </li>
             ))}
+          </ul>
+        ) : coop ? (
+          // Coop: Shared position (not shown) and score
+          <>
+            <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5 sm:px-5">
+              <span className="text-sm font-medium text-muted-foreground">
+                Group Score
+              </span>
+              <span className="font-display text-lg font-bold tabular-nums">
+                {players[0]?.victoryPoints ?? "—"}
+              </span>
+            </div>
+            <ul className="divide-y divide-border/60">
+              {players.map((player) => {
+                const isCurrentUser = player.profileId === userId;
+                return (
+                  <li
+                    key={player.profileId}
+                    className={cn(
+                      "flex items-center gap-2.5 px-4 py-2.5 text-sm sm:gap-3 sm:px-5",
+                      isCurrentUser && "bg-primary/12 dark:bg-primary/18",
+                    )}
+                  >
+                    <PlayerIdentity player={player} highlight={isCurrentUser} />
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : isSolo ? (
+          // Solo: Single result outcome and score
+          <ul className="divide-y divide-border/60">
+            {players.map((player) => {
+              const isCurrentUser = player.profileId === userId;
+              return (
+                <li
+                  key={player.profileId}
+                  className={cn(
+                    "flex items-center gap-2.5 px-4 py-2.5 text-sm sm:gap-3 sm:px-5",
+                    isCurrentUser && "bg-primary/12 dark:bg-primary/18",
+                  )}
+                >
+                  <PlayerIdentity player={player} highlight={isCurrentUser} />
+
+                  {/* Victory points */}
+                  <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
+                    {player.victoryPoints ?? "—"}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <ul className="divide-y divide-border/60">

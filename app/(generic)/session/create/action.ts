@@ -16,8 +16,14 @@ import { db } from "@/utils/db";
 import { requireTribeMembership } from "@/utils/auth";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
-import { BGGDetailsInterface } from "@/utils/fetchBgg";
+import {
+  BGGDetailsInterface,
+  BGGLinkInterface,
+  fetchBGGDetails,
+} from "@/utils/fetchBgg";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
+import { gameExpansionTable } from "@/db/schema/gameExpansion";
+import { juncSessionExpansionTable } from "@/db/schema/juncSessionExpansion";
 import { customAlphabet } from "nanoid";
 
 type Notification = typeof notificationsTable.$inferInsert;
@@ -25,9 +31,12 @@ type CompGameLog = typeof compGameLogTable.$inferInsert;
 
 // Game log entry as submitted by the client. Anonymous players have no
 // profile yet: profileId is null and anonymousPlayer carries their name.
+// expansionIds is session-level (same list on every row) and is peeled off
+// before the row is written to comp_game_log.
 export type SessionLogInput = Omit<CompGameLog, "profileId"> & {
   profileId: number | null;
   anonymousPlayer?: { firstName: string; lastName: string };
+  expansionIds?: number[];
 };
 
 const generateAnonId = customAlphabet(
@@ -188,8 +197,10 @@ export async function submitNewSession(payload: SessionLogInput[]) {
     // together, or a retried submit could strand half-created players.
     const affectedProfileIds = await db.transaction(async (tx) => {
       const logs: CompGameLog[] = [];
+      // Session-level, identical on every row — grab it once.
+      const expansionIds = payload[0].expansionIds ?? [];
 
-      for (const { anonymousPlayer, ...log } of payload) {
+      for (const { anonymousPlayer, expansionIds: _expansionIds, ...log } of payload) {
         if (log.profileId !== null) {
           logs.push({ ...log, profileId: log.profileId });
           continue;
@@ -231,13 +242,17 @@ export async function submitNewSession(payload: SessionLogInput[]) {
         throw new Error("Game log insert returned no rows");
       }
 
-      // For rolling statistics
+      // For rolling statistics. Rated (isVp) sessions feed the WPA-driving
+      // columns; unrated sessions (coop/solo) only bump the "total games"
+      // counters and never touch rollingScore.
       const rollingStats = logs.map((log) => ({
         profileId: log.profileId,
         groupId: log.groupId,
-        rollingScore: log.score!,
-        sessionsPlayed: 1,
-        sessionsWon: log.isWinner ? 1 : 0,
+        rollingScore: log.isVp ? log.score! : 0,
+        sessionsPlayed: log.isVp ? 1 : 0,
+        sessionsWon: log.isVp && log.isWinner ? 1 : 0,
+        unratedSessionsPlayed: log.isVp ? 0 : 1,
+        unratedSessionsWon: !log.isVp && log.isWinner ? 1 : 0,
         latestSession: log.datePlayed,
       }));
 
@@ -251,11 +266,25 @@ export async function submitNewSession(payload: SessionLogInput[]) {
           ],
           set: {
             rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
-            sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + 1`,
+            sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + EXCLUDED.sessions_played`,
             sessionsWon: sql`${rollingPlayerStatsTable.sessionsWon} + EXCLUDED.sessions_won`,
+            unratedSessionsPlayed: sql`${rollingPlayerStatsTable.unratedSessionsPlayed} + EXCLUDED.unrated_sessions_played`,
+            unratedSessionsWon: sql`${rollingPlayerStatsTable.unratedSessionsWon} + EXCLUDED.unrated_sessions_won`,
             latestSession: sql`EXCLUDED.latest_session`,
           },
         });
+
+      if (expansionIds.length > 0) {
+        await tx
+          .insert(juncSessionExpansionTable)
+          .values(
+            expansionIds.map((expansionId) => ({
+              sessionId: logs[0].sessionId,
+              expansionId,
+            })),
+          )
+          .onConflictDoNothing();
+      }
 
       // Returns a list of profile_ids that need their cache invalidated
       return Array.from(new Set(logs.map((log) => log.profileId)));
@@ -394,6 +423,52 @@ export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
     return { success: true };
   } catch (error) {
     console.error("Failed to upsert game details:", error);
+    return { success: false, error };
+  }
+}
+
+// Fetches full expansion details (image, thumbnail, year) for a base game's
+// expansion links. BGG's search/thing response only gives id+name for these,
+// so a follow-up `thing` call is needed once the user opens the picker.
+export async function getExpansionDetails(
+  expansionLinks: BGGLinkInterface[],
+): Promise<BGGDetailsInterface[]> {
+  if (expansionLinks.length === 0) return [];
+  return fetchBGGDetails(
+    expansionLinks.map((link) => ({ type: "boardgameexpansion", id: link.id })),
+  );
+}
+
+// Upserts the expansions selected for a session into game_expansion, keyed
+// by BGG expansion id. Mirrors upsertGameDetails's onConflictDoNothing shape.
+export async function upsertExpansionDetails(
+  baseGameId: number,
+  selectedExpansions: Pick<
+    BGGDetailsInterface,
+    "id" | "title" | "image" | "thumbnail" | "yearPublished" | "weight"
+  >[],
+) {
+  if (selectedExpansions.length === 0) return { success: true };
+
+  try {
+    const expansionValues = selectedExpansions.map((expansion) => ({
+      id: parseInt(expansion.id),
+      name: expansion.title,
+      imageUrl: expansion.image || null,
+      thumbnail: expansion.thumbnail || null,
+      yearPublished: parseInt(expansion.yearPublished) || null,
+      weight: parseFloat(expansion.weight) || null,
+      baseGameId,
+    }));
+
+    await db
+      .insert(gameExpansionTable)
+      .values(expansionValues)
+      .onConflictDoNothing({ target: gameExpansionTable.id });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to upsert expansion details:", error);
     return { success: false, error };
   }
 }

@@ -2,6 +2,31 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.5.0] Onboarding, SEO, Sessions Logging - 2026-08-10
+
+A big update to the onboarding process making it more interactive. Session logging now includes Cooperative games, Solo games and Expansions. New site content for improved SEO.
+
+### Added
+
+- New onboarding process. Some sections are still WIP
+- Favourite games management on user’s account
+- Major SEO content overhaul
+- Cooperative, Solo games and Expansions logging (Note: Results are only viewable on Recent Games currently)
+- PostHog integration for site analytics
+
+### Changed
+
+- Filled in content on FAQ page. Accessible from main landing page
+
+### Fixed
+
+- Sidebar no longer reloads on every navigation
+- Logged in users no longer see a loading spinner and a flash of the landing page when accessing the site
+- Caching correctly applied to filtered views on Recent Games page
+- Improved security and reduced duplicated auth checks on certain pages
+- Missing thumbnails on certain games
+- Newly added SuperAdmins now receive existing notifications from the tribe. Converse logic applies for removed SuperAdmins
+
 ## [0.4.0] Anonymous Users - 2026-07-19
 
 ### Added
@@ -10,7 +35,7 @@ All notable changes to Trakka are recorded in this changelog
 - Ability to claim anonymous users by existing members
 - Ability to record sessions where there is a team variant
 
-### Changed:
+### Changed
 
 - Redesigned Tribe settings page with anonymous user management
 - Redesigned player Accounts page including placeholder features
