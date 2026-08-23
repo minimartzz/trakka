@@ -177,7 +177,13 @@ const ClaimCodeCopyMobile = ({
 const AnonAvatar = ({ member }: { member: AnonymousMember }) => (
   <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
     {member.profilePic && (
-      <Image src={member.profilePic} alt="" fill className="object-cover" />
+      <Image
+        src={member.profilePic}
+        alt=""
+        fill
+        sizes="32px"
+        className="object-cover"
+      />
     )}
   </div>
 );

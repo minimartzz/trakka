@@ -18,28 +18,12 @@ const TAGLINES = [
   "Prove it wasn't a fluke. Again. And again.",
 ];
 
-// Showcase screenshots for both browser and mobile
 const SHOWCASE_PAIRS: { browser: string; phone: string }[] = [
-  {
-    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/homepage.png`,
-    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/homepage_m.png`,
-  },
-  {
-    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/recentgames.png`,
-    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/recentgames_m.png`,
-  },
-  {
-    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/session.png`,
-    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/session_m.png`,
-  },
-  {
-    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe1.png`,
-    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe1_m.png`,
-  },
-  {
-    browser: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe2.png`,
-    phone: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/landing/tribe2_m.png`,
-  },
+  { browser: "/landing/homepage.png", phone: "/landing/homepage_m.png" },
+  { browser: "/landing/recentgames.png", phone: "/landing/recentgames_m.png" },
+  { browser: "/landing/session.png", phone: "/landing/session_m.png" },
+  { browser: "/landing/tribe1.png", phone: "/landing/tribe1_m.png" },
+  { browser: "/landing/tribe2.png", phone: "/landing/tribe2_m.png" },
 ];
 
 /** Milliseconds each showcase pair stays on screen before crossfading. */

@@ -41,7 +41,7 @@ const GameImage: React.FC<{
       <Image
         src={imageUrl}
         alt={`${gameTitle} cover`}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        sizes="(min-width: 1024px) 22vw, (min-width: 768px) 28vw, (min-width: 640px) 35vw, 45vw"
         className="object-cover object-top"
         onError={() => setImageError(true)}
         fill

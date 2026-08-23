@@ -10,11 +10,10 @@ import smallLogoLight from "@/public/trakka_logo.png";
 import smallLogoDark from "@/public/trakka_logo_dark.png";
 import Link from "next/link";
 import createClient from "@/utils/supabase/client";
-import { User } from "@/lib/interfaces";
 
 const Navbar = () => {
   const [scrolling, setScrolling] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
 
   useEffect(() => {
     const handleScroll = (): void => {
@@ -26,34 +25,16 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Check if user exists
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkSignedIn = async () => {
       const supabase = createClient();
-
-      // Get the auth user details
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser();
-      if (!authUser) {
-        return;
-      }
-
-      // Get profile details
-      const { data: profile, error } = await supabase
-        .from("profile")
-        .select("*")
-        .eq("uuid", authUser.id)
-        .single();
-      if (error || !profile) {
-        console.error(error);
-        return;
-      }
-
-      setUser({ ...profile, ...authUser });
+      setIsSignedIn(Boolean(authUser));
     };
 
-    fetchUser();
+    checkSignedIn();
   }, []);
 
   return (
@@ -63,7 +44,7 @@ const Navbar = () => {
           "transition-all duration-300",
           scrolling
             ? "border-b border-border/60 bg-background/85 backdrop-blur-md"
-            : "border-b border-transparent bg-transparent"
+            : "border-b border-transparent bg-transparent",
         )}
       >
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -104,7 +85,7 @@ const Navbar = () => {
             />
           </Link>
 
-          {user ? (
+          {isSignedIn ? (
             <Button asChild>
               <Link href="/dashboard">Open dashboard</Link>
             </Button>

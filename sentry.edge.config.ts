@@ -9,12 +9,13 @@ Sentry.init({
   dsn: "https://1793c4e46d5642936b640d1902dfe899@o4509785292079104.ingest.us.sentry.io/4511347401818112",
   environment: process.env.NODE_ENV,
   integrations: [
-    // send console.log, console.warn, and console.error calls as logs to Sentry
-    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+    // send console.warn and console.error calls as logs to Sentry. console.log is
+    // excluded — shipping every informational log was pure egress for no signal.
+    Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
   ],
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Sampled at 10% in production; see instrumentation-client.ts for the rationale.
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
 
   // Enable logs to be sent to Sentry
   enableLogs: true,

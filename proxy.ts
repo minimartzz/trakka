@@ -37,12 +37,15 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * Match page navigations only. Everything excluded below either needs no
+     * session refresh or already authenticates itself, and each request that
+     * runs this proxy costs an auth round trip to Supabase plus a second
+     * Fast Origin Transfer charge on Vercel.
+     * - _next/static, _next/image: build output and optimized images
+     * - api: route handlers call supabase.auth.getUser() themselves
+     * - monitoring: Sentry's tunnel route (kept out in case it is re-enabled)
+     * - favicon/robots/sitemap and any file with a static asset extension
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|api/|monitoring|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf)$).*)",
   ],
 };

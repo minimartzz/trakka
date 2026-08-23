@@ -1,15 +1,12 @@
 import { cache } from "react";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/utils/db";
-import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
-import { createClient } from "@/utils/supabase/server";
+import { getCallerProfileRow } from "@/utils/fetchServerUser";
+import { getAuthUser } from "@/utils/supabase/server";
 
 export const requireAuth = cache(async () => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) throw new Error("Unauthorized");
   return user;
 });
@@ -17,10 +14,7 @@ export const requireAuth = cache(async () => {
 export const requireTribeMembership = cache(async (groupId: string) => {
   const user = await requireAuth();
 
-  const [callerProfile] = await db
-    .select({ id: profileTable.id })
-    .from(profileTable)
-    .where(eq(profileTable.uuid, user.id));
+  const callerProfile = await getCallerProfileRow();
   if (!callerProfile) throw new Error("Unauthorized");
 
   const [membership] = await db

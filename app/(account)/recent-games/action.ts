@@ -58,7 +58,7 @@ async function expansionsForSessions(
 
 async function querySessionsByProfile(profileId: number) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`recent-games:${profileId}`);
 
   const userDetails = db
@@ -241,7 +241,7 @@ async function queryProfileHistorySummary(profileId: number): Promise<{
   availableTribes: AvailableTribe[];
 }> {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`recent-games:${profileId}`);
 
   const historyRows = await db
@@ -309,10 +309,6 @@ async function queryRecentGamesPage(
   pageSize: number,
   filters: RecentGamesFilters,
 ): Promise<RecentGamesPage> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag(`recent-games:${profileId}`);
-
   // Result-filter predicate, from the user's own row only.
   const resultWhere =
     filters.result === "won"
@@ -405,9 +401,9 @@ async function queryRecentGamesPage(
   };
 }
 
-// The filter object forms part of the cache key, so equivalent filters must
-// serialise identically: sort the ID arrays and rebuild the object with a fixed
-// key order, otherwise [1,2] and [2,1] mint separate cache entries.
+// Sorts the ID arrays and rebuilds the object with a fixed key order so that
+// equivalent filter sets produce identical SQL predicates regardless of the order
+// the user clicked the chips in.
 function normaliseFilters(filters: RecentGamesFilters): RecentGamesFilters {
   return {
     result: filters.result,
