@@ -1,7 +1,4 @@
-import {
-  cacheLife,
-  cacheTag,
-} from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { compGameLogTable } from "@/db/schema/compGameLog";
 import { gameTable } from "@/db/schema/game";
@@ -15,10 +12,19 @@ import { db } from "@/utils/db";
 
 export async function getTribeMembersCached(groupId: string) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`tribe:${groupId}`, `tribe:${groupId}:members`);
   return db
-    .select({ profileGroup: profileGroupTable, profile: profileTable })
+    .select({
+      profileGroup: profileGroupTable,
+      profile: {
+        id: profileTable.id,
+        username: profileTable.username,
+        firstName: profileTable.firstName,
+        lastName: profileTable.lastName,
+        image: profileTable.image,
+      },
+    })
     .from(profileGroupTable)
     .leftJoin(profileTable, eq(profileGroupTable.profileId, profileTable.id))
     .where(eq(profileGroupTable.groupId, groupId));
@@ -26,7 +32,7 @@ export async function getTribeMembersCached(groupId: string) {
 
 export async function getTribeDetailsCached(groupId: string) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`tribe:${groupId}`, `tribe:${groupId}:details`);
   return db
     .select()
@@ -37,13 +43,35 @@ export async function getTribeDetailsCached(groupId: string) {
 
 export async function getTribeGameSessionsCached(groupId: string) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`tribe:${groupId}`, `tribe:${groupId}:sessions`);
   return db
     .select({
-      compGameLog: compGameLogTable,
-      profile: profileTable,
-      gameDetails: gameTable,
+      compGameLog: {
+        sessionId: compGameLogTable.sessionId,
+        datePlayed: compGameLogTable.datePlayed,
+        createdAt: compGameLogTable.createdAt,
+        gameId: compGameLogTable.gameId,
+        gameTitle: compGameLogTable.gameTitle,
+        profileId: compGameLogTable.profileId,
+        isWinner: compGameLogTable.isWinner,
+        position: compGameLogTable.position,
+        score: compGameLogTable.score,
+        victoryPoints: compGameLogTable.victoryPoints,
+        winContrib: compGameLogTable.winContrib,
+      },
+      profile: {
+        username: profileTable.username,
+        firstName: profileTable.firstName,
+        lastName: profileTable.lastName,
+        image: profileTable.image,
+      },
+      gameDetails: {
+        imageUrl: gameTable.imageUrl,
+        thumbnail: gameTable.thumbnail,
+        playingTime: gameTable.playingTime,
+        weight: gameTable.weight,
+      },
     })
     .from(compGameLogTable)
     .leftJoin(profileTable, eq(compGameLogTable.profileId, profileTable.id))
@@ -53,7 +81,7 @@ export async function getTribeGameSessionsCached(groupId: string) {
 
 export async function getRollingPlayerStatsByGroupCached(groupId: string) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`tribe:${groupId}`, `tribe:${groupId}:stats`);
   return db
     .select()
@@ -63,7 +91,7 @@ export async function getRollingPlayerStatsByGroupCached(groupId: string) {
 
 export async function getDailyPlayerStatsByGroupCached(groupId: string) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`tribe:${groupId}`, `tribe:${groupId}:stats`);
   return db
     .select()
@@ -73,7 +101,7 @@ export async function getDailyPlayerStatsByGroupCached(groupId: string) {
 
 export async function getMonthlyPlayerStatsByGroupCached(groupId: string) {
   "use cache";
-  cacheLife("minutes");
+  cacheLife("hours");
   cacheTag(`tribe:${groupId}`, `tribe:${groupId}:stats`);
   return db
     .select()

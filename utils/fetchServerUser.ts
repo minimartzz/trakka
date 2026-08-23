@@ -1,25 +1,37 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getAuthUser } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-export default cache(async function fetchUser() {
-  const supabase = await createClient();
-
-  // From auth.users table
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const getCallerProfileRow = cache(async () => {
+  const user = await getAuthUser();
   if (!user) {
     return null;
   }
 
-  // Fetch profile information
+  const supabase = await createClient();
   const { data: profileInfo, error } = await supabase
     .from("profile")
     .select("*")
     .eq("uuid", user.id)
     .single();
+
   if (error || !profileInfo) {
+    return null;
+  }
+
+  return profileInfo;
+});
+
+export default cache(async function fetchUser() {
+  // From auth.users table — shared with requireAuth() so the render only makes
+  // one round trip to Supabase Auth
+  const user = await getAuthUser();
+  if (!user) {
+    return null;
+  }
+
+  const profileInfo = await getCallerProfileRow();
+  if (!profileInfo) {
     redirect("/onboarding");
   }
 

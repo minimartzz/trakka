@@ -2,6 +2,17 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.5.1] Hotfix: Optimising DB calls and serving content - 2026-08-23
+
+Reduction in DB calls to optimise for cost
+
+### Fixed
+
+- Reduced image sizes
+- Reduced number of authentication calls
+- Reduced database queries scope to only content that is required
+- Reduced Sentry monitoring frequency
+
 ## [0.5.0] Onboarding, SEO, Sessions Logging - 2026-08-10
 
 A big update to the onboarding process making it more interactive. Session logging now includes Cooperative games, Solo games and Expansions. New site content for improved SEO.

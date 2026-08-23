@@ -201,7 +201,7 @@ const GameSessionContent: React.FC<GameSessionContentProps> = ({
           src={gameImageUrl}
           alt="Game Picture"
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="40px"
           fill
         />
       </div>
@@ -243,7 +243,7 @@ const TribeJoinContent: React.FC<TribeJoinContentProps> = ({
           src={tribeImageUrl}
           alt="Tribe Profile Picture"
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="40px"
           fill
         />
       </div>
@@ -291,7 +291,7 @@ const ClaimResultContent: React.FC<ClaimResultContentProps> = ({
           src={tribeImageUrl}
           alt="Tribe Profile Picture"
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="40px"
           fill
         />
       </div>

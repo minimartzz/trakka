@@ -77,7 +77,8 @@ export function NotificationsProvider({
       `,
       )
       .eq("profile_id", profileId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(50);
 
     if (error) {
       console.error("Failed to fetch notifications:", error);

@@ -36,13 +36,13 @@ Sentry.init({
     Sentry.browserProfilingIntegration(),
   ],
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Sampled at 10% in production: full-fidelity tracing was a top driver of our
+  // Vercel usage. Development stays at 100% so local debugging is unaffected.
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
   // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
   tracePropagationTargets: ["localhost", "http://trakka.co"],
-  // Set profileSessionSampleRate to 1.0 to profile during every session.
   // The decision, whether to profile or not, is made once per session (when the SDK is initialized).
-  profileSessionSampleRate: 1.0,
+  profileSessionSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
   // Enable logs to be sent to Sentry
   enableLogs: true,

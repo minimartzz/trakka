@@ -1,18 +1,13 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 /**
- * Screenshot slots for the landing page.
- *
- * Each frame can either show a placeholder (when no `images` are provided) or
- * crossfade through a list of screenshots driven by an external `activeIndex`,
- * so the BrowserFrame and PhoneFrame can advance their image pairs in sync.
- */
-
-/**
- * A single slot that crossfades through `images` at `activeIndex`. Falls back to
- * a labelled placeholder when no images are supplied.
+ * Each frame shows either a placeholder or images from a list
+ * `activeIndex` syncs both the browser and phone images together
  */
 const CarouselSlot = ({
   label,
@@ -30,6 +25,14 @@ const CarouselSlot = ({
   className?: string;
 }) => {
   const hasImages = images && images.length > 0;
+  const current = hasImages ? activeIndex % images.length : 0;
+
+  // Only mounts images + 1 within the carousel so incoming images are already decoded
+  // when the crossfade starts
+  const [mountedThrough, setMountedThrough] = useState(1);
+  useEffect(() => {
+    setMountedThrough((furthest) => Math.max(furthest, current + 1));
+  }, [current]);
 
   return (
     <div
@@ -39,20 +42,22 @@ const CarouselSlot = ({
       )}
     >
       {hasImages ? (
-        images.map((src, i) => (
-          <Image
-            key={src + i}
-            src={src}
-            alt={alt}
-            fill
-            sizes={sizes}
-            priority={i === 0}
-            className={cn(
-              "object-cover transition-opacity duration-1500 ease-in-out",
-              i === activeIndex % images.length ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ))
+        images.map((src, i) =>
+          i > mountedThrough ? null : (
+            <Image
+              key={src + i}
+              src={src}
+              alt={alt}
+              fill
+              sizes={sizes}
+              priority={i === 0}
+              className={cn(
+                "object-cover transition-opacity duration-1500 ease-in-out",
+                i === current ? "opacity-100" : "opacity-0",
+              )}
+            />
+          ),
+        )
       ) : (
         <>
           <div
