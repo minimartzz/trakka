@@ -42,7 +42,7 @@ const SidebarUser = ({
     avatar: string;
   };
 }) => {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
   const router = useRouter();
@@ -55,9 +55,31 @@ const SidebarUser = ({
     return null;
   }
 
+  // On mobile the sidebar is a sheet that stays open once the dropdown closes,
+  // so navigating has to dismiss it explicitly.
+  const closeOnMobile = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   const menuItems = [
-    { icon: User, label: "Account", action: () => router.push("/account") },
-    { icon: HelpCircle, label: "Help", action: () => router.push("/faq") },
+    {
+      icon: User,
+      label: "Account",
+      action: () => {
+        closeOnMobile();
+        router.push("/account");
+      },
+    },
+    {
+      icon: HelpCircle,
+      label: "Help",
+      action: () => {
+        closeOnMobile();
+        router.push("/faq");
+      },
+    },
     {
       icon: RefreshCcw,
       label: "Sync with BoardGameGeek",
