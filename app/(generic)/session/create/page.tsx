@@ -20,16 +20,43 @@ import {
 } from "@/utils/sessionLog";
 import { format } from "date-fns";
 import { useRouter } from "nextjs-toploader/app";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import posthog from "posthog-js";
 
 // Re-export Player type for backwards compatibility
 export type { Player } from "@/components/SessionForm";
 
+// How long the page can sit unvisited before its form contents count as stale.
+const STALE_AFTER_MS = 10_000;
+
 const Page = () => {
   const router = useRouter();
   // The session layout gates on auth server-side, so the user is always present.
   const user = useUser();
+
+  // Key used to reset the state of the form when user either submits or navigates
+  // away from the page for too long
+  const [formKey, setFormKey] = useState(0);
+  // Tracks when the user left and the effect body decides depending on an interval
+  // whether what was input is kept
+  const leftAtRef = useRef<number | null>(null);
+  const submittedRef = useRef(false);
+
+  useEffect(() => {
+    const leftAt = leftAtRef.current;
+    leftAtRef.current = null;
+    if (
+      leftAt !== null &&
+      (submittedRef.current || Date.now() - leftAt > STALE_AFTER_MS)
+    ) {
+      submittedRef.current = false;
+      setFormKey((key) => key + 1);
+    }
+    return () => {
+      leftAtRef.current = Date.now();
+    };
+  }, []);
 
   const handleSubmit = async (data: {
     date: Date;
@@ -241,6 +268,9 @@ const Page = () => {
           toast.success(
             `Successfully saved session ${gameDetails.title} on ${datePlayed}! 🎉`,
           );
+          // Clear the form on the way back in rather than now, so the remount
+          // doesn't refetch tribes while the user is already navigating away.
+          submittedRef.current = true;
           router.push("/recent-games");
         }
       } catch (error) {
@@ -254,6 +284,7 @@ const Page = () => {
 
   return (
     <SessionForm
+      key={formKey}
       userId={user.id}
       title="New Game Session"
       cardTitle="Record Game Session"
