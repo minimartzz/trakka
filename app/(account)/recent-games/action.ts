@@ -76,6 +76,7 @@ async function querySessionsByProfile(profileId: number) {
     .select({
       id: groupTable.id,
       name: groupTable.name,
+      image: groupTable.image,
     })
     .from(groupTable)
     .as("tribeDetails");
@@ -95,18 +96,22 @@ async function querySessionsByProfile(profileId: number) {
       gameId: compGameLogTable.gameId,
       gameImage: gameTable.imageUrl,
       gameThumbnail: gameTable.thumbnail,
+      gameWeight: gameTable.weight,
+      playingTime: gameTable.playingTime,
       createdAt: compGameLogTable.createdAt,
       numPlayers: compGameLogTable.numPlayers,
       rowId: compGameLogTable.id,
       // Tribe Details
       tribeId: tribeDetails.id,
       tribeName: tribeDetails.name,
-      // User Details + Results
+      tribeImage: tribeDetails.image,
+      // User Details
       profileId: userDetails.id,
       firstName: userDetails.firstName,
       lastName: userDetails.lastName,
       username: userDetails.username,
       profilePic: userDetails.profilePic,
+      // Session Details
       isVp: compGameLogTable.isVp,
       coop: compGameLogTable.coop,
       teamId: compGameLogTable.teamId,
@@ -117,6 +122,9 @@ async function querySessionsByProfile(profileId: number) {
       isFirstPlay: compGameLogTable.isFirstPlay,
       isHighScore: compGameLogTable.highScore,
       rating: compGameLogTable.rating,
+      // Per-session WPA contribution, surfaced on the dashboard's latest
+      // session card
+      score: compGameLogTable.score,
     })
     .from(compGameLogTable)
     .innerJoin(userDetails, eq(compGameLogTable.profileId, userDetails.id))
@@ -189,7 +197,11 @@ function playerRowsForSessions(sessionIds: string[]) {
 
   // 2. Get tribe details
   const tribeDetails = db
-    .select({ id: groupTable.id, name: groupTable.name })
+    .select({
+      id: groupTable.id,
+      name: groupTable.name,
+      image: groupTable.image,
+    })
     .from(groupTable)
     .as("tribeDetails");
 
@@ -202,11 +214,14 @@ function playerRowsForSessions(sessionIds: string[]) {
       gameId: compGameLogTable.gameId,
       gameImage: gameTable.imageUrl,
       gameThumbnail: gameTable.thumbnail,
+      gameWeight: gameTable.weight,
+      playingTime: gameTable.playingTime,
       createdAt: compGameLogTable.createdAt,
       numPlayers: compGameLogTable.numPlayers,
       rowId: compGameLogTable.id,
       tribeId: tribeDetails.id,
       tribeName: tribeDetails.name,
+      tribeImage: tribeDetails.image,
       profileId: userDetails.id,
       firstName: userDetails.firstName,
       lastName: userDetails.lastName,
@@ -231,10 +246,9 @@ function playerRowsForSessions(sessionIds: string[]) {
     .orderBy(desc(compGameLogTable.datePlayed));
 }
 
-// Counts + filter options over the user's WHOLE history (unfiltered), so the
-// result chips and dropdowns never shrink to the current page/filter. Cached on
-// profileId alone: the result is identical for every page and filter combination,
-// so keeping it out of the paged query stops it being recomputed on each change.
+// Counts + filter options over the user's entire history
+// Cached on profileId: the result is identical for every page and filter combination,
+// so keeping it out of the paged query stops it being recomputed on each change
 async function queryProfileHistorySummary(profileId: number): Promise<{
   counts: FilteredCounts;
   availableGames: AvailableGame[];
@@ -269,9 +283,7 @@ async function queryProfileHistorySummary(profileId: number): Promise<{
   };
   const gamesMap = new Map<number, AvailableGame>();
   const tribesMap = new Map<string, AvailableTribe>();
-  // Count once per session, not per row: a user can hold multiple rows in one
-  // session (team mode), which would otherwise inflate the win/loss tallies and
-  // desync numGames from totalSessions.
+  // Count once per session, not per row
   const countedSessions = new Set<string>();
   for (const r of historyRows) {
     if (!countedSessions.has(r.sessionId)) {
@@ -309,7 +321,7 @@ async function queryRecentGamesPage(
   pageSize: number,
   filters: RecentGamesFilters,
 ): Promise<RecentGamesPage> {
-  // Result-filter predicate, from the user's own row only.
+  // Session result filter
   const resultWhere =
     filters.result === "won"
       ? eq(compGameLogTable.isWinner, true)
@@ -319,7 +331,7 @@ async function queryRecentGamesPage(
           ? eq(compGameLogTable.isTie, true)
           : undefined;
 
-  // Game-type predicate: coop = true is cooperative, false is competitive.
+  // Game-type: coop or comp. true is cooperative, false is competitive
   const gameTypeWhere =
     filters.gameType === "cooperative"
       ? eq(compGameLogTable.coop, true)
@@ -327,8 +339,8 @@ async function queryRecentGamesPage(
         ? eq(compGameLogTable.coop, false)
         : undefined;
 
-  // Rating predicate: is_vp = true means the game is rated (victory points
-  // tracked), false means unrated.
+  // Rated: whether the session was rated or not
+  // whether the sessions "score" contributes to their overall WPA
   const ratingWhere =
     filters.rating === "rated"
       ? eq(compGameLogTable.isVp, true)
@@ -401,9 +413,8 @@ async function queryRecentGamesPage(
   };
 }
 
-// Sorts the ID arrays and rebuilds the object with a fixed key order so that
-// equivalent filter sets produce identical SQL predicates regardless of the order
-// the user clicked the chips in.
+// Sorts the session array in a common format, so regardless of the order in which
+// filter was selected in, the displayed list will always be the same
 function normaliseFilters(filters: RecentGamesFilters): RecentGamesFilters {
   return {
     result: filters.result,

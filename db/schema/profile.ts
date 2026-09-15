@@ -77,6 +77,12 @@ export const profileTable = pgTable("profile", {
     .$type<FavouriteGame[]>()
     .notNull()
     .default([]),
+  // Dashboard showcase picks — one card id (or null for an empty slot) per
+  // slot position, in slot order
+  showcaseSlots: jsonb("showcase_slots")
+    .$type<(string | null)[]>()
+    .notNull()
+    .default([]),
   connectedAccounts: jsonb("connected_accounts")
     .$type<Record<string, string>>()
     .notNull()

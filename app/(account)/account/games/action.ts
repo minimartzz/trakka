@@ -53,6 +53,8 @@ export async function addFavouriteGame(game: FavouriteGame) {
       .where(eq(profileTable.id, profile.id));
 
     revalidatePath("/account");
+    // The dashboard's Games tab shows the same picks
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     console.error("Failed to add favourite game:", error);
@@ -73,6 +75,8 @@ export async function removeFavouriteGame(bggId: number) {
       .where(eq(profileTable.id, profile.id));
 
     revalidatePath("/account");
+    // The dashboard's Games tab shows the same picks
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     console.error("Failed to remove favourite game:", error);
