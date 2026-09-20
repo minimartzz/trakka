@@ -66,15 +66,19 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
   const [tribeSearch, setTribeSearch] = useState<string>("");
   const { notifications } = useNotifications();
 
+  // Closes sidebar once a selection is made
+  const closeOnMobile = () => {
+    if (sidebar.isMobile) {
+      sidebar.setOpenMobile(false);
+    }
+  };
+
   // Counts the number of notifications
   // Prevents rerendering of the component unless state changes
   const tribeRequestCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const n of notifications) {
-      if (
-        (n.type !== "join_request" && n.type !== "claim_request") ||
-        n.isRead
-      )
+      if ((n.type !== "join_request" && n.type !== "claim_request") || n.isRead)
         continue;
       const groupId = (n.data as { group_id?: string }).group_id;
       if (typeof groupId === "string") {
@@ -91,7 +95,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
         <div className="relative">
           {showCollapsedView ? (
             <SidebarMenuButton size="lg" className="ml-2" asChild>
-              <Link href={"/dashboard"}>
+              <Link href={"/dashboard"} onClick={closeOnMobile}>
                 <Image src={Logo} alt="logo" width={30} />
                 <span className="font-brand text-2xl">TRAKKA</span>
               </Link>
@@ -99,7 +103,11 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
           ) : (
             <SidebarMenuButton asChild>
               <div className="flex items-center hover:bg-transparent">
-                <Link href={"/dashboard"} className="flex items-center gap-x-2">
+                <Link
+                  href={"/dashboard"}
+                  className="flex items-center gap-x-2"
+                  onClick={closeOnMobile}
+                >
                   <Image src={Logo} alt="logo" height={35} />
                   <span className="font-brand text-2xl">TRAKKA</span>
                 </Link>
@@ -120,7 +128,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                     className={pathname === item.url ? "bg-slate-700" : ""}
                     asChild
                   >
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={closeOnMobile}>
                       <item.icon />
                       <span>{item.name}</span>
                     </Link>
@@ -174,6 +182,7 @@ export function AppSidebar({ user, tribes }: AppSidebarProps) {
                   <Link
                     href={`/tribe/${item.id}`}
                     className="flex justify-between items-center"
+                    onClick={closeOnMobile}
                   >
                     <div className="flex items-center gap-2">
                       <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">

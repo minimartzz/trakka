@@ -1,13 +1,15 @@
 import { fetchSessions } from "@/app/(account)/recent-games/action";
-import { getRollingPlayerStats } from "@/app/(account)/tribe/[id]/action";
+import { getDailyPlayerStats } from "@/app/(account)/tribe/[id]/action";
 import TimeFilteredPerformance from "@/components/dashboard/TimeFilteredPerformance";
 import { SessionDataInterface } from "@/lib/interfaces";
 import fetchUser from "@/utils/fetchServerUser";
 import { filterSessionData } from "@/utils/recordsProcessing";
+import { format } from "date-fns";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { toast } from "sonner";
-import DashboardLoading from "./loading";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
+import { fetchGameMeta } from "./action";
 
 const fetchSessionsByProfile = async (
   id: number,
@@ -31,18 +33,31 @@ const DashboardContent = async () => {
     redirect("/login");
   }
 
-  const [sessionData, rollingStats] = await Promise.all([
+  const [sessionData, dailyStats, gameMeta] = await Promise.all([
     fetchSessionsByProfile(user.id),
-    getRollingPlayerStats({ profileId: user.id }),
+    getDailyPlayerStats({ profileId: user.id }),
+    fetchGameMeta(user.id),
   ]);
   const processedSessions = filterSessionData(user.id, sessionData);
 
   return (
     <TimeFilteredPerformance
       userId={user.id}
+      profile={{
+        firstName: user.first_name,
+        lastName: user.last_name,
+        username: user.username,
+        image: user.image,
+        memberSince: user.confirmed_at
+          ? format(new Date(user.confirmed_at), "MMM yyyy")
+          : "—",
+        favouriteGames: user.favourite_games ?? [],
+        showcaseSlots: user.showcase_slots ?? [],
+      }}
       recentActivity={processedSessions}
       sessions={sessionData}
-      rollingStats={rollingStats}
+      dailyStats={dailyStats}
+      gameMeta={gameMeta}
     />
   );
 };
@@ -50,18 +65,7 @@ const DashboardContent = async () => {
 const Page = () => {
   return (
     <div className="min-h-screen p-4 sm:p-6 space-y-6 mb-15">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          My Performance
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Track your stats across all tribes
-        </p>
-      </div>
-
-      {/* Content */}
-      <Suspense fallback={<DashboardLoading />}>
+      <Suspense fallback={<DashboardSkeleton />}>
         <DashboardContent />
       </Suspense>
     </div>

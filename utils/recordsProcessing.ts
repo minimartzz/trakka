@@ -22,10 +22,13 @@ export const filterSessionData = (
         gameTitle: record.gameTitle,
         gameId: record.gameId,
         gameImage: record.gameImage,
+        gameWeight: record.gameWeight,
+        playingTime: record.playingTime,
         createdAt: new Date(record.createdAt),
         numPlayers: record.numPlayers,
         tribe: record.tribeName,
         tribeId: record.tribeId,
+        tribeImage: record.tribeImage,
         players: [],
         isVp: record.isVp,
         coop: record.coop,
@@ -55,6 +58,7 @@ export const filterSessionData = (
       isTie: record.isTie,
       isFirstPlay: record.isFirstPlay,
       isHighScore: record.isHighScore,
+      score: record.score,
     };
 
     sessionMap.get(record.sessionId)!.players.push(player);

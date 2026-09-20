@@ -2,78 +2,76 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
-import { endOfDay, isWithinInterval, subMonths, subYears } from "date-fns";
+import {
+  endOfDay,
+  isWithinInterval,
+  subMonths,
+  subWeeks,
+  subYears,
+} from "date-fns";
 import { motion } from "motion/react";
 import {
   TrendingUp,
   Trophy,
   Users,
   Dices,
-  Gamepad2,
   Swords,
-  Library,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
-import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
+import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import type { FavouriteGame } from "@/db/schema/profile";
+import type { GameMeta } from "@/app/(account)/dashboard/action";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
-import StatCard from "@/components/tribes/StatCard";
-import MeepleIcon from "@/components/icons/MeepleIcon";
 import DotsIcon from "@/components/icons/DotsIcon";
-import DateRangePicker from "./DateRangePicker";
+import TimeframeFilter, { Timeframe } from "./TimeframeFilter";
+import DashboardProfileCard from "./DashboardProfileCard";
+import DashboardStatCard from "./DashboardStatCard";
+import LatestSessionCard from "./LatestSessionCard";
+import DashboardDetailedStats from "./DashboardDetailedStats";
+import GenreOverview from "./GenreOverview";
+import PlayerSummary from "./PlayerSummary";
+import DashboardTribes from "./DashboardTribes";
+import DashboardPlayers from "./DashboardPlayers";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface TimeFilteredPerformanceProps {
-  userId: number;
-  recentActivity: GroupedSession[];
-  sessions: SessionDataInterface[];
-  rollingStats: SelectRollingPlayerStats[];
+interface DashboardProfile {
+  firstName: string;
+  lastName: string;
+  username: string;
+  image: string;
+  memberSince: string;
+  favouriteGames?: FavouriteGame[];
+  showcaseSlots?: (string | null)[];
 }
 
-type Timeframe =
-  | "1month"
-  | "3months"
-  | "6months"
-  | "1year"
-  | "3years"
-  | "all"
-  | "custom";
-
-const TIMEFRAME_LABELS: Record<Exclude<Timeframe, "custom">, string> = {
-  "1month": "1M",
-  "3months": "3M",
-  "6months": "6M",
-  "1year": "1Y",
-  "3years": "3Y",
-  all: "ALL",
-};
+interface TimeFilteredPerformanceProps {
+  userId: number;
+  profile: DashboardProfile;
+  recentActivity: GroupedSession[];
+  sessions: SessionDataInterface[];
+  dailyStats: SelectHistDailyPlayerStats[];
+  gameMeta: GameMeta;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const calculateStartDate = (timeframe: string): Date => {
   const today = endOfDay(new Date());
   switch (timeframe) {
+    case "1week":
+      return subWeeks(today, 1);
     case "1month":
       return subMonths(today, 1);
-    case "3months":
+    case "1quarter":
       return subMonths(today, 3);
     case "6months":
       return subMonths(today, 6);
@@ -98,31 +96,28 @@ const formatRelativeDate = (dateString: string): string => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-// ─── Section Header (matches TribeHomeTab pattern) ────────────────────────────
+// ─── Page Heading ─────────────────────────────────────────────────────────────
 
-const SectionHeader: React.FC<{
-  icon: React.ReactNode;
-  title: string;
-  delay?: number;
-}> = ({ icon, title, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay }}
-    className="flex items-center gap-2 mb-4"
-  >
-    {icon}
-    <h2 className="text-lg font-semibold">{title}</h2>
-  </motion.div>
+const PageHeading: React.FC = () => (
+  <div>
+    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+      My Performance
+    </h1>
+    <p className="text-sm text-muted-foreground mt-1">
+      Track your stats across all tribes
+    </p>
+  </div>
 );
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
   userId,
+  profile,
   recentActivity,
   sessions,
-  rollingStats,
+  dailyStats,
+  gameMeta,
 }) => {
   const [timeframe, setTimeframe] = useState<Timeframe>("1year");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -136,6 +131,21 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     }
   }, [dateRange]);
 
+  // ── Active window ─────────────────────────────────────────────────────────
+
+  const activeRange = useMemo(() => {
+    if (dateRange?.from && dateRange.to) {
+      return { from: dateRange.from, to: endOfDay(dateRange.to) };
+    }
+    if (timeframe !== "custom" && timeframe !== "all") {
+      return {
+        from: calculateStartDate(timeframe),
+        to: endOfDay(new Date()),
+      };
+    }
+    return null;
+  }, [timeframe, dateRange]);
+
   // ── Filtered activities ───────────────────────────────────────────────────
 
   const filteredActivities = useMemo(() => {
@@ -144,95 +154,187 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       parsedDate: new Date(activity.datePlayed),
     }));
 
-    let finalFromDate: Date | undefined;
-    let finalToDate: Date | undefined;
+    if (!activeRange) return activitiesWithDates;
 
-    if (dateRange?.from && dateRange.to) {
-      finalFromDate = dateRange.from;
-      finalToDate = endOfDay(dateRange.to);
-    } else if (timeframe !== "custom" && timeframe !== "all") {
-      finalFromDate = calculateStartDate(timeframe);
-      finalToDate = endOfDay(new Date());
-    } else {
-      return activitiesWithDates;
-    }
-
-    if (finalFromDate && finalToDate) {
-      return activitiesWithDates.filter((activity) =>
-        isWithinInterval(activity.parsedDate, {
-          start: finalFromDate!,
-          end: finalToDate!,
-        }),
-      );
-    }
-
-    return activitiesWithDates;
-  }, [recentActivity, timeframe, dateRange]);
+    return activitiesWithDates.filter((activity) =>
+      isWithinInterval(activity.parsedDate, {
+        start: activeRange.from,
+        end: activeRange.to,
+      }),
+    );
+  }, [recentActivity, activeRange]);
 
   // ── Derived stats ─────────────────────────────────────────────────────────
 
-  const { top5Players, topGamesStats } = useMemo(() => {
+  const { top5Players } = useMemo(() => {
     const sessionsWithDates = sessions.map((s) => ({
       ...s,
       parsedDate: new Date(s.datePlayed),
     }));
 
-    let finalFromDate: Date | undefined;
-    let finalToDate: Date | undefined;
+    const filtered = activeRange
+      ? sessionsWithDates.filter((s) =>
+          isWithinInterval(s.parsedDate, {
+            start: activeRange.from,
+            end: activeRange.to,
+          }),
+        )
+      : sessionsWithDates;
 
-    if (dateRange?.from && dateRange.to) {
-      finalFromDate = dateRange.from;
-      finalToDate = endOfDay(dateRange.to);
-    } else if (timeframe !== "custom" && timeframe !== "all") {
-      finalFromDate = calculateStartDate(timeframe);
-      finalToDate = endOfDay(new Date());
-    } else {
-      const topPlayers = topOpponents(userId, sessionsWithDates);
-      const tg = topGames(userId, sessionsWithDates);
-      return { top5Players: topPlayers.slice(0, 5), topGamesStats: tg };
-    }
-
-    const filtered = sessionsWithDates.filter((s) =>
-      isWithinInterval(s.parsedDate, {
-        start: finalFromDate!,
-        end: finalToDate!,
-      }),
-    );
     const topPlayers = topOpponents(userId, filtered);
     const tg = topGames(userId, filtered);
     return { top5Players: topPlayers.slice(0, 5), topGamesStats: tg };
-  }, [sessions, userId, timeframe, dateRange]);
+  }, [sessions, userId, activeRange]);
 
   // ── Metric calculations ───────────────────────────────────────────────────
 
-  const gamesPlayed = filteredActivities.length;
-  const uniqueGames = new Set(filteredActivities.map((a) => a.gameId)).size;
-
-  // Rolling stats aggregated across all groups
-  const totalSessionsPlayed = rollingStats.reduce(
-    (sum, s) => sum + s.sessionsPlayed,
-    0,
-  );
-  const totalSessionsWon = rollingStats.reduce(
-    (sum, s) => sum + s.sessionsWon,
-    0,
-  );
-  const totalRollingScore = rollingStats.reduce(
-    (sum, s) => sum + s.rollingScore,
-    0,
+  // Most recent session overall — like the profile card, it ignores the
+  // timeframe filter so it always shows the actual latest game.
+  const latestSession = useMemo(
+    () =>
+      [...recentActivity].sort(
+        (a, b) =>
+          new Date(b.datePlayed).getTime() - new Date(a.datePlayed).getTime(),
+      )[0],
+    [recentActivity],
   );
 
-  // Win Rate: total sessionsWon / total sessionsPlayed, rounded to nearest whole number
-  const winRate =
-    totalSessionsPlayed > 0
-      ? Math.round((totalSessionsWon / totalSessionsPlayed) * 100)
-      : 0;
+  // Profile card shows lifetime totals — it's an identity card, so it stays
+  // fixed while the timeframe filter changes everything around it.
+  const lifetimeGamesPlayed = recentActivity.length;
+  const lifetimeGamesWon = recentActivity.filter((a) => a.isWinner).length;
 
-  // WPA: total rollingScore / total sessionsPlayed, rounded to 2 decimal places
-  const wpa =
-    totalSessionsPlayed > 0
-      ? Math.round((totalRollingScore / totalSessionsPlayed) * 100) / 100
-      : 0;
+  // Win Rate over the active window, plus the preceding window of equal length
+  // so the card can show a trend.
+  const { winRate, winRateTrend } = useMemo(() => {
+    const rate = (rows: { isWinner: boolean }[]) =>
+      rows.length > 0
+        ? (rows.filter((r) => r.isWinner).length / rows.length) * 100
+        : null;
+
+    const current = rate(filteredActivities);
+
+    // "All time" has no preceding window to compare against
+    if (!activeRange || current === null) {
+      return { winRate: current, winRateTrend: undefined };
+    }
+
+    const spanMs = activeRange.to.getTime() - activeRange.from.getTime();
+    const priorRows = recentActivity.filter((a) => {
+      const d = new Date(a.datePlayed).getTime();
+      return (
+        d >= activeRange.from.getTime() - spanMs &&
+        d < activeRange.from.getTime()
+      );
+    });
+
+    const previous = rate(priorRows);
+    if (previous === null) {
+      return { winRate: current, winRateTrend: undefined };
+    }
+
+    const delta = current - previous;
+    return {
+      winRate: current,
+      winRateTrend: {
+        direction:
+          Math.abs(delta) < 0.05
+            ? ("flat" as const)
+            : delta > 0
+              ? ("up" as const)
+              : ("down" as const),
+        value: `${Math.abs(delta).toFixed(1)}%`,
+      },
+    };
+  }, [filteredActivities, recentActivity, activeRange]);
+
+  // Win Rate sparkline: cumulative win rate walked forward through the window,
+  // so the line shows how the number arrived at its current value.
+  const winRateSeries = useMemo(() => {
+    const ordered = [...filteredActivities].sort(
+      (a, b) => a.parsedDate.getTime() - b.parsedDate.getTime(),
+    );
+
+    let wins = 0;
+    return ordered.map((a, i) => {
+      if (a.isWinner) wins++;
+      return (wins / (i + 1)) * 100;
+    });
+  }, [filteredActivities]);
+
+  // WPA over the active window, from the daily snapshots. Each snapshot holds
+  // that day's score per tribe, so a day's WPA is the mean across tribes that
+  // recorded play; the card value is the mean over the window.
+  const { wpa, wpaTrend, wpaSeries } = useMemo(() => {
+    // Collapse per-tribe rows into one value per day
+    const byDate = new Map<string, { score: number; count: number }>();
+    for (const s of dailyStats) {
+      if (s.sessionsPlayed <= 0) continue;
+      const entry = byDate.get(s.snapshotDate) ?? { score: 0, count: 0 };
+      entry.score += s.score;
+      entry.count += 1;
+      byDate.set(s.snapshotDate, entry);
+    }
+
+    const daily = [...byDate.entries()]
+      .map(([date, { score, count }]) => ({
+        time: new Date(date).getTime(),
+        wpa: score / count,
+      }))
+      .sort((a, b) => a.time - b.time);
+
+    const inWindow = activeRange
+      ? daily.filter(
+          (d) =>
+            d.time >= activeRange.from.getTime() &&
+            d.time <= activeRange.to.getTime(),
+        )
+      : daily;
+
+    const mean = (rows: { wpa: number }[]) =>
+      rows.length > 0
+        ? rows.reduce((sum, r) => sum + r.wpa, 0) / rows.length
+        : null;
+
+    const current = mean(inWindow);
+    if (current === null) {
+      return { wpa: null, wpaTrend: undefined, wpaSeries: [] };
+    }
+
+    const series = inWindow.map((d) => d.wpa);
+
+    if (!activeRange) {
+      return { wpa: current, wpaTrend: undefined, wpaSeries: series };
+    }
+
+    const spanMs = activeRange.to.getTime() - activeRange.from.getTime();
+    const previous = mean(
+      daily.filter(
+        (d) =>
+          d.time >= activeRange.from.getTime() - spanMs &&
+          d.time < activeRange.from.getTime(),
+      ),
+    );
+
+    if (previous === null) {
+      return { wpa: current, wpaTrend: undefined, wpaSeries: series };
+    }
+
+    const delta = current - previous;
+    return {
+      wpa: current,
+      wpaTrend: {
+        direction:
+          Math.abs(delta) < 0.005
+            ? ("flat" as const)
+            : delta > 0
+              ? ("up" as const)
+              : ("down" as const),
+        value: Math.abs(delta).toFixed(2),
+      },
+      wpaSeries: series,
+    };
+  }, [dailyStats, activeRange]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -254,422 +356,140 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
   if (sessions.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="text-center py-20"
-      >
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-          <Dices className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-medium mb-2">No Games Recorded Yet</h3>
-        <p className="text-muted-foreground max-w-sm mx-auto">
-          Start logging game sessions to see your performance statistics.
-        </p>
-      </motion.div>
+      <div className="space-y-8">
+        <PageHeading />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center py-20"
+        >
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <Dices className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">No Games Recorded Yet</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto">
+            Start logging game sessions to see your performance statistics.
+          </p>
+        </motion.div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      {/* ── Timeframe filter bar ─────────────────────────────────────────── */}
+      {/* ── Heading + timeframe filter ───────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col sm:flex-row sm:items-center gap-3"
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex items-center gap-0.5 self-start rounded-lg border bg-muted/30 p-1">
-          {(
-            Object.entries(TIMEFRAME_LABELS) as [
-              Exclude<Timeframe, "custom">,
-              string,
-            ][]
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => handleTimeframeChange(key)}
-              className={cn(
-                "text-sm font-semibold px-2.5 py-1 rounded-md transition-colors",
-                timeframe === key
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">or</span>
-          <DateRangePicker date={dateRange} setDate={handleDateRangeChange} />
-        </div>
+        <PageHeading />
+        <TimeframeFilter
+          timeframe={timeframe}
+          onTimeframeChange={handleTimeframeChange}
+          dateRange={dateRange}
+          onDateRangeChange={handleDateRangeChange}
+          activeRange={activeRange}
+        />
       </motion.div>
 
       {/* ── Section: Key Stats ───────────────────────────────────────────── */}
       <section>
-        <SectionHeader
-          icon={<TrendingUp className="w-5 h-5 text-primary" />}
-          title="Overview"
-          delay={0.05}
-        />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Games Played"
-            value={gamesPlayed}
-            icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-br from-accent-3 to-accent-1"
-            delay={0.1}
-          />
-          <StatCard
-            title="Unique Games"
-            value={uniqueGames}
-            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-4 to-accent-2"
+        {/* Mobile: profile, then the two stat cards side by side, then the
+            latest session. Desktop: profile spans both rows on the left, with
+            the stats above the latest session on the right. */}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:grid-rows-[auto_1fr]">
+          <div className="col-span-2 lg:col-span-1 lg:row-span-2">
+            <DashboardProfileCard
+              firstName={profile.firstName}
+              lastName={profile.lastName}
+              username={profile.username}
+              image={profile.image}
+              memberSince={profile.memberSince}
+              gamesPlayed={lifetimeGamesPlayed}
+              gamesWon={lifetimeGamesWon}
+              recentActivity={recentActivity}
+              favouriteGames={profile.favouriteGames}
+              showcaseSlots={profile.showcaseSlots}
+            />
+          </div>
+
+          <DashboardStatCard
+            title="Win Rate"
+            value={winRate !== null ? winRate.toFixed(0) : "—"}
+            suffix={winRate !== null ? "%" : ""}
+            trend={winRateTrend}
+            trendLabel="vs. previous period"
+            series={winRateSeries}
+            icon={<Trophy className="w-4 h-4" />}
+            variant="a"
             delay={0.15}
           />
-          <StatCard
-            title="Win Rate"
-            value={gamesPlayed > 0 ? winRate : "-"}
-            suffix={gamesPlayed > 0 ? "%" : ""}
-            icon={<Trophy className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-1 to-accent-3"
+          <DashboardStatCard
+            title="WPA"
+            value={wpa !== null ? wpa.toFixed(2) : "—"}
+            trend={wpaTrend}
+            trendLabel="vs. previous period"
+            series={wpaSeries}
+            icon={<Swords className="w-4 h-4" />}
+            variant="b"
             delay={0.2}
           />
-          <StatCard
-            title="WPA"
-            value={gamesPlayed > 0 ? wpa : "-"}
-            suffix=""
-            icon={<Swords className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-br from-accent-2 to-accent-4"
-            delay={0.25}
+
+          <div className="col-span-2">
+            <LatestSessionCard
+              userId={userId}
+              session={latestSession}
+              delay={0.25}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section: Detailed Stats ──────────────────────────────────────── */}
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <DashboardDetailedStats
+            userId={userId}
+            sessions={recentActivity}
+            favouriteGames={profile.favouriteGames}
+            gameMeta={gameMeta}
+            delay={0.3}
+          />
+        </div>
+        {/* Genre overview fills whatever height the summary leaves it */}
+        <div className="flex flex-col gap-4">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <GenreOverview
+              userId={userId}
+              sessions={filteredActivities}
+              gameMeta={gameMeta}
+              delay={0.35}
+            />
+          </div>
+          <PlayerSummary
+            userId={userId}
+            sessions={recentActivity}
+            delay={0.4}
           />
         </div>
       </section>
 
-      {/* ── Section: Recent Activity + Top Opponents ─────────────────────── */}
-      <section>
-        <SectionHeader
-          icon={<Dices className="w-5 h-5 text-primary" />}
-          title="Recent Activity"
-          delay={0.25}
+      {/* ── Section: Tribes + Players ────────────────────────────────────── */}
+      <section className="grid gap-4 lg:grid-cols-2">
+        <DashboardTribes
+          userId={userId}
+          sessions={filteredActivities}
+          activeRange={activeRange}
+          delay={0.45}
         />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Recent sessions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="lg:col-span-2"
-          >
-            <Card className="h-full">
-              <CardContent className="p-0">
-                {filteredActivities.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Dices className="w-10 h-10 mb-2 opacity-50" />
-                    <p className="text-sm">No sessions in this period</p>
-                  </div>
-                ) : (
-                  <div className="max-h-105 overflow-y-auto overflow-x-auto no-scrollbar">
-                    <Table>
-                      <TableHeader className="sticky top-0 z-10 bg-card">
-                        <TableRow>
-                          <TableHead className="w-20">Date</TableHead>
-                          <TableHead>Game</TableHead>
-                          <TableHead>Tribe</TableHead>
-                          <TableHead className="hidden sm:table-cell text-center">
-                            Players
-                          </TableHead>
-                          <TableHead className="text-right">Result</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredActivities.slice(0, 15).map((session) => {
-                          const playerDetails = session.players.find(
-                            (p) => p.profileId === userId,
-                          );
-                          const position = playerDetails?.position;
-                          const posText = position
-                            ? positionOrdinalSuffix(position)
-                            : "—";
-
-                          return (
-                            <TableRow
-                              key={session.sessionId}
-                              className="hover:bg-muted/50 transition-colors"
-                            >
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {formatRelativeDate(session.datePlayed)}
-                              </TableCell>
-                              <TableCell>
-                                <span
-                                  className="font-medium truncate max-w-35 block"
-                                  title={session.gameTitle}
-                                >
-                                  {session.gameTitle}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <span className="text-sm text-muted-foreground truncate max-w-20 sm:max-w-none block">
-                                  {session.tribe}
-                                </span>
-                              </TableCell>
-                              <TableCell className="hidden sm:table-cell">
-                                <div className="flex items-center justify-center gap-2">
-                                  {session.players.slice(0, 5).map((p) => {
-                                    const isCurrentUser =
-                                      p.profileId === userId;
-                                    const isWinner = p.isWinner;
-                                    return (
-                                      <Tooltip key={p.profileId}>
-                                        <TooltipTrigger asChild>
-                                          <div className="relative shrink-0">
-                                            <Avatar
-                                              className={cn(
-                                                "w-7 h-7 ring-2 transition-opacity",
-                                                isWinner
-                                                  ? "ring-amber-400"
-                                                  : isCurrentUser
-                                                    ? "ring-primary"
-                                                    : "ring-background opacity-50",
-                                              )}
-                                            >
-                                              <AvatarImage
-                                                src={p.profilePic}
-                                                className="object-cover"
-                                              />
-                                              <AvatarFallback className="text-[10px] bg-muted">
-                                                {p.firstName[0]}
-                                              </AvatarFallback>
-                                            </Avatar>
-                                            {/* Winner crown badge */}
-                                            {isWinner && (
-                                              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] leading-none select-none pointer-events-none">
-                                                👑
-                                              </span>
-                                            )}
-                                            {/* Current-user dot (when not winner) */}
-                                            {isCurrentUser && !isWinner && (
-                                              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-1 ring-background" />
-                                            )}
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {isCurrentUser ? "You" : p.firstName}
-                                          {isWinner && " 👑"}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    );
-                                  })}
-                                  {session.players.length > 5 && (
-                                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-[10px] font-medium ring-2 ring-background shrink-0">
-                                      +{session.players.length - 5}
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-1.5">
-                                  {session.isTied && (
-                                    <span className="text-xs">🤝</span>
-                                  )}
-                                  {session.isWinner ? (
-                                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
-                                      <DotsIcon
-                                        value={session.players.length}
-                                        className="**:data-dot:bg-current"
-                                      />
-                                      {posText}
-                                    </Badge>
-                                  ) : session.isLoser ? (
-                                    <Badge
-                                      variant="destructive"
-                                      className="font-semibold"
-                                    >
-                                      <DotsIcon
-                                        value={session.players.length}
-                                      />
-                                      {posText}
-                                    </Badge>
-                                  ) : session.isPlayer ? (
-                                    <Badge
-                                      variant="secondary"
-                                      className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                                    >
-                                      <DotsIcon
-                                        value={session.players.length}
-                                        className="**:data-dot:bg-current"
-                                      />
-                                      {posText}
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-xs text-muted-foreground">
-                                      —
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Top Opponents */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.35 }}
-            className="lg:col-span-1"
-          >
-            <Card className="h-full">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                    <Users className="w-4 h-4 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Top Opponents</h3>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                {top5Players.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    No games found
-                  </p>
-                ) : (
-                  <ul className="space-y-3">
-                    {top5Players.map((opponent, idx) => (
-                      <li
-                        key={opponent.player.id}
-                        className="flex items-center gap-3"
-                      >
-                        <span className="text-sm font-semibold text-muted-foreground w-5 text-center font-display">
-                          {idx + 1}
-                        </span>
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage
-                            src={opponent.player.profilePic}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {opponent.player.firstName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {opponent.player.firstName}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            @{opponent.player.username}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className="font-semibold shrink-0"
-                        >
-                          {opponent.count}{" "}
-                          {opponent.count === 1 ? "game" : "games"}
-                        </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Section: Game Performance ────────────────────────────────────── */}
-      <section>
-        <SectionHeader
-          icon={<Gamepad2 className="w-5 h-5 text-primary" />}
-          title="Game Performance"
-          delay={0.35}
+        <DashboardPlayers
+          userId={userId}
+          sessions={filteredActivities}
+          delay={0.5}
         />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-        >
-          <Card>
-            <CardContent className="p-0">
-              {topGamesStats.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <Gamepad2 className="w-10 h-10 mb-2 opacity-50" />
-                  <p className="text-sm">No games in this period</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10 text-center">#</TableHead>
-                        <TableHead>Game</TableHead>
-                        <TableHead className="text-center w-25">
-                          Played
-                        </TableHead>
-                        <TableHead className="hidden sm:table-cell w-50">
-                          W / L
-                        </TableHead>
-                        <TableHead className="text-right w-20">Win %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {topGamesStats.slice(0, 10).map((game, idx) => (
-                        <TableRow key={game.game.gameId}>
-                          <TableCell className="text-center text-sm text-muted-foreground font-display font-semibold">
-                            {idx + 1}
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-medium truncate max-w-45 block">
-                              {game.game.gameTitle}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center font-semibold">
-                            {game.count}
-                          </TableCell>
-                          {/* Win/Loss bar — desktop only */}
-                          <TableCell className="hidden sm:table-cell">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-2 rounded-full bg-destructive/20 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-emerald-600 transition-all duration-500"
-                                  style={{ width: `${game.winRate}%` }}
-                                />
-                              </div>
-                              <span className="text-xs text-muted-foreground whitespace-nowrap w-16 text-right">
-                                {game.wins}W / {game.count - game.wins}L
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            className={cn(
-                              "text-right font-bold",
-                              game.winRate >= 50
-                                ? "text-emerald-700 dark:text-emerald-400"
-                                : "text-destructive",
-                            )}
-                          >
-                            {game.winRate}%
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
       </section>
     </div>
   );

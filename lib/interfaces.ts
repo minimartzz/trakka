@@ -15,11 +15,14 @@ export interface SessionDataInterface {
   gameTitle: string;
   gameId: number;
   gameImage: string | null;
+  gameWeight: number | null;
+  playingTime: number | null;
   createdAt: Date;
   numPlayers: number;
   rowId: number;
   tribeId: string;
   tribeName: string;
+  tribeImage: string;
   profileId: number;
   firstName: string;
   lastName: string;
@@ -35,6 +38,7 @@ export interface SessionDataInterface {
   isFirstPlay: boolean;
   isHighScore: boolean;
   rating: number | null;
+  score?: number | null;
 }
 // NOTE: SessionDataInterface.coop / GroupedSession.coop added for the
 // competitive-vs-cooperative card distinction on the recent-games page.
@@ -54,6 +58,7 @@ export interface SessionPlayer {
   isTie: boolean;
   isFirstPlay: boolean;
   isHighScore: boolean;
+  score?: number | null;
 }
 
 // An expansion played alongside the base game in a session.
@@ -70,10 +75,13 @@ export interface GroupedSession {
   gameTitle: string;
   gameId: number;
   gameImage: string | null;
+  gameWeight: number | null;
+  playingTime: number | null;
   createdAt: Date;
   numPlayers: number;
   tribe: string;
   tribeId: string;
+  tribeImage: string;
   players: SessionPlayer[];
   isVp: boolean;
   coop: boolean;
