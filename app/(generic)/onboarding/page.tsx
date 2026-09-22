@@ -9,6 +9,7 @@ import type { DraftTribe } from "@/db/schema/profile";
 import { db } from "@/utils/db";
 import { createClient } from "@/utils/supabase/server";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -86,6 +87,12 @@ const OnboardingContent = async () => {
   // Resume where they left off, but never on the completion screen.
   const initialStep = Math.min(profile?.onboardingStep ?? 0, TOTAL_STEPS - 1);
 
+  // Claim code for anonymous user
+  const cookieStore = await cookies();
+  const initialClaimCode: string | undefined =
+    user.user_metadata?.claimCode ??
+    cookieStore.get("pending_claim_code")?.value;
+
   return (
     <OnboardingFlow
       userId={user.id}
@@ -93,6 +100,7 @@ const OnboardingContent = async () => {
       initialStep={initialStep}
       initialState={initialState}
       defaultImageUrl={GENERIC_IMAGE_URL}
+      initialClaimCode={initialClaimCode}
     />
   );
 };

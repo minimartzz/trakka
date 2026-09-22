@@ -100,6 +100,13 @@ const LoginClient = () => {
 
           {/* Confirmation links are single use. New users are redirected back
           to onboarding when they log in */}
+          {searchParams.get("reason") === "claim" && (
+            <div className="mx-6 rounded-md border p-3 text-sm text-muted-foreground">
+              Log in or sign up to claim your player profile. Your claim code
+              will be filled in for you.
+            </div>
+          )}
+
           {searchParams.get("reason") === "link_used" && (
             <div className="mx-6 rounded-md border p-3 text-sm text-muted-foreground">
               You&apos;ve already verified your email. Sign in below and

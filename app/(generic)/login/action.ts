@@ -6,6 +6,7 @@ import { SignUpActionState, signUpFormSchema } from "@/utils/signUpSchema";
 import { createClient } from "@/utils/supabase/server";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 // Supabase Auth only signs in by email/phone, so a username has to be
@@ -44,12 +45,21 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
+
+  // From anonymous user claim. Claim code automatically filled in on page
+  const cookieStore = await cookies();
+  const claimCode = cookieStore.get("pending_claim_code")?.value;
+  if (claimCode) {
+    cookieStore.delete("pending_claim_code");
+    redirect(`/account?tab=games&claim=${encodeURIComponent(claimCode)}`);
+  }
+
   redirect("/dashboard");
 }
 
 export async function signup(
   _prev: SignUpActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<SignUpActionState> {
   const supabase = await createClient();
 
@@ -66,11 +76,22 @@ export async function signup(
     };
   }
 
-  const { error } = await supabase.auth.signUp(data);
+  // A claim code from a shared link rides along in user metadata (same as an
+  // invite code) so it survives email confirmation on another device and can
+  // prefill the onboarding claim step.
+  const cookieStore = await cookies();
+  const claimCode = cookieStore.get("pending_claim_code")?.value;
+
+  const { error } = await supabase.auth.signUp({
+    ...data,
+    options: { data: { claimCode: claimCode || null } },
+  });
 
   if (error) {
     redirect("/error");
   }
+
+  if (claimCode) cookieStore.delete("pending_claim_code");
 
   revalidatePath("/", "layout");
   redirect("/login/confirm-email");

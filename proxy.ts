@@ -31,6 +31,20 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Anonymous player claim code. Directs to login or sign-up first
+  if (pathname.startsWith("/claim")) {
+    const claimCode = pathname.split("/")[2];
+
+    if (claimCode) {
+      response.cookies.set("pending_claim_code", claimCode, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24,
+      });
+    }
+  }
+
   return response;
 }
 

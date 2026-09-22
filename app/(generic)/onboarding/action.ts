@@ -368,9 +368,14 @@ export async function completeOnboarding(payload: {
 
     // The invite has been acted on (or deliberately dropped) — clear it so the
     // same link can't queue a second request on a later visit.
-    if (caller.user.user_metadata?.inviteCode) {
+    if (
+      caller.user.user_metadata?.inviteCode ||
+      caller.user.user_metadata?.claimCode
+    ) {
       const supabase = await createClient();
-      await supabase.auth.updateUser({ data: { inviteCode: null } });
+      await supabase.auth.updateUser({
+        data: { inviteCode: null, claimCode: null },
+      });
     }
 
     return { success: true };

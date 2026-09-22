@@ -16,6 +16,7 @@ import React from "react";
 
 interface PlayersSectionProps {
   groupId: string;
+  tribeName: string;
   players: MemberRow[];
   setPlayers: React.Dispatch<React.SetStateAction<MemberRow[]>>;
   anonymousMembers: AnonymousMember[];
@@ -24,6 +25,7 @@ interface PlayersSectionProps {
 
 const PlayersSection = ({
   groupId,
+  tribeName,
   players,
   setPlayers,
   anonymousMembers,
@@ -71,6 +73,7 @@ const PlayersSection = ({
         <TabsContent value="anonymous" className="mt-4">
           <AnonymousPlayersSection
             groupId={groupId}
+            tribeName={tribeName}
             members={anonymousMembers}
           />
         </TabsContent>
