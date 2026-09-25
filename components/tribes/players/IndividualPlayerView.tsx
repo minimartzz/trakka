@@ -62,7 +62,7 @@ interface IndividualPlayerViewProps {
 
 const Sparkline: React.FC<{ data: number[]; color?: string }> = ({
   data,
-  color = "white",
+  color = "currentColor",
 }) => {
   if (data.length < 2) return <div className="h-7" />;
 
@@ -112,19 +112,25 @@ const DeltaBadge: React.FC<{
   decimals?: number;
 }> = ({ delta, suffix = "%", decimals = 1 }) => {
   if (delta === null) {
-    return <span className="text-xs text-white/40">— vs last 30d</span>;
+    return (
+      <span className="text-xs text-muted-foreground">— vs last 30d</span>
+    );
   }
   const positive = delta >= 0;
   return (
     <span
       className={cn(
         "text-xs font-semibold flex items-center gap-0.5",
-        positive ? "text-emerald-300" : "text-red-300",
+        positive
+          ? "text-emerald-700 dark:text-emerald-400"
+          : "text-destructive",
       )}
     >
       {positive ? "▲" : "▼"} {Math.abs(delta).toFixed(decimals)}
       {suffix}
-      <span className="font-normal text-white/40 ml-1">vs last 30d</span>
+      <span className="font-normal text-muted-foreground ml-1">
+        vs last 30d
+      </span>
     </span>
   );
 };
@@ -170,32 +176,37 @@ const FlipWinRateCard: React.FC<{
       >
         {/* ── Front: Standard Win Rate ──── */}
         <div
-          className="relative rounded-xl overflow-hidden h-full"
+          className="relative rounded-xl overflow-hidden h-full bg-card border border-primary/25"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div className="bg-linear-to-br from-primary to-primary/70 p-4 sm:p-5 h-full">
+          {/* Soft diagonal accent wash */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/30 via-primary/10 to-transparent dark:from-primary/45 dark:via-primary/15"
+          />
+          <div className="relative p-4 sm:p-5 h-full">
             {/* Header row */}
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-white/70 mb-0.5">
+                <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
                   Win Rate
                 </p>
-                <p className="text-xs text-white/50">Standard</p>
+                <p className="text-xs text-muted-foreground">Standard</p>
               </div>
-              <div className="flex items-center gap-1 text-white/40 text-[10px]">
+              <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
                 <RotateCcw className="w-3 h-3" />
                 BGA
               </div>
             </div>
 
             {/* Big number */}
-            <p className="text-5xl sm:text-6xl font-black tracking-tight text-white leading-none mb-1">
+            <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
               {conventionalRate}
-              <span className="text-2xl font-bold text-white/70">%</span>
+              <span className="text-2xl font-bold text-foreground/70">%</span>
             </p>
 
             {/* Record */}
-            <p className="text-xs text-white/50 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               {wins}W · {losses}L · {gamesPlayed} games
             </p>
 
@@ -204,42 +215,47 @@ const FlipWinRateCard: React.FC<{
 
             {/* Sparkline */}
             <div className="mt-3 -mx-1">
-              <Sparkline data={sparklineConv} />
+              <Sparkline data={sparklineConv} color="var(--primary)" />
             </div>
           </div>
         </div>
 
         {/* ── Back: BGA Win Rate ──────────── */}
         <div
-          className="absolute inset-0 rounded-xl overflow-hidden"
+          className="absolute inset-0 rounded-xl overflow-hidden bg-card border border-accent-5/25"
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
           }}
         >
-          <div className="bg-linear-to-br from-violet-700 to-violet-500 p-4 sm:p-5 h-full">
+          {/* Soft diagonal accent wash */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-linear-to-br from-accent-5/30 via-accent-5/10 to-transparent dark:from-accent-5/45 dark:via-accent-5/15"
+          />
+          <div className="relative p-4 sm:p-5 h-full">
             {/* Header row */}
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-white/70 mb-0.5">
+                <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
                   Win Rate
                 </p>
-                <p className="text-xs text-white/50">BGA Formula</p>
+                <p className="text-xs text-muted-foreground">BGA Formula</p>
               </div>
-              <div className="flex items-center gap-1 text-white/40 text-[10px]">
+              <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
                 <RotateCcw className="w-3 h-3" />
                 STD
               </div>
             </div>
 
             {/* Big number */}
-            <p className="text-5xl sm:text-6xl font-black tracking-tight text-white leading-none mb-1">
+            <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
               {bgaRate}
-              <span className="text-2xl font-bold text-white/70">%</span>
+              <span className="text-2xl font-bold text-foreground/70">%</span>
             </p>
 
             {/* Formula note */}
-            <p className="hidden sm:block text-xs text-white/50">
+            <p className="hidden sm:block text-xs text-muted-foreground">
               Weighted by player count
             </p>
 
@@ -248,7 +264,7 @@ const FlipWinRateCard: React.FC<{
 
             {/* Sparkline */}
             <div className="mt-3 -mx-1">
-              <Sparkline data={sparklineBga} />
+              <Sparkline data={sparklineBga} color="var(--accent-5)" />
             </div>
           </div>
         </div>
@@ -265,33 +281,40 @@ const WpaStatCard: React.FC<{
   delta: { current: number; delta: number | null };
   sparkline: number[];
 }> = ({ wpa, gamesPlayed, delta, sparkline }) => (
-  <div className="rounded-xl overflow-hidden bg-linear-to-br from-accent-2 to-accent-2/70 h-full">
-    <div className="p-4 sm:p-5 h-full">
+  <div className="relative rounded-xl overflow-hidden bg-card border border-accent-3/25 h-full">
+    {/* Soft diagonal accent wash */}
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 bg-linear-to-br from-accent-3/30 via-accent-3/10 to-transparent dark:from-accent-3/45 dark:via-accent-3/15"
+    />
+    <div className="relative p-4 sm:p-5 h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-sm font-bold uppercase tracking-widest text-white/70 mb-0.5">
+          <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
             WPA
           </p>
-          <p className="text-xs text-white/50">Win Points Average</p>
+          <p className="text-xs text-muted-foreground">Win Points Average</p>
         </div>
-        <Target className="w-4 h-4 text-white/30" />
+        <Target className="w-4 h-4 text-foreground/30" />
       </div>
 
       {/* Big number */}
-      <p className="text-5xl sm:text-6xl font-black tracking-tight text-white leading-none mb-1">
+      <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
         {wpa.toFixed(2)}
       </p>
 
       {/* Games played */}
-      <p className="text-xs text-white/50 mb-3">{gamesPlayed} games played</p>
+      <p className="text-xs text-muted-foreground mb-3">
+        {gamesPlayed} games played
+      </p>
 
       {/* Delta */}
       <DeltaBadge delta={delta.delta} suffix="" decimals={2} />
 
       {/* Sparkline */}
       <div className="mt-3 -mx-1">
-        <Sparkline data={sparkline} />
+        <Sparkline data={sparkline} color="var(--accent-3)" />
       </div>
     </div>
   </div>

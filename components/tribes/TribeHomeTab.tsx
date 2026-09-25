@@ -238,7 +238,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               content: "Since last week",
             }}
             icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-br from-accent-5 to-accent-3"
+            variant="a"
             delay={0.1}
           />
           <StatCard
@@ -250,7 +250,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               content: "Since last week",
             }}
             icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-5 to-accent-3"
+            variant="b"
             delay={0.15}
           />
           <StatCard
@@ -263,7 +263,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               content: "hrs since last week",
             }}
             icon={<Clock className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-3 to-accent-5"
+            variant="a"
             delay={0.2}
           />
           <StatCard
@@ -275,7 +275,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               content: "new since last week",
             }}
             icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-br from-accent-3 to-accent-5"
+            variant="b"
             delay={0.25}
           />
         </div>
