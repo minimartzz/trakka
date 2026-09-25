@@ -449,7 +449,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       </section>
 
       {/* ── Section: Detailed Stats ──────────────────────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardDetailedStats
             userId={userId}
@@ -478,7 +478,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       </section>
 
       {/* ── Section: Tribes + Players ────────────────────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardTribes
           userId={userId}
           sessions={filteredActivities}
