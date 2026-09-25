@@ -14,6 +14,7 @@ export interface GameSession {
   thumbnail: string | null;
   playingTime: number | null;
   gameWeight: number | null;
+  coop: boolean;
   players: {
     profileId: number;
     username: string;

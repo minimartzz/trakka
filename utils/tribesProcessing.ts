@@ -28,6 +28,7 @@ export interface SessionLogRow {
     | "score"
     | "victoryPoints"
     | "winContrib"
+    | "coop"
   >;
   profile: Pick<
     SelectProfile,
@@ -59,6 +60,7 @@ export function processGameSessions(logs: SessionLogRow[]): GameSession[] {
         thumbnail: gameDetails?.thumbnail || null,
         playingTime: gameDetails?.playingTime || null,
         gameWeight: gameDetails?.weight || null,
+        coop: compGameLog.coop,
         players: [],
       });
     }

@@ -59,6 +59,7 @@ export async function getTribeGameSessionsCached(groupId: string) {
         score: compGameLogTable.score,
         victoryPoints: compGameLogTable.victoryPoints,
         winContrib: compGameLogTable.winContrib,
+        coop: compGameLogTable.coop,
       },
       profile: {
         username: profileTable.username,
