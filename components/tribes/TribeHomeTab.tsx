@@ -237,7 +237,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${pastWeeksGames}`,
               content: "Since last week",
             }}
-            icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
             variant="a"
             delay={0.1}
           />
@@ -249,7 +249,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${wpaChange}`,
               content: "Since last week",
             }}
-            icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
             variant="b"
             delay={0.15}
           />
@@ -262,7 +262,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${timeTrendHours}`,
               content: "hrs since last week",
             }}
-            icon={<Clock className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            icon={<Clock className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
             variant="a"
             delay={0.2}
           />
@@ -274,7 +274,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${newGamesThisWeek}`,
               content: "new since last week",
             }}
-            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
+            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
             variant="b"
             delay={0.25}
           />

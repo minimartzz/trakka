@@ -143,7 +143,7 @@ const StatCard: React.FC<StatCardProps> = ({
             {/* Icon container with gradient background */}
             <div
               className={
-                "hidden sm:flex items-center justify-center w-12 h-12 rounded-full bg-primary"
+                "hidden sm:flex items-center justify-center w-12 h-12 rounded-full text-black dark:text-white"
               }
             >
               <div>{icon}</div>
