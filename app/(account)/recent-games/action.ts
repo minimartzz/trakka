@@ -125,6 +125,9 @@ async function querySessionsByProfile(profileId: number) {
       // Per-session WPA contribution, surfaced on the dashboard's latest
       // session card
       score: compGameLogTable.score,
+      eloBefore: compGameLogTable.eloBefore,
+      eloAfter: compGameLogTable.eloAfter,
+      eloSessionsBefore: compGameLogTable.eloSessionsBefore,
     })
     .from(compGameLogTable)
     .innerJoin(userDetails, eq(compGameLogTable.profileId, userDetails.id))
@@ -237,6 +240,9 @@ function playerRowsForSessions(sessionIds: string[]) {
       isFirstPlay: compGameLogTable.isFirstPlay,
       isHighScore: compGameLogTable.highScore,
       rating: compGameLogTable.rating,
+      eloBefore: compGameLogTable.eloBefore,
+      eloAfter: compGameLogTable.eloAfter,
+      eloSessionsBefore: compGameLogTable.eloSessionsBefore,
     })
     .from(compGameLogTable)
     .innerJoin(userDetails, eq(compGameLogTable.profileId, userDetails.id))

@@ -68,6 +68,12 @@
   --color-accent-3: var(--accent-3);
   --color-accent-4: var(--accent-4);
   --color-accent-5: var(--accent-5);
+  --color-elo-iron: var(--elo-iron);
+  --color-elo-bronze: var(--elo-bronze);
+  --color-elo-silver: var(--elo-silver);
+  --color-elo-gold: var(--elo-gold);
+  --color-elo-emerald: var(--elo-emerald);
+  --color-elo-purple: var(--elo-purple);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
@@ -138,6 +144,13 @@
   --accent-3: oklch(63.29% 0.1774 258.56);
   --accent-4: oklch(57.59% 0.2098 276.65);
   --accent-5: oklch(55.63% 0.2445 297.66);
+  /* Elo tiers (see eloTier in utils/elo.ts) */
+  --elo-iron: oklch(48% 0.012 250);
+  --elo-bronze: oklch(56% 0.11 55);
+  --elo-silver: oklch(82% 0.01 250);
+  --elo-gold: oklch(82% 0.15 85);
+  --elo-emerald: oklch(72% 0.15 160);
+  --elo-purple: var(--accent-5);
   --accent-foreground: oklch(28.87% 0.0796 262.2);
   --destructive: oklch(63.68% 0.2078 25.33);
   --destructive-foreground: oklch(1 0 0);
@@ -191,6 +204,11 @@
   --accent-3: oklch(72% 0.12 258.56);
   --accent-4: oklch(68% 0.15 276.65);
   --accent-5: oklch(65% 0.18 297.66);
+  --elo-iron: oklch(55% 0.012 250);
+  --elo-bronze: oklch(60% 0.1 55);
+  --elo-silver: oklch(80% 0.01 250);
+  --elo-gold: oklch(80% 0.13 85);
+  --elo-emerald: oklch(74% 0.13 160);
   --accent-foreground: oklch(95.85% 0.0054 274.96);
   --destructive: oklch(56.27% 0.1974 26.33);
   --destructive-foreground: oklch(100% 0 0);

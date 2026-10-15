@@ -5,4 +5,4 @@ Elo depends on the order sessions were played in, but sessions can be backdated,
 ## Consequences
 
 - The session edit flow must run in a transaction and keep the original `createdAt`, otherwise an edited session moves within its day and replay order changes.
-- Changing any constant in `ELO.md` requires a full replay. Nothing needs migrating.
+- Changing any constant in `docs/ELO.md` requires a full replay. Nothing needs migrating.

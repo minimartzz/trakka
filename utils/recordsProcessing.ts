@@ -59,6 +59,9 @@ export const filterSessionData = (
       isFirstPlay: record.isFirstPlay,
       isHighScore: record.isHighScore,
       score: record.score,
+      eloBefore: record.eloBefore,
+      eloAfter: record.eloAfter,
+      eloSessionsBefore: record.eloSessionsBefore,
     };
 
     sessionMap.get(record.sessionId)!.players.push(player);

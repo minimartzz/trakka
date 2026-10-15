@@ -72,8 +72,8 @@ const AllPlayersView: React.FC<AllPlayersViewProps> = ({
 
   // Calculate badges
   const badgeMap = useMemo(
-    () => calculateBadges(sessions, members, histStats.rollingStats),
-    [sessions, members, histStats.rollingStats],
+    () => calculateBadges(sessions, members, histStats.memberElos),
+    [sessions, members, histStats.memberElos],
   );
 
   // Filter members by search query

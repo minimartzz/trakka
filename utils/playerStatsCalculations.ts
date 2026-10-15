@@ -1,6 +1,11 @@
-import { type GameSession, type TribeMember } from "@/types/tribes";
+import {
+  type GameSession,
+  type MemberElo,
+  type TribeMember,
+} from "@/types/tribes";
 import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import { isCalibrated } from "@/utils/elo";
 
 // ── Badge Types ──────────────────────────────────────────────────────
 
@@ -45,8 +50,8 @@ const BADGE_META: Record<
     image: "/badges/marathoner.png",
   },
   elo_king: {
-    label: "ELO King",
-    description: "Highest WPA in the tribe",
+    label: "Elo King",
+    description: "Highest Elo in any game",
     image: "/badges/elo_king.png",
   },
   extrovert: {
@@ -63,7 +68,7 @@ const MIN_GAMES_FOR_BADGE = 4;
 export function calculateBadges(
   sessions: GameSession[],
   members: TribeMember[],
-  rollingStats: SelectRollingPlayerStats[],
+  memberElos: MemberElo[],
 ): Map<number, BadgeInfo[]> {
   const badgeMap = new Map<number, BadgeInfo[]>();
 
@@ -91,7 +96,7 @@ export function calculateBadges(
     );
 
   // 3. Underdog: Most upsets
-  const upsets = calculateUpsets(sessions, rollingStats, eligible);
+  const upsets = calculateUpsets(sessions, eligible);
   const underdog = upsets[0];
   if (underdog)
     addBadge(underdog.profileId, "underdog", `${underdog.value} upsets`);
@@ -106,18 +111,15 @@ export function calculateBadges(
       `${Math.round(marathoner.value)} min avg`,
     );
 
-  // 5. ELO King: Highest WPA
+  // 5. Elo King: Highest Calibrated Elo in any single game
   const eligibleIds = new Set(eligible.map((m) => m.profileId));
-  const validRolling = rollingStats
-    .filter((s) => eligibleIds.has(s.profileId) && s.sessionsPlayed > 0)
-    .map((s) => ({
-      profileId: s.profileId,
-      wpa: s.rollingScore / s.sessionsPlayed,
-    }))
-    .sort((a, b) => b.wpa - a.wpa);
-  const eloKing = validRolling[0];
-  if (eloKing)
-    addBadge(eloKing.profileId, "elo_king", `${eloKing.wpa.toFixed(2)} WPA`);
+  const eloKing = memberElos
+    .filter(
+      (e) =>
+        eligibleIds.has(e.profileId) && isCalibrated(e.sessionsPlayed),
+    )
+    .sort((a, b) => b.elo - a.elo || b.sessionsPlayed - a.sessionsPlayed)[0];
+  if (eloKing) addBadge(eloKing.profileId, "elo_king", "");
 
   // 6. Extrovert: Most unique co-players
   const coPlayers = calculateUniqueCoPlayers(sessions, eligible);
@@ -156,16 +158,15 @@ function calculateAvgGameWeight(
 
 function calculateUpsets(
   sessions: GameSession[],
-  rollingStats: SelectRollingPlayerStats[],
   eligible: TribeMember[],
 ): { profileId: number; value: number }[] {
-  // Build a WPA lookup
-  const wpaMap = new Map<number, number>();
-  rollingStats.forEach((s) => {
-    if (s.sessionsPlayed > 0) {
-      wpaMap.set(s.profileId, s.rollingScore / s.sessionsPlayed);
-    }
-  });
+  // Elo going into the session, only for players who were Calibrated then
+  const calibratedElo = (player: GameSession["players"][number]) =>
+    player.eloBefore !== null &&
+    player.eloSessionsBefore !== null &&
+    isCalibrated(player.eloSessionsBefore)
+      ? player.eloBefore
+      : null;
 
   const upsetCounts: Record<number, number> = {};
   const eligibleIds = new Set(eligible.map((m) => m.profileId));
@@ -175,10 +176,11 @@ function calculateUpsets(
     const losers = session.players.filter((p) => !p.isWinner);
 
     winners.forEach((winner) => {
-      const winnerWpa = wpaMap.get(winner.profileId) ?? 0;
+      const winnerElo = calibratedElo(winner);
+      if (winnerElo === null) return;
       const causedUpset = losers.some((loser) => {
-        const loserWpa = wpaMap.get(loser.profileId) ?? 0;
-        return winnerWpa < loserWpa;
+        const loserElo = calibratedElo(loser);
+        return loserElo !== null && winnerElo < loserElo;
       });
       if (causedUpset) {
         upsetCounts[winner.profileId] =

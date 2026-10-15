@@ -25,6 +25,11 @@ import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { gameExpansionTable } from "@/db/schema/gameExpansion";
 import { juncSessionExpansionTable } from "@/db/schema/juncSessionExpansion";
 import { customAlphabet } from "nanoid";
+import {
+  invalidateEloCaches,
+  lockGamesForElo,
+  replayGameElo,
+} from "@/utils/eloReplay";
 
 type Notification = typeof notificationsTable.$inferInsert;
 type CompGameLog = typeof compGameLogTable.$inferInsert;
@@ -195,7 +200,9 @@ export async function submitNewSession(payload: SessionLogInput[]) {
   try {
     // Anonymous profile creation and game log inserts must all succeed
     // together, or a retried submit could strand half-created players.
-    const affectedProfileIds = await db.transaction(async (tx) => {
+    const affected = await db.transaction(async (tx) => {
+      await lockGamesForElo(tx, [payload[0].gameId]);
+
       const logs: CompGameLog[] = [];
       // Session-level, identical on every row — grab it once.
       const expansionIds = payload[0].expansionIds ?? [];
@@ -286,8 +293,18 @@ export async function submitNewSession(payload: SessionLogInput[]) {
           .onConflictDoNothing();
       }
 
+      // A backdated session changes every later Elo for this game
+      const eloAffected = await replayGameElo(
+        tx,
+        logs[0].gameId,
+        logs[0].datePlayed,
+      );
+
       // Returns a list of profile_ids that need their cache invalidated
-      return Array.from(new Set(logs.map((log) => log.profileId)));
+      return {
+        profileIds: Array.from(new Set(logs.map((log) => log.profileId))),
+        eloAffected,
+      };
     });
 
     // Invalidate the cache of tribes and profiles
@@ -295,9 +312,10 @@ export async function submitNewSession(payload: SessionLogInput[]) {
       updateTag(`tribe:${groupId}`);
     }
 
-    for (const profileId of affectedProfileIds) {
+    for (const profileId of affected.profileIds) {
       updateTag(`recent-games:${profileId}`);
     }
+    invalidateEloCaches([affected.eloAffected]);
 
     return { success: true };
   } catch (error) {

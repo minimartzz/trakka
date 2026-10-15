@@ -29,6 +29,8 @@ export interface SessionLogRow {
     | "victoryPoints"
     | "winContrib"
     | "coop"
+    | "eloBefore"
+    | "eloSessionsBefore"
   >;
   profile: Pick<
     SelectProfile,
@@ -77,6 +79,8 @@ export function processGameSessions(logs: SessionLogRow[]): GameSession[] {
       score: compGameLog.score,
       victoryPoints: compGameLog.victoryPoints,
       winContrib: compGameLog.winContrib,
+      eloBefore: compGameLog.eloBefore,
+      eloSessionsBefore: compGameLog.eloSessionsBefore,
     });
   });
 

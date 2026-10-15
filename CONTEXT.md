@@ -7,22 +7,22 @@ Trakka tracks board game sessions played within Tribes and turns them into playe
 ### Skill measures
 
 **Elo**:
-A player's skill number for one specific game, shared across every Tribe they play in. Every player starts each game at 1500.
+A player's skill number for one specific game, shared across every Tribe they play in. Every player starts each game at 0. While below 100, a player can't lose Elo. Once a player reaches 100, they can never drop below it.
 _Avoid_: rating, game rating, skill rating
 
 **Calibration**:
-The period covering a player's first 5 Rated Sessions of a game. During it their Elo changes but is never shown.
-_Avoid_: provisional, placement
+A player's first 5 Rated Sessions of a game, also called the Calibration period. Elo moves fastest here. Their Elo is always shown, with an asterisk.
+_Avoid_: provisional, placement, hidden
 
 **Calibrated**:
-A player who has finished Calibration for a game, so their Elo for that game is visible.
+A player who has played 5 or more Rated Sessions of a game, whatever their Elo.
 
 **Elo Change**:
 How far one Rated Session moved a player's Elo. It belongs to that session.
 _Avoid_: delta, gain
 
 **Matchup**:
-A head-to-head comparison between two players, or two teams, within one Rated Session. A session's Elo Changes come from all of its Matchups.
+A head-to-head comparison between two players, or two teams, within one Rated Session. A player's Elo Change for a session is the sum of all their Matchups, scaled by K.
 _Avoid_: duel, pairing
 
 **Elo King**:

@@ -13,6 +13,7 @@ import {
   getRollingPlayerStatsByGroupCached,
   getDailyPlayerStatsByGroupCached,
   getMonthlyPlayerStatsByGroupCached,
+  getTribeMemberElosCached,
 } from "@/app/(account)/tribe/[id]/data";
 
 interface TribeDetailsInterface {
@@ -46,6 +47,7 @@ const TribeDemo = async ({
       rollingStats,
       dailyPlayerStats,
       monthlyPlayerStats,
+      memberElos,
     ] = await Promise.all([
       getTribeMembersCached(tribeId),
       getTribeDetailsCached(tribeId),
@@ -53,6 +55,7 @@ const TribeDemo = async ({
       getRollingPlayerStatsByGroupCached(tribeId),
       getDailyPlayerStatsByGroupCached(tribeId),
       getMonthlyPlayerStatsByGroupCached(tribeId),
+      getTribeMemberElosCached(tribeId),
     ]);
 
     const tribeDetails = tribeDetailsArray[0] as
@@ -60,7 +63,12 @@ const TribeDemo = async ({
       | undefined;
     if (!tribeDetails) return null;
 
-    const histStats = { rollingStats, dailyPlayerStats, monthlyPlayerStats };
+    const histStats = {
+      rollingStats,
+      dailyPlayerStats,
+      monthlyPlayerStats,
+      memberElos,
+    };
     const sessions = processGameSessions(gameLogsRaw);
     const membersWithStats = processMembersWithStats(tribeMembers, sessions);
 

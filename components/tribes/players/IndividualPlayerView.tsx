@@ -716,8 +716,8 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
     [sessions, activePlayerId],
   );
   const badgeMap = useMemo(
-    () => calculateBadges(sessions, members, histStats.rollingStats),
-    [sessions, members, histStats.rollingStats],
+    () => calculateBadges(sessions, members, histStats.memberElos),
+    [sessions, members, histStats.memberElos],
   );
 
   // Banner & stat card data

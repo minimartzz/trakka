@@ -26,6 +26,9 @@ export interface GameSession {
     score: number | null;
     victoryPoints: number | null;
     winContrib: number | null;
+    // Null for sessions that don't affect Elo
+    eloBefore: number | null;
+    eloSessionsBefore: number | null;
     isFirstPlay?: boolean;
   }[];
 }
@@ -63,10 +66,19 @@ export interface TribeAdmin {
 
 // ─── Historical stats ─────────────────────────────────────────────────────────
 
+// A tribe member's current Elo for one game
+export interface MemberElo {
+  profileId: number;
+  gameId: number;
+  elo: number;
+  sessionsPlayed: number;
+}
+
 export interface HistStatsInterface {
   rollingStats: SelectRollingPlayerStats[];
   dailyPlayerStats: SelectHistDailyPlayerStats[];
   monthlyPlayerStats: SelectHistMonthlyPlayerStats[];
+  memberElos: MemberElo[];
 }
 
 // ─── Filters ──────────────────────────────────────────────────────────────────

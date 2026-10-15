@@ -12,6 +12,11 @@ import { db } from "@/utils/db";
 import { requireTribeAdmin } from "@/utils/auth";
 import { and, eq, sql } from "drizzle-orm";
 import { updateTag } from "next/cache";
+import {
+  invalidateEloCaches,
+  lockGamesForElo,
+  replayGameElo,
+} from "@/utils/eloReplay";
 
 type CompGameLog = typeof compGameLogTable.$inferInsert;
 
@@ -201,87 +206,133 @@ export async function updateSession(
   }
 
   try {
-    // Step 1: Reverse the old rolling stats. Decrement whichever bucket
-    // (rated vs. unrated) the row actually contributed to when it was
-    // written, so an unrated row never eats into the rated WPA columns.
-    for (const oldRow of oldRows) {
-      await db
-        .update(rollingPlayerStatsTable)
-        .set({
-          sessionsPlayed: oldRow.isVp
-            ? sql`${rollingPlayerStatsTable.sessionsPlayed} - 1`
-            : rollingPlayerStatsTable.sessionsPlayed,
-          sessionsWon:
-            oldRow.isVp && oldRow.isWinner
-              ? sql`${rollingPlayerStatsTable.sessionsWon} - 1`
-              : rollingPlayerStatsTable.sessionsWon,
-          rollingScore: oldRow.isVp
-            ? sql`${rollingPlayerStatsTable.rollingScore} - ${oldRow.score ?? 0}`
-            : rollingPlayerStatsTable.rollingScore,
-          unratedSessionsPlayed: oldRow.isVp
-            ? rollingPlayerStatsTable.unratedSessionsPlayed
-            : sql`${rollingPlayerStatsTable.unratedSessionsPlayed} - 1`,
-          unratedSessionsWon:
-            !oldRow.isVp && oldRow.isWinner
-              ? sql`${rollingPlayerStatsTable.unratedSessionsWon} - 1`
-              : rollingPlayerStatsTable.unratedSessionsWon,
+    // One transaction: a failed replay must not leave a half-applied edit.
+    const eloAffected = await db.transaction(async (tx) => {
+      // The session as stored, before the edit. Elo needs its game, date and
+      // original createdAt.
+      const storedRows = await tx
+        .select({
+          gameId: compGameLogTable.gameId,
+          datePlayed: compGameLogTable.datePlayed,
+          createdAt: compGameLogTable.createdAt,
         })
-        .where(
-          and(
-            eq(rollingPlayerStatsTable.profileId, oldRow.profileId),
-            eq(rollingPlayerStatsTable.groupId, newPayload[0].groupId),
-          ),
-        );
-    }
+        .from(compGameLogTable)
+        .where(eq(compGameLogTable.sessionId, sessionId));
+      const stored = storedRows[0];
+      const newGameId = newPayload[0].gameId;
+      const newDate = newPayload[0].datePlayed;
 
-    // Step 2: Delete old comp_game_log entries for this session
-    await db
-      .delete(compGameLogTable)
-      .where(eq(compGameLogTable.sessionId, sessionId));
+      // Lock before any write so concurrent writers to these games can't
+      // deadlock (see lockGamesForElo)
+      await lockGamesForElo(
+        tx,
+        stored ? [stored.gameId, newGameId] : [newGameId],
+      );
 
-    // Step 3: Insert new comp_game_log entries
-    await db.insert(compGameLogTable).values(newPayload);
+      // Step 1: Reverse the old rolling stats. Decrement whichever bucket
+      // (rated vs. unrated) the row actually contributed to when it was
+      // written, so an unrated row never eats into the rated WPA columns.
+      for (const oldRow of oldRows) {
+        await tx
+          .update(rollingPlayerStatsTable)
+          .set({
+            sessionsPlayed: oldRow.isVp
+              ? sql`${rollingPlayerStatsTable.sessionsPlayed} - 1`
+              : rollingPlayerStatsTable.sessionsPlayed,
+            sessionsWon:
+              oldRow.isVp && oldRow.isWinner
+                ? sql`${rollingPlayerStatsTable.sessionsWon} - 1`
+                : rollingPlayerStatsTable.sessionsWon,
+            rollingScore: oldRow.isVp
+              ? sql`${rollingPlayerStatsTable.rollingScore} - ${oldRow.score ?? 0}`
+              : rollingPlayerStatsTable.rollingScore,
+            unratedSessionsPlayed: oldRow.isVp
+              ? rollingPlayerStatsTable.unratedSessionsPlayed
+              : sql`${rollingPlayerStatsTable.unratedSessionsPlayed} - 1`,
+            unratedSessionsWon:
+              !oldRow.isVp && oldRow.isWinner
+                ? sql`${rollingPlayerStatsTable.unratedSessionsWon} - 1`
+                : rollingPlayerStatsTable.unratedSessionsWon,
+          })
+          .where(
+            and(
+              eq(rollingPlayerStatsTable.profileId, oldRow.profileId),
+              eq(rollingPlayerStatsTable.groupId, newPayload[0].groupId),
+            ),
+          );
+      }
 
-    // Step 4: Apply new rolling stats — same rated/unrated branch as create.
-    const rollingStats = newPayload.map((log) => ({
-      profileId: log.profileId,
-      groupId: log.groupId,
-      rollingScore: log.isVp ? log.score! : 0,
-      sessionsPlayed: log.isVp ? 1 : 0,
-      sessionsWon: log.isVp && log.isWinner ? 1 : 0,
-      unratedSessionsPlayed: log.isVp ? 0 : 1,
-      unratedSessionsWon: !log.isVp && log.isWinner ? 1 : 0,
-      latestSession: log.datePlayed,
-    }));
+      // Step 2: Delete old comp_game_log entries for this session
+      await tx
+        .delete(compGameLogTable)
+        .where(eq(compGameLogTable.sessionId, sessionId));
 
-    await db
-      .insert(rollingPlayerStatsTable)
-      .values(rollingStats)
-      .onConflictDoUpdate({
-        target: [
-          rollingPlayerStatsTable.profileId,
-          rollingPlayerStatsTable.groupId,
-        ],
-        set: {
-          rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
-          sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + EXCLUDED.sessions_played`,
-          sessionsWon: sql`${rollingPlayerStatsTable.sessionsWon} + EXCLUDED.sessions_won`,
-          unratedSessionsPlayed: sql`${rollingPlayerStatsTable.unratedSessionsPlayed} + EXCLUDED.unrated_sessions_played`,
-          unratedSessionsWon: sql`${rollingPlayerStatsTable.unratedSessionsWon} + EXCLUDED.unrated_sessions_won`,
-          latestSession: sql`EXCLUDED.latest_session`,
-        },
-      });
+      // Step 3: Insert new comp_game_log entries. Keeping the original
+      // createdAt keeps the session's place among same-day sessions, which
+      // decides Elo replay order.
+      await tx.insert(compGameLogTable).values(
+        newPayload.map((log) => ({
+          ...log,
+          createdAt: stored?.createdAt ?? log.createdAt,
+        })),
+      );
 
-    // Step 5: Replace the session's expansion links.
-    await db
-      .delete(juncSessionExpansionTable)
-      .where(eq(juncSessionExpansionTable.sessionId, sessionId));
-    if (expansionIds.length > 0) {
-      await db
-        .insert(juncSessionExpansionTable)
-        .values(expansionIds.map((expansionId) => ({ sessionId, expansionId })))
-        .onConflictDoNothing();
-    }
+      // Step 4: Apply new rolling stats — same rated/unrated branch as create.
+      const rollingStats = newPayload.map((log) => ({
+        profileId: log.profileId,
+        groupId: log.groupId,
+        rollingScore: log.isVp ? log.score! : 0,
+        sessionsPlayed: log.isVp ? 1 : 0,
+        sessionsWon: log.isVp && log.isWinner ? 1 : 0,
+        unratedSessionsPlayed: log.isVp ? 0 : 1,
+        unratedSessionsWon: !log.isVp && log.isWinner ? 1 : 0,
+        latestSession: log.datePlayed,
+      }));
+
+      await tx
+        .insert(rollingPlayerStatsTable)
+        .values(rollingStats)
+        .onConflictDoUpdate({
+          target: [
+            rollingPlayerStatsTable.profileId,
+            rollingPlayerStatsTable.groupId,
+          ],
+          set: {
+            rollingScore: sql`${rollingPlayerStatsTable.rollingScore} + EXCLUDED.rolling_score`,
+            sessionsPlayed: sql`${rollingPlayerStatsTable.sessionsPlayed} + EXCLUDED.sessions_played`,
+            sessionsWon: sql`${rollingPlayerStatsTable.sessionsWon} + EXCLUDED.sessions_won`,
+            unratedSessionsPlayed: sql`${rollingPlayerStatsTable.unratedSessionsPlayed} + EXCLUDED.unrated_sessions_played`,
+            unratedSessionsWon: sql`${rollingPlayerStatsTable.unratedSessionsWon} + EXCLUDED.unrated_sessions_won`,
+            latestSession: sql`EXCLUDED.latest_session`,
+          },
+        });
+
+      // Step 5: Replace the session's expansion links.
+      await tx
+        .delete(juncSessionExpansionTable)
+        .where(eq(juncSessionExpansionTable.sessionId, sessionId));
+      if (expansionIds.length > 0) {
+        await tx
+          .insert(juncSessionExpansionTable)
+          .values(
+            expansionIds.map((expansionId) => ({ sessionId, expansionId })),
+          )
+          .onConflictDoNothing();
+      }
+
+      // Step 6: Replay Elo. Same game: from the earlier of the old and new
+      // dates. Changed game: each game from its own date.
+      if (!stored) return [await replayGameElo(tx, newGameId, newDate)];
+      if (stored.gameId === newGameId) {
+        const fromDate =
+          stored.datePlayed < newDate ? stored.datePlayed : newDate;
+        return [await replayGameElo(tx, newGameId, fromDate)];
+      }
+      return [
+        await replayGameElo(tx, stored.gameId, stored.datePlayed),
+        await replayGameElo(tx, newGameId, newDate),
+      ];
+    });
 
     for (const groupId of affectedGroupIds) {
       updateTag(`tribe:${groupId}`);
@@ -295,6 +346,7 @@ export async function updateSession(
     for (const profileId of affectedProfileIds) {
       updateTag(`recent-games:${profileId}`);
     }
+    invalidateEloCaches(eloAffected);
 
     return { success: true };
   } catch (error) {

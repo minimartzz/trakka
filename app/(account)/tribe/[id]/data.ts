@@ -5,6 +5,7 @@ import { gameTable } from "@/db/schema/game";
 import { groupTable } from "@/db/schema/group";
 import { histDailyPlayerStatsTable } from "@/db/schema/histDailyPlayerStats";
 import { histMonthlyPlayerStatsTable } from "@/db/schema/histMonthlyPlayerStats";
+import { playerGameEloTable } from "@/db/schema/playerGameElo";
 import { profileTable } from "@/db/schema/profile";
 import { profileGroupTable } from "@/db/schema/profileGroup";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
@@ -60,6 +61,8 @@ export async function getTribeGameSessionsCached(groupId: string) {
         victoryPoints: compGameLogTable.victoryPoints,
         winContrib: compGameLogTable.winContrib,
         coop: compGameLogTable.coop,
+        eloBefore: compGameLogTable.eloBefore,
+        eloSessionsBefore: compGameLogTable.eloSessionsBefore,
       },
       profile: {
         username: profileTable.username,
@@ -88,6 +91,27 @@ export async function getRollingPlayerStatsByGroupCached(groupId: string) {
     .select()
     .from(rollingPlayerStatsTable)
     .where(eq(rollingPlayerStatsTable.groupId, groupId));
+}
+
+// Members' current Elo in every game they've played, anywhere. Elo is
+// global, so any replay can change it: tagged "elo" as well as the tribe.
+export async function getTribeMemberElosCached(groupId: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`tribe:${groupId}`, `tribe:${groupId}:elo`, "elo");
+  return db
+    .select({
+      profileId: playerGameEloTable.profileId,
+      gameId: playerGameEloTable.gameId,
+      elo: playerGameEloTable.elo,
+      sessionsPlayed: playerGameEloTable.sessionsPlayed,
+    })
+    .from(playerGameEloTable)
+    .innerJoin(
+      profileGroupTable,
+      eq(playerGameEloTable.profileId, profileGroupTable.profileId),
+    )
+    .where(eq(profileGroupTable.groupId, groupId));
 }
 
 export async function getDailyPlayerStatsByGroupCached(groupId: string) {

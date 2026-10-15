@@ -13,8 +13,11 @@ import {
 } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+import { eloDisplay, eloTier, type EloTier } from "@/utils/elo";
 import { format } from "date-fns";
 import {
+  ArrowDown,
+  ArrowUp,
   CalendarDays,
   Crown,
   Dices,
@@ -192,6 +195,66 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     </div>
   );
 
+  // ELO Change
+  // - Green: gain
+  // - Red: loss
+  // - Muted: no change
+  const eloTrendClass = (delta: number) =>
+    cn(
+      delta > 0 && "bg-accent-1 text-[oklch(25.3%_0.0321_265.95)]",
+      delta < 0 && "bg-destructive text-white",
+      delta === 0 && "bg-muted text-muted-foreground",
+    );
+
+  // Elo box colour by tier. Iron, bronze and purple are dark enough for white
+  // text; the lighter tiers use the dark text of the gain pill
+  const ELO_TIER_CLASS: Record<EloTier, string> = {
+    iron: "bg-elo-iron text-white",
+    bronze: "bg-elo-bronze text-white",
+    silver: "bg-elo-silver text-[oklch(25.3%_0.0321_265.95)]",
+    gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
+    emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
+    purple: "bg-elo-purple text-white",
+  };
+
+  const EloArrow = ({ delta }: { delta: number }) =>
+    delta > 0 ? (
+      <ArrowUp aria-label="Elo up" strokeWidth={3} className="size-4" />
+    ) : delta < 0 ? (
+      <ArrowDown aria-label="Elo down" strokeWidth={3} className="size-4" />
+    ) : null;
+
+  // Players who are still in calibration will have an asterisk next to them
+  const CalibratingMark = () => (
+    <span title="Calibrating" aria-label="Calibrating">
+      *
+    </span>
+  );
+
+  // Elo Change for this session, asterisked while still in Calibration
+  // (see docs/ELO.md)
+  const EloTag = ({ player }: { player: SessionPlayer }) => {
+    const display = eloDisplay(player);
+    if (!display) return null;
+
+    const { delta } = display;
+    return (
+      <span
+        className={cn(
+          "inline-flex shrink-0 items-center gap-0.5 px-1.5 py-0.5 text-sm font-bold tabular-nums",
+          eloTrendClass(delta),
+        )}
+      >
+        <EloArrow delta={delta} />
+        {delta === 0 ? "±0" : Math.abs(delta)}
+        {display.calibrating && <CalibratingMark />}
+      </span>
+    );
+  };
+
+  // The current user's Elo after this session
+  const userElo = playerDetails ? eloDisplay(playerDetails) : null;
+
   const PlayerIdentity = ({
     player,
     highlight,
@@ -226,35 +289,19 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
       </div>
 
       {/* Name + username */}
-      {compact ? (
-        <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
-          <span
-            className={cn(
-              "truncate font-medium text-foreground",
-              highlight && "font-semibold text-primary",
-            )}
-          >
-            {player.firstName}
-          </span>
-          <span className="truncate text-xs text-muted-foreground">
-            (@{player.username})
-          </span>
-        </div>
-      ) : (
-        <div className="min-w-0 flex-1">
-          <span
-            className={cn(
-              "block truncate font-medium text-foreground",
-              highlight && "font-semibold text-primary",
-            )}
-          >
-            {player.firstName}
-          </span>
-          <span className="block truncate text-xs text-muted-foreground">
-            @{player.username}
-          </span>
-        </div>
-      )}
+      <div className="min-w-0 flex-1">
+        <span
+          className={cn(
+            "block truncate font-medium text-foreground",
+            highlight && "font-semibold text-primary",
+          )}
+        >
+          {player.firstName}
+        </span>
+        <span className="block truncate text-xs text-muted-foreground">
+          @{player.username}
+        </span>
+      </div>
     </>
   );
 
@@ -375,6 +422,18 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
           {/* Headline result + optional unrated marker + expansions played */}
           <div className="flex shrink-0 flex-col items-end gap-1">
             {getResultBadge()}
+            {/* User's Elo for the session, coloured by tier */}
+            {userElo && (
+              <span
+                className={cn(
+                  "mt-1.5 inline-flex items-center px-2 py-1 text-base font-bold tabular-nums",
+                  ELO_TIER_CLASS[eloTier(userElo.elo)],
+                )}
+              >
+                ELO {userElo.elo}
+                {userElo.calibrating && <CalibratingMark />}
+              </span>
+            )}
             {/* Unrated games are marked with a tag */}
             {!isVp && (
               <span className="rounded-full border border-border px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">
@@ -434,6 +493,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                         highlight={player.profileId === userId}
                         compact
                       />
+                      <EloTag player={player} />
                       {/* Team-level result + score, only on the first member */}
                       {memberIdx === 0 ? (
                         <>
@@ -533,6 +593,8 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                   </span>
 
                   <PlayerIdentity player={player} highlight={isCurrentUser} />
+
+                  <EloTag player={player} />
 
                   <ResultMarker
                     isWinner={player.isWinner}

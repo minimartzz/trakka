@@ -13,6 +13,7 @@ import {
   getRollingPlayerStats,
   getTribeDetails,
   getTribeGameSessions,
+  getTribeMemberElos,
   getTribeMembers,
 } from "@/app/(account)/tribe/[id]/action";
 import { notFound } from "next/navigation";
@@ -45,6 +46,7 @@ const TribeContent = async ({
     rollingStats,
     dailyPlayerStats,
     monthlyPlayerStats,
+    memberElos,
   ] = await Promise.all([
     fetchUser(),
     getTribeMembers(tribeId),
@@ -53,6 +55,7 @@ const TribeContent = async ({
     getRollingPlayerStats({ groupId: tribeId }),
     getDailyPlayerStats({ groupId: tribeId }),
     getMonthlyPlayerStats({ groupId: tribeId }),
+    getTribeMemberElos(tribeId),
   ]);
 
   if (!user) {
@@ -63,6 +66,7 @@ const TribeContent = async ({
     rollingStats,
     dailyPlayerStats,
     monthlyPlayerStats,
+    memberElos,
   };
 
   const tribeDetails: TribeDetailsInterface = tribeDetailsArray[0];
