@@ -157,7 +157,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                     <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Players
                     </p>
-                    <div className="flex min-w-0 flex-wrap items-center -space-x-3 sm:space-x-0 sm:gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center -space-x-3">
                       {session.players.map((p, index) => {
                         const isCurrentUser = p.profileId === userId;
                         return (
