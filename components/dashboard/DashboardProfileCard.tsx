@@ -23,6 +23,11 @@ import {
   type GameElo,
 } from "@/app/(account)/dashboard/action";
 import { CalibratingMark, ELO_TIER_CLASS } from "@/components/GameSessionCard";
+import {
+  sessionResult,
+  sessionType,
+  type SessionResult,
+} from "@/components/dashboard/stats/shared";
 import { eloTier, isCalibrated } from "@/utils/elo";
 
 interface DashboardProfileCardProps {
@@ -46,12 +51,25 @@ const MAX_RECENT_SESSIONS = 10;
 const NUM_SHOWCASE_SLOTS = 2;
 const LONG_PRESS_MS = 500;
 
-const sessionDotColor = (session: GroupedSession): string => {
-  if (session.isWinner) return "bg-emerald-500";
-  if (session.isLoser) return "bg-destructive";
-  if (session.isTied) return "bg-amber-500";
-  return "bg-sky-500";
+// Co-op/solo sessions are blue regardless of outcome. Competitive and team
+// sessions: a tie is orange, a win green, and anything short of a win red.
+// Rated sessions get a ring.
+const SESSION_RESULT_DOT: Record<
+  Exclude<SessionResult, "all">,
+  string
+> = {
+  win: "bg-emerald-500",
+  tied: "bg-amber-500",
+  loss: "bg-destructive",
 };
+
+const sessionDotClass = (session: GroupedSession): string =>
+  cn(
+    sessionType(session) === "competitive"
+      ? SESSION_RESULT_DOT[sessionResult(session)]
+      : "bg-sky-500",
+    session.isVp && "ring-2 ring-foreground/60 ring-offset-1 ring-offset-card",
+  );
 
 // A game the user can showcase: their Elo in it, with its details
 interface ShowcaseGame {
@@ -429,7 +447,7 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
                     key={session.sessionId}
                     className={cn(
                       "h-3.5 w-3.5 rounded-full",
-                      sessionDotColor(session),
+                      sessionDotClass(session),
                     )}
                   />
                 ))}
