@@ -22,7 +22,7 @@ const member = (profileId: number): TribeMember => ({
 const elo = (
   profileId: number,
   value: number,
-  sessionsPlayed = 8,
+  sessionsPlayed = 12,
   gameId = 1,
 ): MemberElo => ({
   profileId,

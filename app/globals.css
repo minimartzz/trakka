@@ -74,6 +74,7 @@
   --color-elo-gold: var(--elo-gold);
   --color-elo-emerald: var(--elo-emerald);
   --color-elo-purple: var(--elo-purple);
+  --color-elo-maroon: var(--elo-maroon);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
@@ -151,6 +152,7 @@
   --elo-gold: oklch(82% 0.15 85);
   --elo-emerald: oklch(72% 0.15 160);
   --elo-purple: var(--accent-5);
+  --elo-maroon: oklch(40% 0.13 15);
   --accent-foreground: oklch(28.87% 0.0796 262.2);
   --destructive: oklch(63.68% 0.2078 25.33);
   --destructive-foreground: oklch(1 0 0);
@@ -211,6 +213,7 @@
   --elo-silver: oklch(80% 0.01 250);
   --elo-gold: oklch(80% 0.13 85);
   --elo-emerald: oklch(74% 0.13 160);
+  --elo-maroon: oklch(50% 0.14 15);
   --accent-foreground: oklch(95.85% 0.0054 274.96);
   --destructive: oklch(56.27% 0.1974 26.33);
   --destructive-foreground: oklch(100% 0 0);

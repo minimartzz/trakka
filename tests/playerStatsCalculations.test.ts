@@ -84,31 +84,31 @@ describe("Underdog", () => {
     const sessions = [
       // A real upset for 1
       session("s1", [
-        [1, true, 200, 8],
-        [2, false, 300, 10],
+        [1, true, 200, 13],
+        [2, false, 300, 15],
       ]),
       // 4 is still in the Calibration period: not an upset
       session("s2", [
         [4, true, 150, 2],
-        [2, false, 300, 11],
+        [2, false, 300, 16],
       ]),
       session("s3", [
         [4, true, 160, 3],
-        [2, false, 290, 12],
+        [2, false, 290, 17],
       ]),
       // 3 was still in the Calibration period as the loser: not an upset
       session("s4", [
-        [4, true, 170, 6],
-        [3, false, 400, 4],
+        [4, true, 170, 11],
+        [3, false, 400, 9],
       ]),
       // 5 is below 100 but past the Calibration period: still upsets
       session("s5", [
-        [5, true, 80, 9],
-        [2, false, 280, 13],
+        [5, true, 80, 14],
+        [2, false, 280, 18],
       ]),
       session("s6", [
-        [5, true, 90, 10],
-        [2, false, 270, 14],
+        [5, true, 90, 15],
+        [2, false, 270, 19],
       ]),
     ];
 
@@ -128,7 +128,7 @@ describe("Elo King", () => {
     const elos = [
       elo(1, 100, 350, 12),
       elo(2, 100, 300, 30),
-      elo(2, 200, 410, 8),
+      elo(2, 200, 410, 13),
       elo(3, 300, 280, 40),
     ];
 
@@ -139,7 +139,7 @@ describe("Elo King", () => {
 
   it("ignores Elo from games the member is still in the Calibration period for", () => {
     const members = [member(1), member(2)];
-    const elos = [elo(1, 100, 500, 4), elo(2, 100, 120, 5)];
+    const elos = [elo(1, 100, 500, 9), elo(2, 100, 120, 10)];
 
     const badges = calculateBadges([], members, elos);
 
@@ -147,7 +147,7 @@ describe("Elo King", () => {
   });
 
   it("goes to nobody when every member is still in the Calibration period", () => {
-    const badges = calculateBadges([], [member(1)], [elo(1, 100, 300, 4)]);
+    const badges = calculateBadges([], [member(1)], [elo(1, 100, 300, 9)]);
 
     expect(badgeHolder(badges, "elo_king")).toBeUndefined();
   });
@@ -160,7 +160,7 @@ describe("Elo King", () => {
 
   it("breaks a tie in favour of the member with more sessions of that game", () => {
     const members = [member(1), member(2)];
-    const elos = [elo(1, 100, 350, 9), elo(2, 200, 350, 21)];
+    const elos = [elo(1, 100, 350, 14), elo(2, 200, 350, 21)];
 
     const badges = calculateBadges([], members, elos);
 
@@ -168,7 +168,7 @@ describe("Elo King", () => {
   });
 
   it("shows only the badge, with no value", () => {
-    const badges = calculateBadges([], [member(1)], [elo(1, 100, 350, 9)]);
+    const badges = calculateBadges([], [member(1)], [elo(1, 100, 350, 14)]);
 
     const king = badges.get(1)!.find((b) => b.type === "elo_king")!;
     expect(king.value).toBe("");

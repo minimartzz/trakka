@@ -3,22 +3,18 @@
 
 export const START = 0;
 export const FLOOR = 100;
-export const CALIBRATION_SESSIONS = 5;
-export const K_CALIBRATION = 70;
-export const K_START = 70;
-export const K_MIN = 12;
-export const TAU = 30;
+export const K_START = 80;
+export const K_STEP = 5;
+export const K_MIN = 30;
+// The Calibration period lasts until K reaches K_MIN: 10 Rated Sessions
+export const CALIBRATION_SESSIONS = (K_START - K_MIN) / K_STEP;
 export const SCALE = 400;
 
 // How far a player can move, given the Rated Sessions of this game they've
-// already played. Flat through the Calibration period, then tapers from
-// K_START towards K_MIN.
+// already played. Starts at K_START, drops by K_STEP each session through the
+// Calibration period, then stays at K_MIN.
 export const kFactor = (sessionsPlayed: number): number =>
-  sessionsPlayed < CALIBRATION_SESSIONS
-    ? K_CALIBRATION
-    : K_MIN +
-      (K_START - K_MIN) *
-        Math.exp(-(sessionsPlayed - CALIBRATION_SESSIONS) / TAU);
+  Math.max(K_MIN, K_START - K_STEP * sessionsPlayed);
 
 // Calibrated: past the Calibration period, whatever their Elo
 export const isCalibrated = (sessionsPlayed: number): boolean =>
@@ -194,11 +190,25 @@ export function eloDisplay(row: {
   };
 }
 
-// Colour band for an Elo, each 100 wide from 0; purple has no upper limit
+// Colour band for an Elo, by the highest Elo each tier covers; maroon has no
+// upper limit
 export type EloTier =
-  "iron" | "bronze" | "silver" | "gold" | "emerald" | "purple";
+  | "iron"
+  | "bronze"
+  | "silver"
+  | "gold"
+  | "emerald"
+  | "purple"
+  | "maroon";
 
-const ELO_TIERS: EloTier[] = ["iron", "bronze", "silver", "gold", "emerald"];
+const ELO_TIERS: [upTo: number, tier: EloTier][] = [
+  [50, "iron"],
+  [100, "bronze"],
+  [200, "silver"],
+  [300, "gold"],
+  [400, "emerald"],
+  [500, "purple"],
+];
 
 export const eloTier = (elo: number): EloTier =>
-  ELO_TIERS[Math.floor(elo / 100)] ?? "purple";
+  ELO_TIERS.find(([upTo]) => elo <= upTo)?.[1] ?? "maroon";

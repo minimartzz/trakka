@@ -135,17 +135,17 @@ describe("buildEloRace", () => {
     ]);
   });
 
-  it("flags other Tribes' sessions and the first 5 as calibrating", () => {
+  it("flags other Tribes' sessions and the first 10 as calibrating", () => {
     const history = [
-      rated(1, 4, 140, "tribe-b"),
-      rated(1, 5, 150),
+      rated(1, 9, 140, "tribe-b"),
+      rated(1, 10, 150),
       rated(1, 12, 160),
     ];
 
     const points = buildEloRace(history, session12).get(1)!;
 
     expect(points.map((p) => p.sameTribe)).toEqual([false, true, true]);
-    // eloSessionsBefore 3 and 4: still calibrating after the 4th, not the 5th
+    // Still calibrating after the 9th session, not after the 10th
     expect(points.map((p) => p.calibrating)).toEqual([true, false, false]);
   });
 

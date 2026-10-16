@@ -11,11 +11,11 @@ A player's skill number for one specific game, shared across every Tribe they pl
 _Avoid_: rating, game rating, skill rating
 
 **Calibration**:
-A player's first 5 Rated Sessions of a game, also called the Calibration period. Elo moves fastest here. Their Elo is always shown, with an asterisk.
+A player's first 10 Rated Sessions of a game, also called the Calibration period. Elo moves fastest here, and slows a little with each session. Their Elo is always shown, with an asterisk.
 _Avoid_: provisional, placement, hidden
 
 **Calibrated**:
-A player who has played 5 or more Rated Sessions of a game, whatever their Elo.
+A player who has played 10 or more Rated Sessions of a game, whatever their Elo.
 
 **Elo Change**:
 How far one Rated Session moved a player's Elo. It belongs to that session.

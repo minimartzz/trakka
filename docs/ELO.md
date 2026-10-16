@@ -13,10 +13,10 @@ How Trakka calculates Elo. Terms (Elo, Calibration, Calibrated, Elo Change, Matc
 
 - Every player starts every game at **0**.
 - Most established players are expected to sit between **100 and 500**. There is no upper limit, so strong players can go past 500.
-- **The Calibration period (first 5 Rated Sessions):** Elo moves at full speed (highest K).
+- **The Calibration period (first 10 Rated Sessions):** Elo moves fastest. K starts at 80 and drops by 5 each session, then stays at 30 from the 11th session on.
 - **Below 100:** a player can't lose Elo, in or after the Calibration period. A bad session leaves them where they were, so a player who never wins stays at 0.
 - **The floor (100):** once a player reaches 100, they can never drop below it.
-- A player is **in Calibration** for exactly their first 5 Rated Sessions of the game, whatever their Elo. Their Elo is always shown, with an asterisk while they are in Calibration.
+- A player is **in Calibration** for exactly their first 10 Rated Sessions of the game, whatever their Elo. Their Elo is always shown, with an asterisk while they are in Calibration.
 
 ## Constants
 
@@ -24,22 +24,23 @@ How Trakka calculates Elo. Terms (Elo, Calibration, Calibrated, Elo Change, Matc
 |---|---|---|
 | `START` | 0 | Starting Elo for every player in every game |
 | `FLOOR` | 100 | Below this, Elo can't go down. Once reached, Elo can't fall below it. |
-| `CALIBRATION_SESSIONS` | 5 | Length of the Calibration period, in Rated Sessions |
-| `K_CALIBRATION` | 70 | K for each session in the Calibration period |
-| `K_START` | 70 | Where K starts tapering from after the Calibration period. It equals `K_CALIBRATION`, so the curve has no sudden drop. |
-| `K_MIN` | 12 | K the curve settles towards |
-| `TAU` | 30 | How slowly K tapers after the Calibration period, in sessions |
+| `K_START` | 80 | K for a player's first Rated Session of the game |
+| `K_STEP` | 5 | How much K drops after each session in the Calibration period |
+| `K_MIN` | 30 | K once the Calibration period is over |
+| `CALIBRATION_SESSIONS` | 10 | Length of the Calibration period, in Rated Sessions: `(K_START − K_MIN) / K_STEP`, the point where K reaches `K_MIN` |
 | `SCALE` | 400 | Elo gap at which the higher player is expected to win 10 to 1 |
 
-The values were tuned with simulations of small groups (2–5 players, about 3.6 per session) with varied skill. The aim was for the median to land around **200** once players have about 10–15 sessions of a game.
+The values were chosen with simulations of small groups (2–5 players, about 3.6 per session) with varied skill, all starting together. A new player climbs about as fast as under a long, flat start, and a floor of 30 keeps an overrated player's losses large enough to pull them back (see [Self-correction](#self-correction)).
 
 | Sessions per player | Bottom 10% | Median | Top 10% | Highest |
 |---|---|---|---|---|
-| ~4 | 0 | ~100 | ~250 | ~410 |
-| ~14 | 100 | ~205 | ~415 | ~615 |
-| ~27 | 100 | ~260 | ~500 | ~735 |
+| ~4 | 0 | ~100 | ~255 | ~410 |
+| ~14 | ~90 | ~175 | ~370 | ~580 |
+| ~27 | 100 | ~220 | ~435 | ~695 |
 
-The median keeps creeping up with play, because the floor keeps absorbing losses: about 305 at ~54 sessions each and 330 at ~108. Tribes where players join over time sit up to about 30 lower than Tribes whose players all start together.
+The median keeps creeping up with play, because the floor keeps absorbing losses: about 275 at ~54 sessions each and 335 at ~108. Tribes where players join over time sit somewhat lower than Tribes whose players all start together.
+
+The trade-off of a K that never drops below 30: an established player's Elo keeps moving about 20 a session, roughly double what a K tapering towards 12 would give, so it stays a little noisier.
 
 ## Calculation
 
@@ -49,22 +50,21 @@ Sessions of a game are processed in `(datePlayed, createdAt, sessionId)` order. 
 
 - `Rᵢ`: current Elo for this game, starting at `START`
 - `nᵢ`: number of Rated Sessions of this game already played
-- Player *i* is **in Calibration** (the Calibration period) while `nᵢ < CALIBRATION_SESSIONS`
+- Player *i* is **in Calibration** (the Calibration period) while `nᵢ < CALIBRATION_SESSIONS`, that is for their first 10 Rated Sessions
 
 ### 1. K: scaling factor
 
 K sets how far one session can move a player. It is only applied to the final sum (step 4).
 
 ```
-Kᵢ = K_CALIBRATION                                   if nᵢ < CALIBRATION_SESSIONS
-   = K_MIN + (K_START − K_MIN) · e^(−(nᵢ − 5) / TAU)   otherwise
+Kᵢ = max(K_MIN, K_START − K_STEP · nᵢ)
 ```
 
-| n | 0–5 | 10 | 20 | 35 | 50 |
-|---|---|---|---|---|---|
-| K | 70 | ~61 | ~47 | ~33 | ~25 |
+| n | 0 | 1 | 2 | 5 | 9 | 10 and on |
+|---|---|---|---|---|---|---|
+| K | 80 | 75 | 70 | 55 | 35 | 30 |
 
-The first 5 sessions run at full K so new players find their level quickly. After that, K tapers off slowly, with no sudden drop. A slow taper keeps an overrated player's losses large enough to pull them back down quickly (see [Self-correction](#self-correction)).
+New players start at the highest K so they find their level quickly, and K steps down through the Calibration period so their Elo settles gradually rather than all at once. From the 11th session, K stays at 30. It never tapers further, so an overrated player's losses stay large enough to pull them back down (see [Self-correction](#self-correction)).
 
 ### 2. Sides
 
@@ -102,7 +102,7 @@ For player *i* on side A, the preliminary changes from every Matchup are summed 
 ΔRᵢ = Kᵢ · Σ over every other side B of (S_AB − W_AB)
 ```
 
-- This is a sum, not an average, so a session with more opponents can move a player further. For example, a newcomer who wins a 5-player session against equal opponents gets `70 × 4 × 0.5 = +140`.
+- This is a sum, not an average, so a session with more opponents can move a player further. For example, a newcomer who wins a 5-player session against equal opponents gets `80 × 4 × 0.5 = +160`.
 - Teammates share their side's `W` and `S`, but each uses their own `Kᵢ`.
 
 ### 5. Update: climb and floor
@@ -137,12 +137,12 @@ A 4-player individual session.
 
 | Player | Elo | n | K | Finish |
 |---|---|---|---|---|
-| Alice | 320 | 20 | 47.2 | 2nd |
+| Alice | 320 | 20 | 30 | 2nd |
 | Bob | 60 | 2 (Calibration period) | 70 | 1st |
-| Cara | 250 | 10 | 61.1 | 4th |
-| Dan | 110 | 40 | 30.1 | 3rd |
+| Cara | 250 | 10 | 30 | 4th |
+| Dan | 110 | 40 | 30 | 3rd |
 
-**Alice** (K = 47.2)
+**Alice** (K = 30)
 
 | Opponent | W | S | S − W |
 |---|---|---|---|
@@ -151,7 +151,7 @@ A 4-player individual session.
 | Dan | 0.770 | 1 | +0.230 |
 | **Sum** | | | **−0.187** |
 
-ΔR = 47.2 × −0.187 = **−8.8**, giving 311.2. Losing to the lowest-rated player costs her more than her two expected wins earn.
+ΔR = 30 × −0.187 = **−5.6**, giving 314.4. Losing to the lowest-rated player costs her more than her two expected wins earn.
 
 **Bob** (K = 70, Calibration period)
 
@@ -164,7 +164,7 @@ A 4-player individual session.
 
 ΔR = 70 × 2.138 = **+149.6**, giving 209.6. He is past 100 but has played only 3 sessions, so he is still in Calibration.
 
-**Cara** (K = 61.1)
+**Cara** (K = 30, just Calibrated)
 
 | Opponent | W | S | S − W |
 |---|---|---|---|
@@ -173,9 +173,9 @@ A 4-player individual session.
 | Dan | 0.691 | 0 | −0.691 |
 | **Sum** | | | **−1.841** |
 
-ΔR = 61.1 × −1.841 = **−112.5**, giving 137.5.
+ΔR = 30 × −1.841 = **−55.2**, giving 194.8.
 
-**Dan** (K = 30.1)
+**Dan** (K = 30)
 
 | Opponent | W | S | S − W |
 |---|---|---|---|
@@ -184,33 +184,33 @@ A 4-player individual session.
 | Cara | 0.309 | 1 | +0.691 |
 | **Sum** | | | **−0.110** |
 
-ΔR = 30.1 × −0.110 = **−3.3**, giving 106.7.
+ΔR = 30 × −0.110 = **−3.3**, giving 106.7.
 
 **What if, instead:**
 
 - **Below 100:** had Bob finished last, his sum would be −0.862 and ΔR = −60.4. He is below 100, so he would stay at 60, shown as "±0*". The same applies after the Calibration period, when he would be Calibrated even though he is below 100.
-- **The floor:** had Dan finished last, his sum would be −1.110 and ΔR = −33.4. 110 − 33.4 = 76.6 is below the floor, so he would stop at 100.
+- **The floor:** had Dan finished last, his sum would be −1.110 and ΔR = −33.3. 110 − 33.3 = 76.7 is below the floor, so he would stop at 100.
 
 ## Self-correction
 
-W pulls an overrated player back down: they gain little from expected wins and lose a lot from unexpected losses. K tapers slowly after the Calibration period, so that pull stays strong.
+W pulls an overrated player back down: they gain little from expected wins and lose a lot from unexpected losses. K never drops below 30, so that pull stays strong.
 
 Simulated case: a Tribe with A at 350 (n=20), B at 250 (n=15) and C at 150 (n=10). A newcomer wins five 4-player sessions in a row, then finishes last in the 6th.
 
 | After session | 1 | 2 | 3 | 4 | 5 | 6 (last) |
 |---|---|---|---|---|---|---|
-| Newcomer | 168 | 286 | 367 | 427 | 474 | 303 |
-| A | 337 | 327 | 325 | 328 | 333 | 382 |
-| B | 207 | 179 | 166 | 160 | 158 | 206 |
-| C | 100 | 100 | 100 | 100 | 100 | 115 |
+| Newcomer | 192 | 314 | 392 | 446 | 486 | 351 |
+| A | 342 | 337 | 337 | 340 | 344 | 380 |
+| B | 226 | 209 | 199 | 193 | 190 | 218 |
+| C | 111 | 100 | 100 | 100 | 100 | 110 |
 
-The single loss costs the newcomer 171, about a third of the 474 they gained. The veterans pay for the newcomer's streak, because their K is still fairly high: B loses 92 over the five sessions.
+The single loss costs the newcomer 135, still at K 55 in their Calibration period. The veterans pay for the newcomer's streak at K 30: B loses 60 over the five sessions.
 
-If the newcomer is really only as good as B, they settle quickly. Their median Elo over 2,000 simulated runs:
+If the newcomer is really only as good as B, they come back down over their Calibration period and settle by about their 25th session. Their median Elo over 2,000 simulated runs:
 
 | Sessions played | 7 | 11 | 16 | 26 | 36 |
 |---|---|---|---|---|---|
-| Median Elo | ~250 | ~265 | ~265 | ~270 | ~275 |
+| Median Elo | ~340 | ~300 | ~285 | ~275 | ~275 |
 
 ## Recalculation
 
@@ -221,6 +221,7 @@ Elo depends on session order, so it is always recalculated by **replaying** a ga
 - **Deleted session:** replay from its date, through the same replay entry point.
 - **Anonymous player claimed:** replay every game the merged profile has played.
 - **Launch:** backfill by replaying every game from its first session.
+- **Changing a constant:** run the same backfill (`npx tsx scripts/backfillElo.ts`). Stored Elo only changes once every game is replayed.
 
 A replay runs inside the same transaction as the write, under a lock per game.
 
@@ -244,9 +245,9 @@ These are visible to everyone who can see the session.
 
 The viewer's Elo after the session appears in a box under the result badge, e.g. "ELO 263". The box is coloured by tier:
 
-| Elo | 0–99 | 100–199 | 200–299 | 300–399 | 400–499 | 500+ |
-|---|---|---|---|---|---|---|
-| Tier | Iron | Bronze | Silver | Gold | Emerald | Purple |
+| Elo | 0–50 | 51–100 | 101–200 | 201–300 | 301–400 | 401–500 | 501+ |
+|---|---|---|---|---|---|---|---|
+| Tier | Iron | Bronze | Silver | Gold | Emerald | Purple | Maroon |
 
 The tier uses the Elo as displayed (rounded).
 
@@ -255,4 +256,4 @@ If they are still in Calibration after the session, the number has an asterisk, 
 ### Badges
 
 - **Elo King:** one per Tribe. It goes to the eligible member with the highest Elo in any single game where they are Calibrated, using their global Elo. A tie goes to the player with more Rated Sessions of that game. Only the badge is shown, with no value.
-- **Underdog:** an upset is winning against a player whose `elo_before` for that session was higher than the winner's. It only counts if both players were Calibrated going into the session (`elo_sessions_before ≥ 5`).
+- **Underdog:** an upset is winning against a player whose `elo_before` for that session was higher than the winner's. It only counts if both players were Calibrated going into the session (`elo_sessions_before ≥ 10`).

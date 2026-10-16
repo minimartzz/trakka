@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   eloDisplay,
   eloTier,
+  isCalibrated,
   kFactor,
   replayElo,
   type EloRowInput,
@@ -39,13 +40,25 @@ const resultFor = (result: ReturnType<typeof replayElo>, rowId: number) =>
   result.rows.find((r) => r.rowId === rowId)!;
 
 describe("K-factor", () => {
-  it("holds at 70 through the Calibration period, then tapers towards 12", () => {
-    expect(kFactor(0)).toBe(70);
-    expect(kFactor(4)).toBe(70);
-    expect(kFactor(5)).toBeCloseTo(70, 6);
-    expect(kFactor(10)).toBeCloseTo(61.1, 2);
-    expect(kFactor(20)).toBeCloseTo(47.18, 2);
-    expect(kFactor(50)).toBeCloseTo(24.94, 2);
+  it("starts at 80 and drops 5 a session through the Calibration period", () => {
+    expect(kFactor(0)).toBe(80);
+    expect(kFactor(1)).toBe(75);
+    expect(kFactor(4)).toBe(60);
+    expect(kFactor(9)).toBe(35);
+  });
+
+  it("stays at 30 once the Calibration period is over", () => {
+    expect(kFactor(10)).toBe(30);
+    expect(kFactor(20)).toBe(30);
+    expect(kFactor(100)).toBe(30);
+  });
+});
+
+describe("isCalibrated", () => {
+  it("is false for the first 10 Rated Sessions, whatever the Elo", () => {
+    expect(isCalibrated(0)).toBe(false);
+    expect(isCalibrated(9)).toBe(false);
+    expect(isCalibrated(10)).toBe(true);
   });
 });
 
@@ -58,7 +71,7 @@ describe("replayElo", () => {
 
     expect(resultFor(result, winner.rowId)).toMatchObject({
       eloBefore: 0,
-      eloAfter: 35,
+      eloAfter: 40,
       eloSessionsBefore: 0,
     });
     expect(resultFor(result, loser.rowId)).toMatchObject({
@@ -66,7 +79,7 @@ describe("replayElo", () => {
       eloAfter: 0,
       eloSessionsBefore: 0,
     });
-    expect(result.players.get(1)).toEqual(state(35, 1));
+    expect(result.players.get(1)).toEqual(state(40, 1));
     expect(result.players.get(2)).toEqual(state(0, 1));
   });
 
@@ -84,10 +97,10 @@ describe("replayElo", () => {
 
     const result = replayElo([bob, alice, dan, cara], start);
 
-    expect(resultFor(result, alice.rowId).eloAfter).toBeCloseTo(311.2, 2);
+    expect(resultFor(result, alice.rowId).eloAfter).toBeCloseTo(314.4, 2);
     expect(resultFor(result, bob.rowId).eloAfter).toBeCloseTo(209.63, 2);
-    expect(resultFor(result, cara.rowId).eloAfter).toBeCloseTo(137.53, 2);
-    expect(resultFor(result, dan.rowId).eloAfter).toBeCloseTo(106.69, 2);
+    expect(resultFor(result, cara.rowId).eloAfter).toBeCloseTo(194.77, 2);
+    expect(resultFor(result, dan.rowId).eloAfter).toBeCloseTo(106.7, 2);
   });
 
   it("sums Matchups rather than averaging them", () => {
@@ -96,8 +109,8 @@ describe("replayElo", () => {
 
     const result = replayElo([winner, ...others], new Map());
 
-    // 70 × 4 opponents × (1 − 0.5)
-    expect(resultFor(result, winner.rowId).eloAfter).toBeCloseTo(140, 6);
+    // 80 × 4 opponents × (1 − 0.5)
+    expect(resultFor(result, winner.rowId).eloAfter).toBeCloseTo(160, 6);
   });
 
   it("treats a shared position as a draw", () => {
@@ -110,8 +123,8 @@ describe("replayElo", () => {
 
     const result = replayElo([low, high], start);
 
-    expect(resultFor(result, low.rowId).eloAfter).toBeCloseTo(158.56, 2);
-    expect(resultFor(result, high.rowId).eloAfter).toBeCloseTo(241.44, 2);
+    expect(resultFor(result, low.rowId).eloAfter).toBeCloseTo(154.2, 2);
+    expect(resultFor(result, high.rowId).eloAfter).toBeCloseTo(245.8, 2);
   });
 
   it("never takes Elo away from a player below 100, in or after the Calibration period", () => {
@@ -119,14 +132,14 @@ describe("replayElo", () => {
     const calibrating = row("s1", 2, 2);
     const alsoStrong = row("s3", 7, 1);
     const calibrated = row("s3", 3, 2);
-    // Three newcomers: 2nd place nets exactly 0, last place would be −70
+    // Three newcomers: 2nd place nets exactly 0, last place would be −80
     const first = row("s2", 4, 1);
     const middle = row("s2", 5, 2);
     const last = row("s2", 6, 3);
     const start = new Map([
       [1, state(300, 30)],
       [2, state(40, 3)],
-      [3, state(60, 5)],
+      [3, state(60, 12)],
       [7, state(300, 30)],
     ]);
 
@@ -137,7 +150,7 @@ describe("replayElo", () => {
 
     expect(resultFor(result, calibrating.rowId).eloAfter).toBe(40);
     expect(resultFor(result, calibrated.rowId).eloAfter).toBe(60);
-    expect(resultFor(result, first.rowId).eloAfter).toBeCloseTo(70, 6);
+    expect(resultFor(result, first.rowId).eloAfter).toBeCloseTo(80, 6);
     expect(resultFor(result, middle.rowId).eloAfter).toBeCloseTo(0, 6);
     expect(resultFor(result, last.rowId).eloAfter).toBe(0);
   });
@@ -152,7 +165,7 @@ describe("replayElo", () => {
 
     const result = replayElo([winner, loser], start);
 
-    // Unclamped, 110 − 68.1 × 0.5 would be about 76
+    // Unclamped, 110 − 50 × 0.5 would be 85
     expect(resultFor(result, loser.rowId).eloAfter).toBe(100);
   });
 
@@ -173,10 +186,10 @@ describe("replayElo", () => {
     const result = replayElo([p1, p2, p3, p4], start);
 
     // Team averages 150 vs 200
-    expect(resultFor(result, p1.rowId).eloAfter).toBeCloseTo(314.25, 2);
-    expect(resultFor(result, p2.rowId).eloAfter).toBeCloseTo(40, 2);
-    expect(resultFor(result, p3.rowId).eloAfter).toBeCloseTo(185.75, 2);
-    expect(resultFor(result, p4.rowId).eloAfter).toBeCloseTo(185.75, 2);
+    expect(resultFor(result, p1.rowId).eloAfter).toBeCloseTo(317.14, 2);
+    expect(resultFor(result, p2.rowId).eloAfter).toBeCloseTo(45.72, 2);
+    expect(resultFor(result, p3.rowId).eloAfter).toBeCloseTo(182.86, 2);
+    expect(resultFor(result, p4.rowId).eloAfter).toBeCloseTo(182.86, 2);
   });
 
   it("skips unrated, coop and solo sessions, leaving Elo untouched", () => {
@@ -271,13 +284,13 @@ describe("eloDisplay", () => {
 
   it("drops the marker on the session that completes the Calibration period, even below 100", () => {
     expect(
-      eloDisplay({ eloBefore: 60.4, eloAfter: 70.4, eloSessionsBefore: 4 }),
+      eloDisplay({ eloBefore: 60.4, eloAfter: 70.4, eloSessionsBefore: 9 }),
     ).toEqual({ delta: 10, elo: 70, calibrating: false });
   });
 
   it("doesn't mark a player below 100 after the Calibration period", () => {
     expect(
-      eloDisplay({ eloBefore: 95, eloAfter: 95, eloSessionsBefore: 7 }),
+      eloDisplay({ eloBefore: 95, eloAfter: 95, eloSessionsBefore: 12 }),
     ).toEqual({ delta: 0, elo: 95, calibrating: false });
   });
 
@@ -295,16 +308,20 @@ describe("eloDisplay", () => {
 });
 
 describe("eloTier", () => {
-  it("bands Elo into 100-wide tiers, lower bound inclusive, with purple open-ended", () => {
+  it("bands Elo into tiers, upper bound inclusive, with maroon open-ended", () => {
     expect(eloTier(0)).toBe("iron");
-    expect(eloTier(99)).toBe("iron");
+    expect(eloTier(50)).toBe("iron");
+    expect(eloTier(51)).toBe("bronze");
     expect(eloTier(100)).toBe("bronze");
-    expect(eloTier(199)).toBe("bronze");
+    expect(eloTier(101)).toBe("silver");
     expect(eloTier(200)).toBe("silver");
+    expect(eloTier(201)).toBe("gold");
     expect(eloTier(300)).toBe("gold");
+    expect(eloTier(301)).toBe("emerald");
     expect(eloTier(400)).toBe("emerald");
-    expect(eloTier(499)).toBe("emerald");
+    expect(eloTier(401)).toBe("purple");
     expect(eloTier(500)).toBe("purple");
-    expect(eloTier(812)).toBe("purple");
+    expect(eloTier(501)).toBe("maroon");
+    expect(eloTier(812)).toBe("maroon");
   });
 });

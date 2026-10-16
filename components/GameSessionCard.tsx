@@ -36,8 +36,8 @@ import React, { useState } from "react";
 import { sessionHref, useRowLink } from "@/hooks/use-row-link";
 import SessionTitleLink from "@/components/SessionTitleLink";
 
-// Elo box colour by tier. Iron, bronze and purple are dark enough for white
-// text; the lighter tiers use the dark text of the gain pill
+// Elo box colour by tier. Iron, bronze, purple and maroon are dark enough for
+// white text; the lighter tiers use the dark text of the gain pill
 export const ELO_TIER_CLASS: Record<EloTier, string> = {
   iron: "bg-elo-iron text-white",
   bronze: "bg-elo-bronze text-white",
@@ -45,6 +45,7 @@ export const ELO_TIER_CLASS: Record<EloTier, string> = {
   gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
   emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
   purple: "bg-elo-purple text-white",
+  maroon: "bg-elo-maroon text-white",
 };
 
 // Elo shown as text in its tier colour, without the box
@@ -55,6 +56,7 @@ export const ELO_TIER_TEXT_CLASS: Record<EloTier, string> = {
   gold: "text-elo-gold",
   emerald: "text-elo-emerald",
   purple: "text-elo-purple",
+  maroon: "text-elo-maroon",
 };
 
 // Players who are still in calibration will have an asterisk next to them
