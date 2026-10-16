@@ -33,6 +33,8 @@ import { HandshakeIcon, SwordIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { sessionHref, useRowLink } from "@/hooks/use-row-link";
+import SessionTitleLink from "@/components/SessionTitleLink";
 
 // Elo box colour by tier. Iron, bronze and purple are dark enough for white
 // text; the lighter tiers use the dark text of the gain pill
@@ -90,6 +92,8 @@ interface GameSessionsCardProps {
   userId: number;
   session: GroupedSession;
   canEdit?: boolean;
+  // Opens the session page on click. Off for demo cards with no real session.
+  linkToSession?: boolean;
 }
 
 const GameSessionCard: React.FC<GameSessionsCardProps> = ({
@@ -111,7 +115,9 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
     numPlayers,
   },
   canEdit = false,
+  linkToSession = false,
 }) => {
+  const rowLink = useRowLink();
   const playerDetails = players.find((player) => player.profileId === userId);
   const position = playerDetails?.position;
   const positionWithSuffix =
@@ -353,8 +359,10 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
   return (
     <Card
+      onClick={linkToSession ? rowLink(sessionHref(sessionId)) : undefined}
       className={cn(
         "relative overflow-hidden py-0 transition-colors",
+        linkToSession && "cursor-pointer",
         coop
           ? "border-accent bg-accent/50 hover:border-accent/80"
           : "bg-muted/50 hover:border-foreground/20",
@@ -399,7 +407,11 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="font-display truncate text-xl font-bold sm:text-2xl">
-                {gameTitle}
+                {linkToSession ? (
+                  <SessionTitleLink sessionId={sessionId} gameTitle={gameTitle} />
+                ) : (
+                  gameTitle
+                )}
               </h3>
               {canEdit && (
                 <Link

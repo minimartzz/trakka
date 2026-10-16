@@ -345,6 +345,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           delay={0.4}
           canEdit={canEditSessions}
           showRatings
+          linkToSession
         />
       </section>
 

@@ -133,6 +133,12 @@ const LoginClient = () => {
             {/* Login LoginClient */}
             <TabsContent value="login" className="pt-3">
               <form>
+                {/* Where to go after logging in, set by proxy.ts */}
+                <input
+                  type="hidden"
+                  name="next"
+                  value={searchParams.get("next") ?? ""}
+                />
                 <div className="space-y-2">
                   <Label htmlFor="identifier">Username or Email</Label>
                   <Input

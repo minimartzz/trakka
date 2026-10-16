@@ -68,6 +68,20 @@ const expectedScore = (rating: number, opponentRating: number): number =>
 const actualScore = (position: number, opponentPosition: number): number =>
   position < opponentPosition ? 1 : position === opponentPosition ? 0.5 : 0;
 
+// Replay order: (datePlayed, createdAt, sessionId). Plain code-unit
+// comparison, not localeCompare, so the DB can reproduce it.
+export const compareReplayOrder = (
+  a: { datePlayed: string; createdAt: Date; sessionId: string },
+  b: { datePlayed: string; createdAt: Date; sessionId: string },
+): number => {
+  const compare = (x: string, y: string) => (x < y ? -1 : x > y ? 1 : 0);
+  return (
+    compare(a.datePlayed, b.datePlayed) ||
+    a.createdAt.getTime() - b.createdAt.getTime() ||
+    compare(a.sessionId, b.sessionId)
+  );
+};
+
 // Replays one game's sessions. `start` holds each player's state from before
 // the first row; players not in it start at START with no sessions played.
 export function replayElo(
@@ -77,16 +91,9 @@ export function replayElo(
   const players = new Map(start);
   const results: EloRowResult[] = [];
 
-  // Replay order: (datePlayed, createdAt, sessionId). Rows of one session
-  // share all three, so sorting rows also keeps sessions contiguous. Plain
-  // code-unit comparison, not localeCompare, so the DB can reproduce it.
-  const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-  const ordered = [...rows].sort(
-    (a, b) =>
-      compare(a.datePlayed, b.datePlayed) ||
-      a.createdAt.getTime() - b.createdAt.getTime() ||
-      compare(a.sessionId, b.sessionId),
-  );
+  // Rows of one session share the whole replay order, so sorting rows also
+  // keeps sessions contiguous
+  const ordered = [...rows].sort(compareReplayOrder);
 
   const sessions = new Map<string, EloRowInput[]>();
   for (const r of ordered) {

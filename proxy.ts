@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
+// /session/<id>, but not /session/create or /session/edit/<id>
+const SESSION_PAGE = /^\/session\/(?!(?:create|edit)$)[^/]+$/;
+
 export async function proxy(request: NextRequest) {
   // update user's auth session
   const { response, user } = await updateSession(request);
@@ -14,6 +17,16 @@ export async function proxy(request: NextRequest) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl, { headers: response.headers });
+  }
+
+  // Logged-out visitors opening a shared session link come back to it after
+  // login. The account layout still does the real auth check.
+  if (!user && SESSION_PAGE.test(pathname)) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl, { headers: response.headers });
   }
 
   // Add invite link to cookies on /join

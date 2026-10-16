@@ -364,6 +364,7 @@ const Page = () => {
               session={session}
               userId={user.id as number}
               canEdit={editableTribeIds.has(session.tribeId)}
+              linkToSession
             />
           ))}
         </div>

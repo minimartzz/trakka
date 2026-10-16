@@ -47,6 +47,8 @@ import type { FavouriteGame } from "@/db/schema/profile";
 import type { GameMeta } from "@/app/(account)/dashboard/action";
 import { useIsMobile } from "@/hooks/use-mobile";
 import DotsIcon from "@/components/icons/DotsIcon";
+import { sessionHref, useRowLink } from "@/hooks/use-row-link";
+import SessionTitleLink from "@/components/SessionTitleLink";
 import {
   GameThumb,
   HeaderIcon,
@@ -175,6 +177,7 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
   delay = 0,
 }) => {
   const isMobile = useIsMobile();
+  const rowLink = useRowLink();
   const pageSize = isMobile ? 5 : 10;
 
   const [type, setType] = useState<SessionType>("all");
@@ -274,7 +277,8 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                       return (
                         <div
                           key={session.sessionId}
-                          className="rounded-lg border bg-muted/30 p-3"
+                          onClick={rowLink(sessionHref(session.sessionId))}
+                          className="cursor-pointer rounded-lg border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
                         >
                           <div className="flex items-center gap-3">
                             <GameThumb
@@ -287,7 +291,10 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                                 className="truncate font-medium"
                                 title={session.gameTitle}
                               >
-                                {session.gameTitle}
+                                <SessionTitleLink
+                                  sessionId={session.sessionId}
+                                  gameTitle={session.gameTitle}
+                                />
                               </p>
                               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                                 <TypeIcon session={session} />
@@ -397,7 +404,8 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                           return (
                             <TableRow
                               key={session.sessionId}
-                              className="transition-colors hover:bg-muted/50"
+                              onClick={rowLink(sessionHref(session.sessionId))}
+                              className="cursor-pointer transition-colors hover:bg-muted/50"
                             >
                               <TableCell className="w-8">
                                 <TypeIcon session={session} />
@@ -419,7 +427,10 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                                     className="block max-w-40 truncate font-medium sm:max-w-60"
                                     title={session.gameTitle}
                                   >
-                                    {session.gameTitle}
+                                    <SessionTitleLink
+                                  sessionId={session.sessionId}
+                                  gameTitle={session.gameTitle}
+                                />
                                   </span>
                                 </div>
                               </TableCell>

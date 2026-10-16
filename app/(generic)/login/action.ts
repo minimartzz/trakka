@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 
 // Supabase Auth only signs in by email/phone, so a username has to be
 // resolved to its email first. The identifier can be either an email or a
@@ -24,6 +24,15 @@ async function resolveEmail(identifier: string): Promise<string | null> {
     .limit(1);
 
   return rows[0]?.email ?? null;
+}
+
+// Same-site paths only. Parsing it the way a browser would catches tricks a
+// prefix check misses ("//host", "/\host", "/\t/host").
+function safeNextPath(next: FormDataEntryValue | null): string | null {
+  if (typeof next !== "string" || !next.startsWith("/")) return null;
+  const base = "http://trakka.local";
+  const url = new URL(next, base);
+  return url.origin === base ? `${url.pathname}${url.search}` : null;
 }
 
 export async function login(formData: FormData) {
@@ -53,6 +62,11 @@ export async function login(formData: FormData) {
     cookieStore.delete("pending_claim_code");
     redirect(`/account?tab=games&claim=${encodeURIComponent(claimCode)}`);
   }
+
+  // Back to the page that sent them to login (see proxy.ts), replacing the
+  // login page in history so Back doesn't return to it
+  const next = safeNextPath(formData.get("next"));
+  if (next) redirect(next, RedirectType.replace);
 
   redirect("/dashboard");
 }

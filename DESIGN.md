@@ -114,7 +114,7 @@ This system explicitly rejects three families: the flat productivity look (Notio
 - Dark-first, with a real light mode for users who prefer it (not an afterthought).
 - Tabular numerals globally; alignment is non-negotiable in a stats app.
 - Display face (Barlow Condensed) used purposefully for scores and standings, not as eyebrow decoration.
-- One brand blue, four semantic accents (green / teal / red / violet), no further hues.
+- One brand blue, four semantic accents (green / teal / red / violet), no further hues outside charts (see Chart below).
 - Motion lives in three places only: new sessions logged, standings shifting, async state resolving.
 
 ## 2. Colors
@@ -138,6 +138,10 @@ The palette is **Committed**: deep brand blue carries the surface in both modes 
 - **Page Day** (`oklch(1 0 0)`): Light-mode page and card. Pure white in this system, not a cream-warmed off-white.
 - **Muted** (`oklch(53.41% 0.0386 264.97)` light / `oklch(70.77% 0.0282 264.38)` dark): Secondary copy, helper text, axis labels. Never used as primary body text.
 - **Border** (`oklch(91.78% 0.0104 261.79)` light / `oklch(28.43% 0.03 262.75)` dark): Hairline borders, dividers, input strokes. Tinted toward brand blue.
+
+### Chart (categorical)
+- **`--chart-1…5`**: orange, magenta, mustard, lime and brown, one per player when a chart draws several players' lines (the session page's Elo race). Light mode sits at 46–64% lightness and dark mode at 66–80%, so each line reads on its card. Each hue is at least 25° from brand blue and the win, tie, loss and violet accents, so a line never looks like an outcome. They colour chart lines only, never UI.
+- **The viewer's line is brand blue** (`--primary`), drawn bolder, matching how the viewer's row is highlighted elsewhere. Players past the fifth fall back to Muted; their avatar on the line still says whose it is.
 
 ### Named Rules
 
@@ -252,4 +256,4 @@ Below the filter row, a context-aware count line: "Showing N of M sessions" when
 - **Don't** rely on hue alone for win/loss signaling. The Color-Vision Safe Rule says no.
 - **Don't** apply Tailwind's default `dark:bg-input/30` background on inputs embedded inside `bg-card` containers; they create a visible inner rectangle. Pass `bg-transparent dark:bg-transparent` on those inputs.
 - **Don't** animate page-load choreography. Motion is for state changes (new session, standing shift, async resolved), not for "the page is now visible."
-- **Don't** introduce a second brand blue, a "warm gray" neutral, or a hue not already named in the palette. The system is intentionally narrow.
+- **Don't** introduce a second brand blue, a "warm gray" neutral, or a hue not already named in the palette. The system is intentionally narrow. The chart palette is the one named exception, and only for chart lines.

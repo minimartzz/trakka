@@ -48,6 +48,7 @@ export function RecentGamesSection({
         initialTimeFilter="all_time"
         canEdit={canEdit}
         showRatings
+        linkToSession
         // Tribe WPA is a running mean over every game, not just this one
         wpaSessions={sessions}
       />

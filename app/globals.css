@@ -169,11 +169,13 @@
   );
   --shadow-elegant: 0 10px 30px -10px oklch(41.12% 0.1454 262.39 / 0.1);
   --shadow-glow: 0 0 40px oklch(41.12% 0.1454 262.39 / 0.2);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* Categorical lines for other players (see DESIGN.md → Chart). Hues avoid
+     brand blue and the win/tie/loss/violet accents. */
+  --chart-1: oklch(64% 0.15 55);
+  --chart-2: oklch(56% 0.2 340);
+  --chart-3: oklch(60% 0.12 95);
+  --chart-4: oklch(58% 0.14 130);
+  --chart-5: oklch(46% 0.08 60);
   --sidebar: oklch(0.2795 0.0368 260.03);
   --sidebar-background: oklch(0.3717 0.0392 257.29);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
@@ -215,11 +217,11 @@
   --border: oklch(28.43% 0.03 262.75);
   --input: oklch(28.43% 0.03 262.75);
   --ring: oklch(57.61% 0.1504 262.63);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --chart-1: oklch(74% 0.14 55);
+  --chart-2: oklch(70% 0.17 340);
+  --chart-3: oklch(80% 0.12 95);
+  --chart-4: oklch(76% 0.14 130);
+  --chart-5: oklch(66% 0.08 60);
   --gradient-primary: linear-gradient(
     135deg,
     oklch(57.61% 0.1504 262.63),

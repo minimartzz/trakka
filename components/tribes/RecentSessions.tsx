@@ -66,6 +66,8 @@ import {
 } from "@/components/GameSessionCard";
 import DotsIcon from "@/components/icons/DotsIcon";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { sessionHref, useRowLink } from "@/hooks/use-row-link";
+import SessionTitleLink from "@/components/SessionTitleLink";
 
 interface RecentSessionsProps {
   sessions: GameSession[];
@@ -91,6 +93,11 @@ interface RecentSessionsProps {
    */
   showRatings?: boolean;
   wpaSessions?: GameSession[];
+  /**
+   * Each row opens its session page. Edit mode turns this off, so clicks there
+   * stay with the edit actions.
+   */
+  linkToSession?: boolean;
 }
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
@@ -688,8 +695,10 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   canEdit = false,
   showRatings = false,
   wpaSessions,
+  linkToSession = false,
 }) => {
   const router = useRouter();
+  const rowLink = useRowLink();
   const isMobile = useIsMobile();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(initialTimeFilter);
   const [selectedGameIds, setSelectedGameIds] = useState<number[]>([]);
@@ -777,6 +786,18 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   }, [isEmpty]);
 
   const showEditColumn = canEdit && editMode;
+  const linkRows = linkToSession && !showEditColumn;
+  const rowClick = (sessionId: string) =>
+    linkRows ? rowLink(sessionHref(sessionId)) : undefined;
+  const titleOf = (session: GameSession) =>
+    linkRows ? (
+      <SessionTitleLink
+        sessionId={session.sessionId}
+        gameTitle={session.gameTitle}
+      />
+    ) : (
+      session.gameTitle
+    );
 
   const handleEditSession = (sessionId: string) => {
     router.push(`/session/edit/${sessionId}`);
@@ -898,9 +919,11 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                   return (
                     <div
                       key={session.sessionId}
+                      onClick={rowClick(session.sessionId)}
                       className={cn(
                         "rounded-lg border bg-muted/30 p-3",
                         currentUser && "bg-primary/5",
+                        linkRows && "cursor-pointer",
                       )}
                     >
                       {/* Game + date, type pill top right */}
@@ -916,7 +939,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                               className="truncate font-medium"
                               title={session.gameTitle}
                             >
-                              {session.gameTitle}
+                              {titleOf(session)}
                             </p>
                             <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                               <Calendar className="size-3.5" />
@@ -1137,9 +1160,11 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                       return (
                         <TableRow
                           key={session.sessionId}
+                          onClick={rowClick(session.sessionId)}
                           className={cn(
                             "border-b transition-colors hover:bg-muted/50",
                             currentUser && "bg-primary/5",
+                            linkRows && "cursor-pointer",
                           )}
                         >
                           {/* Session type */}
@@ -1163,7 +1188,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 className="font-medium truncate max-w-30 md:max-w-48 lg:max-w-64"
                                 title={session.gameTitle}
                               >
-                                {session.gameTitle}
+                                {titleOf(session)}
                               </span>
                             </div>
                           </TableCell>
