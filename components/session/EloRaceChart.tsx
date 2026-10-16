@@ -12,7 +12,6 @@ import {
 } from "recharts";
 import { useContainerSize } from "@/hooks/useContainerSize";
 import { CalibratingMark } from "@/components/GameSessionCard";
-import { CALIBRATION_SESSIONS } from "@/utils/elo";
 import type { SessionPagePlayer } from "@/app/(account)/session/[sessionId]/data";
 import { cn } from "@/lib/utils";
 import type { EloRacePoint } from "@/utils/sessionPage";
@@ -141,6 +140,8 @@ interface EloRaceChartProps {
   players: SessionPagePlayer[];
   viewerId: number;
   highlight: Highlight;
+  // How many of each player's latest sessions to draw
+  sessions: number;
 }
 
 /**
@@ -148,12 +149,24 @@ interface EloRaceChartProps {
  * every line ends at this session, where their avatar sits.
  */
 export default function EloRaceChart({
-  race,
+  race: fullRace,
   players,
   viewerId,
   highlight,
+  sessions,
 }: EloRaceChartProps) {
   const highlightedId = highlight.id;
+  // Each player's points trimmed to the latest `sessions`, still ending at 0
+  const race = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(fullRace).map(([id, points]) => [
+          id,
+          points.filter((p) => p.index > -sessions),
+        ]),
+      ) as Record<number, EloRacePoint[]>,
+    [fullRace, sessions],
+  );
   const [containerRef, { width, height }] = useContainerSize();
   const colours = useMemo(
     () => lineColours(players, viewerId),
@@ -182,31 +195,22 @@ export default function EloRaceChart({
     });
   }, [charted, race]);
 
-  // The highlighted line, then the viewer's, are drawn last so they sit on top
+  // The highlighted line is drawn last so it sits on top
   const drawOrder = useMemo(
     () =>
-      [...charted].sort((a, b) => {
-        const rank = (p: SessionPagePlayer) =>
-          p.profileId === highlightedId
-            ? 2
-            : p.profileId === viewerId
-              ? 1
-              : 0;
-        return rank(a) - rank(b);
-      }),
-    [charted, highlightedId, viewerId],
+      [...charted].sort(
+        (a, b) =>
+          Number(a.profileId === highlightedId) -
+          Number(b.profileId === highlightedId),
+      ),
+    [charted, highlightedId],
   );
 
   if (charted.length === 0) return null;
 
-  // The viewer's line stays fully opaque; others fade back while one is
-  // highlighted
+  // The highlighted line is solid; the rest fade back behind it
   const opacity = (profileId: number) =>
-    profileId === viewerId || profileId === highlightedId
-      ? 1
-      : highlightedId === null
-        ? 0.55
-        : 0.15;
+    profileId === highlightedId ? 1 : highlightedId === null ? 0.7 : 0.3;
 
   return (
     <div>
@@ -265,8 +269,7 @@ export default function EloRaceChart({
             {drawOrder.map((player) => {
               const id = player.profileId;
               const colour = colours.get(id)!;
-              const isViewer = id === viewerId;
-              const emphasised = isViewer || id === highlightedId;
+              const emphasised = id === highlightedId;
               const points = race[id];
               return (
                 <Line
@@ -356,10 +359,6 @@ export default function EloRaceChart({
           );
         })}
       </ul>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Hollow points are still in Calibration: the player hadn&apos;t yet
-        finished {CALIBRATION_SESSIONS} Rated Sessions of the game.
-      </p>
     </div>
   );
 }

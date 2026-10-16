@@ -11,6 +11,7 @@ import {
   Dices,
   Puzzle,
   Users,
+  Weight,
 } from "lucide-react";
 import DotsIcon from "@/components/icons/DotsIcon";
 import {
@@ -24,34 +25,37 @@ import type {
 } from "@/app/(account)/session/[sessionId]/data";
 import type { SessionExpansion } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
+import {
+  getWeightBg,
+  getWeightColor,
+  getWeightLabel,
+} from "@/components/tribes/games/utils";
 
 const CHIP_LIMIT = 6;
 
-const range = (min: number | null, max: number | null) =>
-  min && max && min !== max ? `${min}–${max}` : String(max || min || "");
+const range = (min: number | null, max: number | null, dash = "–") =>
+  min && max && min !== max ? `${min}${dash}${max}` : String(max || min || "");
 
 const playTime = (game: SessionGame) =>
-  range(game.minPlayingTime, game.maxPlayingTime) ||
+  range(game.minPlayingTime, game.maxPlayingTime, " – ") ||
   (game.playingTime ? String(game.playingTime) : "");
 
-// Weight on BGG's 1–5 scale, as five pips plus the number
+// Weight out of 5 with its Light / Medium / Heavy band, as on the tribe's
+// Games tab
 const WeightSpec: React.FC<{ weight: number }> = ({ weight }) => (
-  <div className="flex items-center gap-2">
-    <span className="flex gap-0.5" aria-hidden>
-      {[1, 2, 3, 4, 5].map((pip) => (
-        <span
-          key={pip}
-          className={cn(
-            "h-1.5 w-3.5 rounded-full",
-            pip <= Math.round(weight) ? "bg-primary" : "bg-muted",
-          )}
-        />
-      ))}
+  <div
+    className={cn(
+      "flex items-baseline gap-1.5 rounded-lg border px-2 py-0.5",
+      getWeightBg(weight),
+    )}
+  >
+    <span className={cn("font-bold tabular-nums", getWeightColor(weight))}>
+      {weight.toFixed(1)}
     </span>
-    <span className="font-semibold tabular-nums text-foreground">
-      {weight.toFixed(2)}
+    <span className="text-xs text-muted-foreground">/ 5</span>
+    <span className={cn("text-xs font-medium", getWeightColor(weight))}>
+      {getWeightLabel(weight)}
     </span>
-    <span className="sr-only">out of 5</span>
   </div>
 );
 
@@ -67,7 +71,10 @@ const Specs: React.FC<{
     <dl className={cn("text-sm", className)}>
       {game && game.weight > 0 && (
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-muted-foreground">Weight</dt>
+          <dt className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <Weight className="size-3.5" />
+            Weight
+          </dt>
           <dd>
             <WeightSpec weight={game.weight} />
           </dd>

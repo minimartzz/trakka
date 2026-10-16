@@ -1,12 +1,12 @@
-import { Medal, Trophy } from "lucide-react";
+import { Medal, Swords, Trophy } from "lucide-react";
 import type {
   SessionPageData,
   SessionPagePlayer,
 } from "@/app/(account)/session/[sessionId]/data";
 import { cn } from "@/lib/utils";
 import SessionDescription from "./SessionDescription";
-import { formatWpa, playLabel } from "@/utils/sessionPage";
-import { PlayerIdentity } from "./PlayerParts";
+import { playLabel } from "@/utils/sessionPage";
+import { PlayerIdentity, WpaValue } from "./PlayerParts";
 
 // Co-op and solo sessions have one result for everyone: Won or Lost, with the
 // icon and label carrying it as well as the colour
@@ -64,11 +64,16 @@ const PlayerLine: React.FC<{
       <PlayerIdentity player={player} isViewer={isViewer} />
     </div>
     <dl className="flex shrink-0 gap-5 text-right text-sm">
-      <div>
-        <dt className="text-xs text-muted-foreground">WPA</dt>
-        <dd className="font-semibold tabular-nums">{formatWpa(player.wpa)}</dd>
+      <div className="space-y-1">
+        <dt className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <Swords className="size-3.5" />
+          WPA
+        </dt>
+        <dd>
+          <WpaValue wpa={player.wpa} />
+        </dd>
       </div>
-      <div>
+      <div className="space-y-1">
         <dt className="text-xs text-muted-foreground">Play</dt>
         <dd className="font-semibold tabular-nums">
           {playLabel(player.playNumber)}

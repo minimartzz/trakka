@@ -1,27 +1,40 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Crown, Handshake } from "lucide-react";
+import { Crown, Gauge, Handshake, Info, Swords } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type {
   SessionPageData,
   SessionPagePlayer,
 } from "@/app/(account)/session/[sessionId]/data";
 import { cn } from "@/lib/utils";
+import { CALIBRATION_SESSIONS } from "@/utils/elo";
 import {
   ELO_RACE_LENGTH,
-  formatWpa,
   playLabel,
   standingGroups,
   type StandingGroup,
 } from "@/utils/sessionPage";
 import EloRaceChart, { hoverHandlers, type Highlight } from "./EloRaceChart";
-import { EloBeforeAfter, EloChangePill, PlayerIdentity } from "./PlayerParts";
+import { EloMovement, PlayerIdentity, WpaValue } from "./PlayerParts";
 
-// After the position: player, VP, then Elo when rated
+// Phones only have room for each player's last few sessions
+const MOBILE_RACE_LENGTH = 5;
+
+// After the position: player and VP, then WPA and Elo (rated only). Phones
+// keep the first two as columns and put WPA and Elo on a line underneath.
 const columns = (rated: boolean) =>
-  rated
-    ? "grid-cols-[minmax(0,1fr)_3.5rem_auto] sm:grid-cols-[minmax(0,1fr)_4.5rem_6.5rem]"
-    : "grid-cols-[minmax(0,1fr)_3.5rem] sm:grid-cols-[minmax(0,1fr)_4.5rem]";
+  cn(
+    "grid-cols-[minmax(0,1fr)_auto]",
+    rated
+      ? "sm:grid-cols-[minmax(0,1fr)_4rem_4.5rem_11.5rem]"
+      : "sm:grid-cols-[minmax(0,1fr)_4rem_4.5rem]",
+  );
 
 // As on the session card: a tie for first shows both
 const ResultMarkers: React.FC<{ group: StandingGroup<SessionPagePlayer> }> = ({
@@ -65,8 +78,26 @@ const TeamHeader: React.FC<{
       <ResultMarkers group={group} />
     </div>
     <Vp value={group.members[0].victoryPoints} />
-    {rated && <span />}
+    {/* Empty WPA and Elo columns */}
+    <span className="hidden sm:block" />
+    {rated && <span className="hidden sm:block" />}
   </li>
+);
+
+// A WPA or Elo cell. On phones its label and value join the strip's grid, so
+// labels share a row and values share the next; wider screens use the header.
+const Stat: React.FC<{
+  label: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}> = ({ label, icon: Icon, children }) => (
+  <div className="contents sm:flex sm:flex-col sm:items-end">
+    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground sm:hidden">
+      <Icon className="size-3.5" />
+      {label}
+    </span>
+    {children}
+  </div>
 );
 
 const PlayerRow: React.FC<{
@@ -90,7 +121,7 @@ const PlayerRow: React.FC<{
     <li
       {...linkToChart}
       className={cn(
-        "grid items-center gap-x-3 px-3 py-3 sm:px-4",
+        "grid items-center gap-x-3 gap-y-3 px-3 py-3 sm:gap-x-4 sm:px-4",
         columns(rated),
         isViewer && "bg-primary/12 dark:bg-primary/18",
         highlighted && !isViewer && "bg-muted/60",
@@ -100,21 +131,24 @@ const PlayerRow: React.FC<{
         player={player}
         isViewer={isViewer}
         markers={inTeam ? null : <ResultMarkers group={group} />}
-      >
-        <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-          WPA {formatWpa(player.wpa)} · {playLabel(player.playNumber)}
-        </p>
-      </PlayerIdentity>
+        detail={playLabel(player.playNumber)}
+      />
 
       {/* Teammates share the VP shown in their team's header */}
       {inTeam ? <span /> : <Vp value={player.victoryPoints} />}
 
-      {rated && (
-        <div className="flex flex-col items-end gap-0.5">
-          <EloChangePill player={player} />
-          <EloBeforeAfter player={player} />
-        </div>
-      )}
+      {/* Phones: labels then values under the name, lined up past the
+          avatar. Wider screens dissolve the wrapper so these become columns. */}
+      <div className="col-span-2 grid auto-cols-max grid-flow-col grid-rows-[auto_auto] items-center justify-start gap-x-5 gap-y-2 pl-13 sm:contents">
+        <Stat label="WPA" icon={Swords}>
+          <WpaValue wpa={player.wpa} />
+        </Stat>
+        {rated && (
+          <Stat label="Elo" icon={Gauge}>
+            <EloMovement player={player} />
+          </Stat>
+        )}
+      </div>
     </li>
   );
 };
@@ -132,7 +166,12 @@ export default function CompetitiveResults({
   viewerId: number;
 }) {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [pinnedId, setPinnedId] = useState<number | null>(null);
+  // The viewer's own line starts out pinned, when they have one
+  const [pinnedId, setPinnedId] = useState<number | null>(() =>
+    data.eloRace?.[viewerId] ? viewerId : null,
+  );
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const raceLength = useIsMobile() ? MOBILE_RACE_LENGTH : ELO_RACE_LENGTH;
   const highlight: Highlight = {
     id: hoveredId ?? pinnedId,
     hover: setHoveredId,
@@ -149,17 +188,24 @@ export default function CompetitiveResults({
           Standings
         </h2>
         <div className="mt-3 overflow-hidden rounded-lg border bg-card">
-          <div className="flex border-b text-xs font-medium text-muted-foreground">
-            <span className="w-11 shrink-0 py-2 text-center sm:w-14">Pos</span>
+          {/* Column labels; phones label each player's stats inline */}
+          <div className="hidden border-b text-xs font-medium text-muted-foreground sm:flex">
+            <span className="w-14 shrink-0 py-2 text-center">Pos</span>
             <div
-              className={cn(
-                "grid flex-1 gap-x-3 px-3 py-2 sm:px-4",
-                columns(rated),
-              )}
+              className={cn("grid flex-1 gap-x-4 px-4 py-2", columns(rated))}
             >
               <span>Player</span>
               <span className="text-right">VP</span>
-              {rated && <span className="text-right">Elo</span>}
+              <span className="inline-flex items-center justify-end gap-1">
+                <Swords className="size-3.5" />
+                WPA
+              </span>
+              {rated && (
+                <span className="inline-flex items-center justify-end gap-1">
+                  <Gauge className="size-3.5" />
+                  Elo
+                </span>
+              )}
             </div>
           </div>
 
@@ -205,11 +251,30 @@ export default function CompetitiveResults({
 
       {data.eloRace && (
         <section aria-labelledby="elo-race-heading">
-          <h2 id="elo-race-heading" className="text-xl font-semibold">
-            Elo race
-          </h2>
+          <div className="flex items-center gap-1">
+            <h2 id="elo-race-heading" className="text-xl font-semibold">
+              ELO race
+            </h2>
+            {/* Opens on tap as well as hover, for phones */}
+            <Tooltip open={aboutOpen} onOpenChange={setAboutOpen}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setAboutOpen((open) => !open)}
+                  aria-label="About hollow points"
+                  className="flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-7"
+                >
+                  <Info className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-64">
+                Hollow points are still in Calibration: the player hadn&apos;t
+                yet finished {CALIBRATION_SESSIONS} Rated Sessions of the game.
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Each player&apos;s last {ELO_RACE_LENGTH} Rated Sessions of{" "}
+            Each player&apos;s last {raceLength} Rated Sessions of{" "}
             {data.gameTitle}
           </p>
           <div className="mt-3 rounded-lg border bg-card p-3 sm:p-5">
@@ -218,6 +283,7 @@ export default function CompetitiveResults({
               players={data.players}
               viewerId={viewerId}
               highlight={highlight}
+              sessions={raceLength}
             />
           </div>
         </section>
