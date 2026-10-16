@@ -5,7 +5,8 @@ import type {
 } from "@/app/(account)/session/[sessionId]/data";
 import { cn } from "@/lib/utils";
 import SessionDescription from "./SessionDescription";
-import { PlayerIdentity, formatWpa, playLabel } from "./PlayerParts";
+import { formatWpa, playLabel } from "@/utils/sessionPage";
+import { PlayerIdentity } from "./PlayerParts";
 
 // Co-op and solo sessions have one result for everyone: Won or Lost, with the
 // icon and label carrying it as well as the colour

@@ -15,13 +15,6 @@ import {
 import type { SessionPagePlayer } from "@/app/(account)/session/[sessionId]/data";
 import { cn } from "@/lib/utils";
 import { CALIBRATION_SESSIONS, eloDisplay } from "@/utils/elo";
-import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
-
-export const formatWpa = (wpa: number | null) =>
-  wpa === null ? "—" : wpa.toFixed(2);
-
-export const playLabel = (playNumber: number) =>
-  `${positionOrdinalSuffix(playNumber)} play`;
 
 const PlayerAvatar: React.FC<{ player: SessionPagePlayer }> = ({ player }) => (
   <div className="relative size-10 shrink-0 overflow-hidden rounded-full bg-muted">

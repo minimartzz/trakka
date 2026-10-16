@@ -9,17 +9,13 @@ import type {
 import { cn } from "@/lib/utils";
 import {
   ELO_RACE_LENGTH,
+  formatWpa,
+  playLabel,
   standingGroups,
   type StandingGroup,
 } from "@/utils/sessionPage";
 import EloRaceChart, { hoverHandlers, type Highlight } from "./EloRaceChart";
-import {
-  EloBeforeAfter,
-  EloChangePill,
-  PlayerIdentity,
-  formatWpa,
-  playLabel,
-} from "./PlayerParts";
+import { EloBeforeAfter, EloChangePill, PlayerIdentity } from "./PlayerParts";
 
 // After the position: player, VP, then Elo when rated
 const columns = (rated: boolean) =>

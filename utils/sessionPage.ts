@@ -2,6 +2,15 @@
 // Session, Calibration, Elo Change) are defined in CONTEXT.md.
 
 import { compareReplayOrder, isCalibrated } from "@/utils/elo";
+import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+
+// Shared by server and client components, so they can't live in a
+// "use client" module
+export const formatWpa = (wpa: number | null) =>
+  wpa === null ? "—" : wpa.toFixed(2);
+
+export const playLabel = (playNumber: number) =>
+  `${positionOrdinalSuffix(playNumber)} play`;
 
 export type SessionMode = "rated" | "unrated" | "coop" | "solo";
 
