@@ -2,6 +2,27 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.7.0] ELO System - 2026-10-16
+
+Games now have an ELO system attached to it. The calibration period last around 10 games and it's globally tagged to your account.
+
+### Added
+
+- ELO for games! Every game now has a global ELO! Get crackin’
+- Anonymous user codes now have a shareable code with a custom message
+
+### Changed
+
+- Refreshed the colour scheme for stat cards
+- Recent games sections now distinguish game types and have better filtering
+
+### Fixed
+
+- Mobile site dashboard no longer have components cut off to the right
+- Logic for Nemesis, Dominating, and Best Buddy for Tribe “Rivalries and Friends” section fixed
+- Logic for H2H comparisons now only compare competitive games
+- Fixed last 10 games logic on player profile on dashboard
+
 ## [0.5.1] Hotfix: Optimising DB calls and serving content - 2026-08-23
 
 Reduction in DB calls to optimise for cost
