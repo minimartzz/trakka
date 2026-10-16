@@ -123,6 +123,7 @@ const TribePageClient: React.FC<TribePageClientProps> = ({
           <TribeGamesTab
             sessions={sessions}
             members={members}
+            memberElos={histStats.memberElos}
             groupId={tribeId}
             currentUserId={userId}
             selectedGameId={selectedGameId}

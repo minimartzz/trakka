@@ -34,6 +34,58 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 
+// Elo box colour by tier. Iron, bronze and purple are dark enough for white
+// text; the lighter tiers use the dark text of the gain pill
+export const ELO_TIER_CLASS: Record<EloTier, string> = {
+  iron: "bg-elo-iron text-white",
+  bronze: "bg-elo-bronze text-white",
+  silver: "bg-elo-silver text-[oklch(25.3%_0.0321_265.95)]",
+  gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
+  emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
+  purple: "bg-elo-purple text-white",
+};
+
+// Elo shown as text in its tier colour, without the box
+export const ELO_TIER_TEXT_CLASS: Record<EloTier, string> = {
+  iron: "text-elo-iron",
+  bronze: "text-elo-bronze",
+  silver: "text-elo-silver",
+  gold: "text-elo-gold",
+  emerald: "text-elo-emerald",
+  purple: "text-elo-purple",
+};
+
+// Players who are still in calibration will have an asterisk next to them
+export const CalibratingMark = () => (
+  <span title="Calibrating" aria-label="Calibrating">
+    *
+  </span>
+);
+
+// ELO Change
+// - Green: gain
+// - Red: loss
+// - Muted: no change
+export const eloTrendClass = (delta: number) =>
+  cn(
+    delta > 0 && "bg-accent-1 text-[oklch(25.3%_0.0321_265.95)]",
+    delta < 0 && "bg-destructive text-white",
+    delta === 0 && "bg-muted text-muted-foreground",
+  );
+
+export const EloArrow = ({
+  delta,
+  className = "size-4",
+}: {
+  delta: number;
+  className?: string;
+}) =>
+  delta > 0 ? (
+    <ArrowUp aria-label="Elo up" strokeWidth={3} className={className} />
+  ) : delta < 0 ? (
+    <ArrowDown aria-label="Elo down" strokeWidth={3} className={className} />
+  ) : null;
+
 interface GameSessionsCardProps {
   userId: number;
   session: GroupedSession;
@@ -193,42 +245,6 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
         </span>
       )}
     </div>
-  );
-
-  // ELO Change
-  // - Green: gain
-  // - Red: loss
-  // - Muted: no change
-  const eloTrendClass = (delta: number) =>
-    cn(
-      delta > 0 && "bg-accent-1 text-[oklch(25.3%_0.0321_265.95)]",
-      delta < 0 && "bg-destructive text-white",
-      delta === 0 && "bg-muted text-muted-foreground",
-    );
-
-  // Elo box colour by tier. Iron, bronze and purple are dark enough for white
-  // text; the lighter tiers use the dark text of the gain pill
-  const ELO_TIER_CLASS: Record<EloTier, string> = {
-    iron: "bg-elo-iron text-white",
-    bronze: "bg-elo-bronze text-white",
-    silver: "bg-elo-silver text-[oklch(25.3%_0.0321_265.95)]",
-    gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
-    emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
-    purple: "bg-elo-purple text-white",
-  };
-
-  const EloArrow = ({ delta }: { delta: number }) =>
-    delta > 0 ? (
-      <ArrowUp aria-label="Elo up" strokeWidth={3} className="size-4" />
-    ) : delta < 0 ? (
-      <ArrowDown aria-label="Elo down" strokeWidth={3} className="size-4" />
-    ) : null;
-
-  // Players who are still in calibration will have an asterisk next to them
-  const CalibratingMark = () => (
-    <span title="Calibrating" aria-label="Calibrating">
-      *
-    </span>
   );
 
   // Elo Change for this session, asterisked while still in Calibration

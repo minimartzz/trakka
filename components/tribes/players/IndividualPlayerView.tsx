@@ -15,7 +15,16 @@ import {
   RotateCcw,
   Trophy,
   Target,
+  Info,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { isCalibrated } from "@/utils/elo";
+import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+import { format, parseISO } from "date-fns";
 import {
   type GameSession,
   type TribeMember,
@@ -37,6 +46,7 @@ import {
   calculateWpaDelta,
   getRoleLabel,
   ComparativeStat,
+  type PlayerGameStat,
 } from "@/utils/playerStatsCalculations";
 import PlayerSearchSelect from "./PlayerSearchSelect";
 import PlayHeatmap from "./PlayHeatmap";
@@ -401,7 +411,9 @@ const SectionHeader: React.FC<{
   icon: React.ReactNode;
   title: string;
   delay?: number;
-}> = ({ icon, title, delay = 0 }) => (
+  // Shown in a tooltip on an info icon beside the title
+  info?: string;
+}> = ({ icon, title, delay = 0, info }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -410,16 +422,33 @@ const SectionHeader: React.FC<{
   >
     {icon}
     <h3 className="text-base font-semibold">{title}</h3>
+    {info && (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label={info}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Info className="w-4 h-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-60">{info}</TooltipContent>
+      </Tooltip>
+    )}
   </motion.div>
 );
 
 // ── Comparative card ─────────────────────────────────────────────────
 
+// e.g. "05 Mar 2026"; parseISO reads YYYY-MM-DD as a local date
 const formatShortDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  format(parseISO(dateStr), "dd MMM yyyy");
+
+const timesLabel = (n: number) => (n === 1 ? "1 time" : `${n} times`);
+
+// Games with a result against them: draws are left out
+const headToHeads = (stat: ComparativeStat) => stat.wins + stat.losses;
 
 const ComparativeCard: React.FC<{
   label: string;
@@ -428,33 +457,9 @@ const ComparativeCard: React.FC<{
   labelClass: string;
   stat: ComparativeStat | null;
   statLine: string;
-  sessions: GameSession[];
-  activePlayerId: number;
   delay?: number;
-}> = ({
-  label,
-  icon,
-  iconColor,
-  labelClass,
-  stat,
-  statLine,
-  sessions,
-  activePlayerId,
-  delay = 0,
-}) => {
+}> = ({ label, icon, iconColor, labelClass, stat, statLine, delay = 0 }) => {
   const [flipped, setFlipped] = useState(false);
-
-  const recentGames = useMemo(() => {
-    if (!stat) return [];
-    return sessions
-      .filter(
-        (s) =>
-          s.players.some((p) => p.profileId === activePlayerId) &&
-          s.players.some((p) => p.profileId === stat.profileId),
-      )
-      .sort((a, b) => b.datePlayed.localeCompare(a.datePlayed))
-      .slice(0, 3);
-  }, [sessions, activePlayerId, stat]);
 
   // ── Empty state ───────────────────────────────────────────────────
   if (!stat) {
@@ -595,62 +600,49 @@ const ComparativeCard: React.FC<{
                 </div>
               </div>
 
-              {/* Game rows */}
+              {/* The most recent head-to-heads: date, then both finishing
+                  positions with the one who finished ahead in bold */}
               <div className="flex flex-col gap-1.5 flex-1 justify-center">
-                {recentGames.length === 0 ? (
+                {stat.recent.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center">
-                    No games together yet
+                    No games against each other yet
                   </p>
                 ) : (
-                  recentGames.map((session) => {
-                    const me = session.players.find(
-                      (p) => p.profileId === activePlayerId,
-                    );
-                    const won = me?.isWinner ?? false;
-                    const winner = session.players.find((p) => p.isWinner);
-                    return (
-                      <div
-                        key={session.sessionId}
-                        className="flex items-center gap-2"
-                      >
-                        {/* W / L badge */}
+                  stat.recent.map((game) => (
+                    <div
+                      key={game.sessionId}
+                      className="flex items-center justify-between gap-2 text-xs tabular-nums"
+                    >
+                      <span className="shrink-0 text-muted-foreground">
+                        {formatShortDate(game.datePlayed)}
+                      </span>
+                      <span className="flex min-w-0 items-center gap-1.5">
                         <span
                           className={cn(
-                            "w-5 h-5 rounded text-[10px] font-black flex items-center justify-center shrink-0",
-                            won
-                              ? "bg-emerald-500/15 text-emerald-500"
-                              : "bg-red-500/15 text-red-400",
+                            "shrink-0",
+                            game.position < game.theirPosition
+                              ? "font-bold text-foreground"
+                              : "text-muted-foreground",
                           )}
                         >
-                          {won ? "W" : "L"}
+                          You {positionOrdinalSuffix(game.position)}
                         </span>
-                        {/* Game title */}
-                        <span className="flex-1 text-xs font-medium truncate">
-                          {session.gameTitle}
+                        <span className="text-muted-foreground/50">·</span>
+                        <span
+                          className={cn(
+                            "truncate",
+                            game.theirPosition < game.position
+                              ? "font-bold text-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {stat.firstName}{" "}
+                          {positionOrdinalSuffix(game.theirPosition)}
                         </span>
-                        {/* Winner + date */}
-                        <div className="flex flex-col items-end shrink-0">
-                          <div className="flex items-center gap-0.5">
-                            <Trophy className="w-2.5 h-2.5 text-amber-400" />
-                            <span className="text-[10px] font-semibold text-amber-500 truncate max-w-12">
-                              {winner?.firstName ?? "—"}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">
-                            {formatShortDate(session.datePlayed)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
+                      </span>
+                    </div>
+                  ))
                 )}
-              </div>
-
-              {/* Summary footer */}
-              <div className="flex items-center justify-between pt-1 border-t">
-                <span className="text-[10px] text-muted-foreground">
-                  {stat.wins}W · {stat.losses}L · {stat.gamesPlayed} together
-                </span>
               </div>
             </CardContent>
           </Card>
@@ -764,6 +756,21 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
 
   const playerBadges = badgeMap.get(activePlayerId) ?? [];
 
+  // The player's current Elo in a game, for the best/worst game cards
+  const gameElo = (game: PlayerGameStat | null) => {
+    const entry =
+      game &&
+      histStats.memberElos.find(
+        (e) => e.profileId === activePlayerId && e.gameId === game.gameId,
+      );
+    return entry
+      ? {
+          elo: Math.round(entry.elo),
+          calibrating: !isCalibrated(entry.sessionsPlayed),
+        }
+      : null;
+  };
+
   // Empty state
   if (!activeMember) {
     return (
@@ -839,6 +846,7 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
           icon={<Gamepad2 className="w-5 h-5 text-primary" />}
           title="Game Breakdown"
           delay={0.1}
+          info="Games are ranked by win rate, weighted by the number of plays"
         />
 
         {/* Row 1: Best + Worst flip cards */}
@@ -848,8 +856,16 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
           transition={{ duration: 0.3, delay: 0.15 }}
           className="grid grid-cols-2 gap-3 mb-4"
         >
-          <GameFlipCard game={detailedStats.bestGame} variant="best" />
-          <GameFlipCard game={detailedStats.worstGame} variant="worst" />
+          <GameFlipCard
+            game={detailedStats.bestGame}
+            variant="best"
+            elo={gameElo(detailedStats.bestGame)}
+          />
+          <GameFlipCard
+            game={detailedStats.worstGame}
+            variant="worst"
+            elo={gameElo(detailedStats.worstGame)}
+          />
         </motion.div>
 
         {/* Row 2: Donut charts */}
@@ -969,11 +985,9 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
             stat={comparative.nemesis}
             statLine={
               comparative.nemesis
-                ? `${comparative.nemesis.losses}L in ${comparative.nemesis.gamesPlayed} games`
+                ? `Lost to them ${timesLabel(comparative.nemesis.losses)} in ${headToHeads(comparative.nemesis)} games`
                 : ""
             }
-            sessions={sessions}
-            activePlayerId={activePlayerId}
             delay={0.25}
           />
           <ComparativeCard
@@ -984,11 +998,9 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
             stat={comparative.dominating}
             statLine={
               comparative.dominating
-                ? `${comparative.dominating.wins}W in ${comparative.dominating.gamesPlayed} games`
+                ? `Beat them ${timesLabel(comparative.dominating.wins)} in ${headToHeads(comparative.dominating)} games`
                 : ""
             }
-            sessions={sessions}
-            activePlayerId={activePlayerId}
             delay={0.3}
           />
           <ComparativeCard
@@ -999,11 +1011,9 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
             stat={comparative.bestBuddy}
             statLine={
               comparative.bestBuddy
-                ? `${comparative.bestBuddy.gamesPlayed} games together`
+                ? `${comparative.bestBuddy.sessionsTogether} games together`
                 : ""
             }
-            sessions={sessions}
-            activePlayerId={activePlayerId}
             delay={0.35}
           />
         </div>

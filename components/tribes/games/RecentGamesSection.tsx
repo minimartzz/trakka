@@ -47,6 +47,9 @@ export function RecentGamesSection({
         emptyMessage="No sessions recorded for this game yet"
         initialTimeFilter="all_time"
         canEdit={canEdit}
+        showRatings
+        // Tribe WPA is a running mean over every game, not just this one
+        wpaSessions={sessions}
       />
     </motion.section>
   );

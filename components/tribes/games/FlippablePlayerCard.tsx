@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
-import { format } from "date-fns";
+// parseISO reads YYYY-MM-DD as a local date, so the day doesn't shift
+import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { type LeadingPlayer } from "@/types/tribes";
 import { accentMap } from "./types";
@@ -17,6 +18,7 @@ export function FlippablePlayerCard({
   accentColor,
   player,
   statLabel,
+  showRate = false,
   flipped,
   onFlip,
 }: {
@@ -25,6 +27,8 @@ export function FlippablePlayerCard({
   accentColor: keyof typeof accentMap;
   player: LeadingPlayer | null;
   statLabel: string;
+  // Show count as a share of plays ("67%", "4 of 6 games") instead of a count
+  showRate?: boolean;
   flipped: boolean;
   onFlip: () => void;
 }) {
@@ -142,11 +146,18 @@ export function FlippablePlayerCard({
                     accent.numberText,
                   )}
                 >
-                  {player.count}
+                  {showRate
+                    ? `${Math.round((player.count / player.plays) * 100)}%`
+                    : player.count}
                 </p>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-1.5">
                   {statLabel}
                 </p>
+                {showRate && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {player.count} of {player.plays} games
+                  </p>
+                )}
               </div>
               <div
                 className={cn(
@@ -231,7 +242,7 @@ export function FlippablePlayerCard({
 
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold truncate">
-                      {format(new Date(game.datePlayed), "MMM d, yyyy")}
+                      {format(parseISO(game.datePlayed), "MMM d, yyyy")}
                     </p>
                     <p className="text-[10px] text-muted-foreground truncate">
                       {game.isWinner ? "Winner" : "Did not win"}

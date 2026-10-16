@@ -16,6 +16,12 @@ import {
 import { cn } from "@/lib/utils";
 import { GroupedSession } from "@/lib/interfaces";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
+import { eloDisplay, eloTier } from "@/utils/elo";
+import {
+  CalibratingMark,
+  ELO_TIER_CLASS,
+  EloArrow,
+} from "@/components/GameSessionCard";
 
 interface LatestSessionCardProps {
   userId: number;
@@ -23,21 +29,22 @@ interface LatestSessionCardProps {
   delay?: number;
 }
 
+// Compact on mobile: the chip grows only as wide as its label needs
 const StatChip: React.FC<{
   label: string;
-  value: string;
+  value: React.ReactNode;
   className?: string;
   valueClassName?: string;
 }> = ({ label, value, className, valueClassName }) => (
   <div
     className={cn(
-      "flex w-16 shrink-0 flex-col items-center overflow-hidden rounded-lg sm:w-20",
+      "flex min-w-12 shrink-0 flex-col items-center overflow-hidden rounded-sm sm:w-20",
       className,
     )}
   >
     <p
       className={cn(
-        "w-full border-b border-current/15 px-2 py-1 text-center text-[10px] font-bold uppercase leading-none tracking-wide sm:py-1.5 sm:text-[11px]",
+        "w-full border-b border-current/15 px-1 py-1 text-center text-[9px] font-bold uppercase leading-none tracking-wide sm:px-2 sm:py-1.5 sm:text-[11px]",
         valueClassName,
       )}
     >
@@ -45,7 +52,7 @@ const StatChip: React.FC<{
     </p>
     <p
       className={cn(
-        "w-full px-2 py-1.5 text-center font-display text-xl font-bold leading-none sm:py-2 sm:text-2xl",
+        "w-full px-1 py-1 text-center font-display text-base font-bold leading-none sm:px-2 sm:py-2 sm:text-2xl",
         valueClassName,
       )}
     >
@@ -66,6 +73,8 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
   delay = 0,
 }) => {
   const me = session?.players.find((p) => p.profileId === userId);
+  // Null when the session doesn't affect Elo
+  const myElo = me ? eloDisplay(me) : null;
 
   return (
     <motion.div
@@ -112,16 +121,9 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                     >
                       {session.gameTitle}
                     </h3>
-                    {me && (
-                      <Badge
-                        className={cn(
-                          "shrink-0",
-                          session.isWinner
-                            ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
-                            : "border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400",
-                        )}
-                      >
-                        {session.isWinner ? "Winner" : "Played"}
+                    {me && session.isWinner && (
+                      <Badge className="shrink-0 border-emerald-500/30 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400">
+                        Winner
                       </Badge>
                     )}
                   </div>
@@ -131,6 +133,21 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                     {format(new Date(session.datePlayed), "d MMM yyyy")}
                     <span className="text-muted-foreground/60">·</span>
                     <span className="truncate">{session.tribe}</span>
+                    {/* Elo Change */}
+                    {myElo && (
+                      <span
+                        title="Elo Change"
+                        className={cn(
+                          "ml-auto inline-flex shrink-0 items-center gap-0.5 font-bold tabular-nums",
+                          myElo.delta > 0 &&
+                            "text-emerald-600 dark:text-emerald-400",
+                          myElo.delta < 0 && "text-destructive",
+                        )}
+                      >
+                        <EloArrow delta={myElo.delta} className="size-3.5" />
+                        {myElo.delta === 0 ? "±0" : Math.abs(myElo.delta)}
+                      </span>
+                    )}
                   </p>
                 </div>
 
@@ -148,7 +165,9 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                             <TooltipTrigger asChild>
                               <div
                                 className="relative shrink-0"
-                                style={{ zIndex: session.players.length - index }}
+                                style={{
+                                  zIndex: session.players.length - index,
+                                }}
                               >
                                 <Avatar
                                   className={cn(
@@ -188,7 +207,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                       <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         Stats
                       </p>
-                      <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-1.5 sm:gap-3">
                         <StatChip
                           label="Position"
                           value={
@@ -218,6 +237,24 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                           }
                           className="bg-accent-4/15"
                           valueClassName="text-accent-4"
+                        />
+                        <StatChip
+                          label="ELO"
+                          value={
+                            myElo ? (
+                              <>
+                                {myElo.elo}
+                                {myElo.calibrating && <CalibratingMark />}
+                              </>
+                            ) : (
+                              "—"
+                            )
+                          }
+                          className={
+                            myElo
+                              ? ELO_TIER_CLASS[eloTier(myElo.elo)]
+                              : "bg-muted text-muted-foreground"
+                          }
                         />
                       </div>
                     </div>

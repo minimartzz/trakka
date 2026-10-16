@@ -47,6 +47,9 @@ import {
   Filter,
   Search,
   RotateCcw,
+  Swords,
+  Gauge,
+  TrendingUp,
 } from "lucide-react";
 import { HandshakeIcon, SwordIcon } from "@phosphor-icons/react";
 import Image from "next/image";
@@ -54,6 +57,13 @@ import { useRouter } from "nextjs-toploader/app";
 import { useState, useMemo, useRef, useEffect } from "react";
 
 import { type GameSession, type TimeFilter } from "@/types/tribes";
+import { wpaBySession } from "@/utils/tribesProcessing";
+import { eloDisplay, eloTier, type EloDisplay } from "@/utils/elo";
+import {
+  CalibratingMark,
+  ELO_TIER_TEXT_CLASS,
+  EloArrow,
+} from "@/components/GameSessionCard";
 import DotsIcon from "@/components/icons/DotsIcon";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -73,6 +83,14 @@ interface RecentSessionsProps {
    * page re-validates the user's role server-side, so this flag is UX only.
    */
   canEdit?: boolean;
+  /**
+   * Shows the current user's tribe WPA and Elo after each session, and the
+   * session's Elo Change. WPA is a running mean over every session in the
+   * tribe, so pass them all as `sessions`, or as `wpaSessions` when `sessions`
+   * is a subset.
+   */
+  showRatings?: boolean;
+  wpaSessions?: GameSession[];
 }
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
@@ -244,6 +262,38 @@ const PlayersDice: React.FC<{ count: number }> = ({ count }) => (
       {count} {count === 1 ? "player" : "players"}
     </TooltipContent>
   </Tooltip>
+);
+
+// The user's Elo after the session, in its tier colour
+const EloValue: React.FC<{ elo: EloDisplay }> = ({ elo }) => (
+  <span
+    className={cn(
+      "text-sm font-bold tabular-nums",
+      ELO_TIER_TEXT_CLASS[eloTier(elo.elo)],
+    )}
+  >
+    {elo.elo}
+    {elo.calibrating && <CalibratingMark />}
+  </span>
+);
+
+// The session's Elo Change: green up, red down, muted when unchanged
+const EloChange: React.FC<{ delta: number; className?: string }> = ({
+  delta,
+  className,
+}) => (
+  <span
+    className={cn(
+      "inline-flex items-center gap-0.5 font-semibold tabular-nums",
+      delta > 0 && "text-emerald-600 dark:text-emerald-400",
+      delta < 0 && "text-destructive",
+      delta === 0 && "text-muted-foreground",
+      className,
+    )}
+  >
+    <EloArrow delta={delta} className="size-3" />
+    {delta === 0 ? "±0" : Math.abs(delta)}
+  </span>
 );
 
 // Small badge overlaid on an avatar/circle to mark a first play
@@ -636,6 +686,8 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
   title,
   initialTimeFilter = "past_month",
   canEdit = false,
+  showRatings = false,
+  wpaSessions,
 }) => {
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -649,6 +701,16 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
 
   const gameOptions = useMemo(() => buildGameOptions(sessions), [sessions]);
   const playerOptions = useMemo(() => buildPlayerOptions(sessions), [sessions]);
+
+  // From every session, before filtering, since WPA is a running mean
+  const showRatingColumns = showRatings && currentUserId !== undefined;
+  const wpaBySessionId = useMemo(
+    () =>
+      showRatingColumns && currentUserId !== undefined
+        ? wpaBySession(wpaSessions ?? sessions, currentUserId)
+        : null,
+    [showRatingColumns, wpaSessions, sessions, currentUserId],
+  );
 
   const activeFilterCount =
     (timeFilter !== initialTimeFilter ? 1 : 0) +
@@ -828,6 +890,10 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                   const winner = getWinner(session);
                   const currentUser = getCurrentUserInSession(session);
                   const isCurrentUserWinner = currentUser?.isWinner ?? false;
+                  const sessionWpa = wpaBySessionId?.get(session.sessionId);
+                  const sessionElo = currentUser
+                    ? eloDisplay(currentUser)
+                    : null;
 
                   return (
                     <div
@@ -860,6 +926,13 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
                           <GameTypePill type={sessionType(session)} />
+                          {/* Elo Change, level with the date */}
+                          {showRatingColumns && sessionElo && (
+                            <EloChange
+                              delta={sessionElo.delta}
+                              className="text-xs"
+                            />
+                          )}
                           {showEditColumn && (
                             <Button
                               variant="ghost"
@@ -888,7 +961,11 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                       <div
                         className={cn(
                           "mt-3 grid gap-2 border-t pt-3 text-center",
-                          currentUserId ? "grid-cols-4" : "grid-cols-2",
+                          showRatingColumns
+                            ? "grid-cols-6"
+                            : currentUserId
+                              ? "grid-cols-4"
+                              : "grid-cols-2",
                         )}
                       >
                         <div>
@@ -943,6 +1020,43 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                             </p>
                           </div>
                         )}
+                        {showRatingColumns && (
+                          <>
+                            <div>
+                              <HeaderIcon label="Your WPA">
+                                <Swords className="size-3.5" />
+                              </HeaderIcon>
+                              <p
+                                className={cn(
+                                  "mt-1 text-sm tabular-nums",
+                                  sessionWpa !== undefined
+                                    ? "font-medium text-accent-4"
+                                    : "text-muted-foreground",
+                                )}
+                              >
+                                {sessionWpa !== undefined
+                                  ? sessionWpa.toFixed(2)
+                                  : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <HeaderIcon label="Your Elo">
+                                <Gauge className="size-3.5" />
+                              </HeaderIcon>
+                              {/* text-sm here too, so the line box matches
+                                  the other stats' and the numbers line up */}
+                              <p className="mt-1 text-sm tabular-nums">
+                                {sessionElo ? (
+                                  <EloValue elo={sessionElo} />
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    —
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
@@ -986,6 +1100,25 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                           </HeaderIcon>
                         </TableHead>
                       )}
+                      {showRatingColumns && (
+                        <>
+                          <TableHead className="w-16 text-right">
+                            <HeaderIcon label="Your WPA">
+                              <Swords className="size-4" />
+                            </HeaderIcon>
+                          </TableHead>
+                          <TableHead className="w-16 text-right">
+                            <HeaderIcon label="Your Elo">
+                              <Gauge className="size-4" />
+                            </HeaderIcon>
+                          </TableHead>
+                          <TableHead className="w-16 text-right">
+                            <HeaderIcon label="Elo change">
+                              <TrendingUp className="size-4" />
+                            </HeaderIcon>
+                          </TableHead>
+                        </>
+                      )}
                       {showEditColumn && (
                         <TableHead className="w-10 sticky right-0 bg-card" />
                       )}
@@ -996,6 +1129,10 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                       const currentUser = getCurrentUserInSession(session);
                       const isCurrentUserWinner =
                         currentUser?.isWinner ?? false;
+                      const sessionWpa = wpaBySessionId?.get(session.sessionId);
+                      const sessionElo = currentUser
+                        ? eloDisplay(currentUser)
+                        : null;
 
                       return (
                         <TableRow
@@ -1102,6 +1239,45 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 </span>
                               )}
                             </TableCell>
+                          )}
+
+                          {/* Your WPA and Elo after the session, and the
+                              Elo Change */}
+                          {showRatingColumns && (
+                            <>
+                              <TableCell className="text-right">
+                                {sessionWpa !== undefined ? (
+                                  <span className="text-sm font-medium tabular-nums text-accent-4">
+                                    {sessionWpa.toFixed(2)}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    —
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {sessionElo ? (
+                                  <EloValue elo={sessionElo} />
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    —
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {sessionElo ? (
+                                  <EloChange
+                                    delta={sessionElo.delta}
+                                    className="text-sm"
+                                  />
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    —
+                                  </span>
+                                )}
+                              </TableCell>
+                            </>
                           )}
 
                           {/* Edit action — sticky to the right so it stays

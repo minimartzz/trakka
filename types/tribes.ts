@@ -15,6 +15,8 @@ export interface GameSession {
   playingTime: number | null;
   gameWeight: number | null;
   coop: boolean;
+  // Rated Session: only these count towards WPA
+  isVp: boolean;
   players: {
     profileId: number;
     username: string;
@@ -28,6 +30,7 @@ export interface GameSession {
     winContrib: number | null;
     // Null for sessions that don't affect Elo
     eloBefore: number | null;
+    eloAfter: number | null;
     eloSessionsBefore: number | null;
     isFirstPlay?: boolean;
   }[];
@@ -72,6 +75,9 @@ export interface MemberElo {
   gameId: number;
   elo: number;
   sessionsPlayed: number;
+  // Null if the game has no row in the game table
+  gameTitle: string | null;
+  thumbnail: string | null;
 }
 
 export interface HistStatsInterface {
@@ -116,8 +122,12 @@ export interface LeadingPlayer {
   firstName: string;
   lastName: string;
   image: string | null;
+  // Wins, last places or plays, depending on the card
   count: number;
+  // Competitive plays of the game
+  plays: number;
   avgVp: number | null;
+  // Most recent first
   recentGames: {
     sessionId: string;
     datePlayed: string;

@@ -224,13 +224,13 @@ const MostPlayedFlipCard: React.FC<{
               sizes="(max-width: 640px) 50vw, 300px"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+            <div className="absolute inset-0 bg-linear-to-br from-slate-700 to-slate-900 flex items-center justify-center">
               <Gamepad2 className="w-12 h-12 text-white/20" />
             </div>
           )}
 
           {/* Dark overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-black/20" />
 
           {/* Badge */}
           <div className="absolute top-0 left-0 right-0 w-full py-1.5 flex items-center justify-center gap-1.5 text-white bg-violet-500/80">
@@ -295,7 +295,7 @@ const MostPlayedFlipCard: React.FC<{
 
             {/* Column headers */}
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="w-[52px] shrink-0" />
+              <span className="w-13 shrink-0" />
               <span
                 className="text-[9px] font-bold uppercase tracking-wider flex-1 text-right"
                 style={{ color: p1Color }}
@@ -332,7 +332,7 @@ const MostPlayedFlipCard: React.FC<{
                     key={r.session.sessionId}
                     className="flex items-center gap-1.5"
                   >
-                    <span className="text-[10px] text-muted-foreground shrink-0 w-[52px]">
+                    <span className="text-[10px] text-muted-foreground shrink-0 w-13">
                       {formatShortDate(r.session.datePlayed)}
                     </span>
                     <span
@@ -594,7 +594,7 @@ const EmptyState: React.FC = () => (
     transition={{ duration: 0.4, delay: 0.1 }}
     className="flex flex-col items-center justify-center py-16 text-center"
   >
-    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-accent-2/10 flex items-center justify-center mb-5">
+    <div className="w-20 h-20 rounded-full bg-linear-to-br from-primary/10 to-accent-2/10 flex items-center justify-center mb-5">
       <Swords className="w-10 h-10 text-primary" />
     </div>
     <h3 className="text-lg font-semibold mb-1">Select two players</h3>
@@ -882,7 +882,8 @@ const HeadToHeadView: React.FC<HeadToHeadViewProps> = ({
                   />
                 ))}
 
-                {h2h.sharedSessions.length > 0 && (
+                {/* Competitive sessions only, so co-op alone shows nothing */}
+                {h2h.p1H2HWins + h2h.p2H2HWins + h2h.h2hTies > 0 && (
                   <>
                     <SectionLabel label="Head to Head" />
                     {comparativeRows.map((row) => (
@@ -922,7 +923,7 @@ const HeadToHeadView: React.FC<HeadToHeadViewProps> = ({
                   p2Id={player2Id}
                 />
               ) : (
-                <Card className="h-[195px]">
+                <Card className="h-48.75">
                   <CardContent className="p-4 flex flex-col items-center justify-center text-center h-full">
                     <Gamepad2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
                     <p className="text-xs text-muted-foreground">

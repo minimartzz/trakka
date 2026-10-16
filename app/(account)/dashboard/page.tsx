@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
-import { fetchGameMeta } from "./action";
+import { fetchGameElos, fetchGameMeta } from "./action";
 
 const fetchSessionsByProfile = async (
   id: number,
@@ -33,10 +33,11 @@ const DashboardContent = async () => {
     redirect("/login");
   }
 
-  const [sessionData, dailyStats, gameMeta] = await Promise.all([
+  const [sessionData, dailyStats, gameMeta, gameElos] = await Promise.all([
     fetchSessionsByProfile(user.id),
     getDailyPlayerStats({ profileId: user.id }),
     fetchGameMeta(user.id),
+    fetchGameElos(user.id),
   ]);
   const processedSessions = filterSessionData(user.id, sessionData);
 
@@ -53,6 +54,7 @@ const DashboardContent = async () => {
           : "—",
         favouriteGames: user.favourite_games ?? [],
         showcaseSlots: user.showcase_slots ?? [],
+        gameElos,
       }}
       recentActivity={processedSessions}
       sessions={sessionData}

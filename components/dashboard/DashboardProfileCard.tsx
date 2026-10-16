@@ -2,20 +2,15 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import {
-  Compass,
-  Dumbbell,
-  Feather,
-  Hourglass,
-  Share2,
-  type LucideIcon,
-} from "lucide-react";
+import { Search, Share2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -23,7 +18,12 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GroupedSession } from "@/lib/interfaces";
 import type { FavouriteGame } from "@/db/schema/profile";
-import { updateShowcaseSlots } from "@/app/(account)/dashboard/action";
+import {
+  updateShowcaseSlots,
+  type GameElo,
+} from "@/app/(account)/dashboard/action";
+import { CalibratingMark, ELO_TIER_CLASS } from "@/components/GameSessionCard";
+import { eloTier, isCalibrated } from "@/utils/elo";
 
 interface DashboardProfileCardProps {
   firstName: string;
@@ -36,14 +36,14 @@ interface DashboardProfileCardProps {
   // Most recent sessions - only on desktop
   recentActivity?: GroupedSession[];
   favouriteGames?: FavouriteGame[];
-  // Persisted showcase card ids - null if none are selected
-  showcaseSlots?: (string | null)[];
+  // Persisted showcase game ids - null if none are selected
+  showcaseSlots?: (number | null)[];
+  // The user's current Elo in each game they've played
+  gameElos?: GameElo[];
 }
 
 const MAX_RECENT_SESSIONS = 10;
 const NUM_SHOWCASE_SLOTS = 2;
-const HEAVYWEIGHT_THRESHOLD = 3.5;
-const SIMPLE_THRESHOLD = 2;
 const LONG_PRESS_MS = 500;
 
 const sessionDotColor = (session: GroupedSession): string => {
@@ -53,79 +53,47 @@ const sessionDotColor = (session: GroupedSession): string => {
   return "bg-sky-500";
 };
 
-interface ShowcaseCardDef {
-  id: string;
-  icon: LucideIcon;
+// A game the user can showcase: their Elo in it, with its details
+interface ShowcaseGame {
+  gameId: number;
   title: string;
-  description: string;
-  background: string;
-  border: string;
-  iconWrapClassName: string;
-  compute: (sessions: GroupedSession[]) => string;
+  image: string | null;
+  plays: number;
+  // Rounded, as displayed
+  elo: number;
+  calibrating: boolean;
 }
 
-const SHOWCASE_CARD_DEFS: ShowcaseCardDef[] = [
-  {
-    id: "unique-games",
-    icon: Compass,
-    title: "Game-trotter",
-    description: "Number of unique games",
-    background: "bg-accent-1/15",
-    border: "border-accent-2/50",
-    iconWrapClassName: "rounded-full bg-accent-1/25 text-accent-1",
-    compute: (sessions) => String(new Set(sessions.map((s) => s.gameId)).size),
-  },
-  {
-    id: "avg-length",
-    icon: Hourglass,
-    title: "It's a Marathon",
-    description: "Average length of games",
-    background: "bg-accent-2/15",
-    border: "border-accent-3/50",
-    iconWrapClassName: "rounded-xl bg-accent-2/25 text-accent-2",
-    compute: (sessions) => {
-      const withLength = sessions.filter(
-        (s): s is GroupedSession & { playingTime: number } =>
-          s.playingTime !== null,
-      );
-      if (withLength.length === 0) return "—";
-      const avg =
-        withLength.reduce((sum, s) => sum + s.playingTime, 0) /
-        withLength.length;
-      return `${Math.round(avg)} min`;
-    },
-  },
-  {
-    id: "heavyweight",
-    icon: Dumbbell,
-    title: "Heavyweight",
-    description: "Sessions played where complexity is >3.5",
-    background: "bg-accent-4/15",
-    border: "border-accent-5/50",
-    iconWrapClassName: "rounded-2xl bg-accent-4/25 text-accent-4 rotate-3",
-    compute: (sessions) =>
-      String(
-        sessions.filter(
-          (s) => s.gameWeight !== null && s.gameWeight > HEAVYWEIGHT_THRESHOLD,
-        ).length,
-      ),
-  },
-  {
-    id: "simple",
-    icon: Feather,
-    title: "Something easy?",
-    description: "Sessions played where complexity is <2",
-    background: "bg-accent-5/15",
-    border: "border-accent-4/50",
-    iconWrapClassName: "rounded-full bg-accent-5/25 text-accent-5 -rotate-6",
-    compute: (sessions) =>
-      String(
-        sessions.filter(
-          (s) => s.gameWeight !== null && s.gameWeight < SIMPLE_THRESHOLD,
-        ).length,
-      ),
-  },
+type CalibrationFilter = "all" | "calibrated" | "calibrating";
+
+const CALIBRATION_FILTERS: { value: CalibrationFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "calibrated", label: "Calibrated" },
+  { value: "calibrating", label: "Calibrating" },
 ];
+
+const playsLabel = (plays: number) =>
+  `${plays} ${plays === 1 ? "play" : "plays"}`;
+
+const GameThumbnail: React.FC<{
+  game: ShowcaseGame;
+  size: number;
+}> = ({ game, size }) => (
+  <span
+    className="relative shrink-0 overflow-hidden rounded-md bg-black/10"
+    style={{ width: size, height: size }}
+  >
+    {game.image && (
+      <Image
+        src={game.image}
+        alt={game.title}
+        fill
+        sizes={`${size}px`}
+        className="object-cover"
+      />
+    )}
+  </span>
+);
 
 // Fires onLongPress after holding for LONG_PRESS_MS; cancelled by an early
 // release or by the pointer moving off the element (a scroll, not a tap).
@@ -164,12 +132,12 @@ const MiniStat: React.FC<{ label: string; value: number | string }> = ({
   </div>
 );
 
+// Showcased game, coloured by the tier of the user's Elo in it
 const ShowcaseSlotCard: React.FC<{
-  cardDef: ShowcaseCardDef | undefined;
-  recentActivity: GroupedSession[];
+  game: ShowcaseGame | undefined;
   triggerProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
-}> = ({ cardDef, recentActivity, triggerProps }) => {
-  if (!cardDef) {
+}> = ({ game, triggerProps }) => {
+  if (!game) {
     return (
       <button
         type="button"
@@ -177,7 +145,7 @@ const ShowcaseSlotCard: React.FC<{
         className="flex min-h-16 items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 px-2 text-center transition-colors hover:bg-muted/40"
       >
         <span className="text-xs text-muted-foreground">
-          Tap here to add a custom stat
+          Tap here to showcase a game
         </span>
       </button>
     );
@@ -188,21 +156,29 @@ const ShowcaseSlotCard: React.FC<{
       type="button"
       {...triggerProps}
       className={cn(
-        "flex min-h-16 items-stretch overflow-hidden rounded-xl border-2 text-left transition-transform hover:scale-[1.02]",
-        cardDef.background,
-        cardDef.border,
+        "flex min-h-16 min-w-0 flex-col gap-2 overflow-hidden rounded-xl p-2.5 text-left transition-transform hover:scale-[1.02]",
+        ELO_TIER_CLASS[eloTier(game.elo)],
       )}
     >
-      <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2.5 py-2">
-        <span className="text-sm font-bold leading-tight text-foreground">
-          {cardDef.title}
-        </span>
-        <span className="text-[10px] leading-tight text-muted-foreground">
-          {cardDef.description}
+      <span className="flex min-w-0 items-center gap-2">
+        <GameThumbnail game={game} size={36} />
+        <span className="min-w-0">
+          <span className="block truncate text-xs font-bold leading-tight">
+            {game.title}
+          </span>
+          <span className="block text-[10px] leading-tight opacity-80">
+            {playsLabel(game.plays)}
+          </span>
         </span>
       </span>
-      <span className="flex w-14 shrink-0 items-center justify-center px-1.5 font-display text-xl font-bold leading-none text-foreground">
-        {cardDef.compute(recentActivity)}
+      <span className="flex items-end justify-between gap-1">
+        <span className="text-[10px] font-medium uppercase leading-tight tracking-wide opacity-80">
+          Elo
+        </span>
+        <span className="font-display text-4xl font-bold leading-none tabular-nums">
+          {game.elo}
+          {game.calibrating && <CalibratingMark />}
+        </span>
       </span>
     </button>
   );
@@ -219,23 +195,79 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
   recentActivity = [],
   favouriteGames = [],
   showcaseSlots,
+  gameElos = [],
 }) => {
   const [openShowcase, setOpenShowcase] = React.useState<number | null>(null);
-  const [slotCardIds, setSlotCardIds] = React.useState<(string | null)[]>(
+  const [slotGameIds, setSlotGameIds] = React.useState<(number | null)[]>(
     () => {
       const initial = showcaseSlots ?? [];
-      return Array.from(
-        { length: NUM_SHOWCASE_SLOTS },
-        (_, i) => initial[i] ?? null,
-      );
+      // Slots saved before the Elo showcase hold stat-card ids; treat them as empty
+      return Array.from({ length: NUM_SHOWCASE_SLOTS }, (_, i) => {
+        const id = initial[i];
+        return typeof id === "number" ? id : null;
+      });
     },
   );
+  const [search, setSearch] = React.useState("");
+  const [calibrationFilter, setCalibrationFilter] =
+    React.useState<CalibrationFilter>("all");
 
-  const handleSelectCard = (cardId: string) => {
+  // Every game the user has an Elo in, highest Elo first. Title, image and
+  // play count come from their sessions, which include every game played.
+  const showcaseGames = React.useMemo(() => {
+    const byGame = new Map<
+      number,
+      { title: string; image: string | null; plays: number }
+    >();
+    for (const session of recentActivity) {
+      const game = byGame.get(session.gameId);
+      if (game) game.plays += 1;
+      else
+        byGame.set(session.gameId, {
+          title: session.gameTitle,
+          image: session.gameImage,
+          plays: 1,
+        });
+    }
+
+    return gameElos
+      .flatMap(({ gameId, elo, sessionsPlayed }): ShowcaseGame[] => {
+        const game = byGame.get(gameId);
+        if (!game) return [];
+        return [
+          {
+            gameId,
+            ...game,
+            elo: Math.round(elo),
+            calibrating: !isCalibrated(sessionsPlayed),
+          },
+        ];
+      })
+      .sort((a, b) => b.elo - a.elo || a.title.localeCompare(b.title));
+  }, [recentActivity, gameElos]);
+
+  const query = search.trim().toLowerCase();
+  const pickerGames = showcaseGames.filter(
+    (game) =>
+      game.title.toLowerCase().includes(query) &&
+      (calibrationFilter === "all" ||
+        game.calibrating === (calibrationFilter === "calibrating")),
+  );
+
+  const openPicker = (slot: number) => {
+    setSearch("");
+    setCalibrationFilter("all");
+    setOpenShowcase(slot);
+  };
+
+  const handleSelectGame = (gameId: number) => {
     if (openShowcase === null) return;
-    const next = [...slotCardIds];
-    next[openShowcase] = cardId;
-    setSlotCardIds(next);
+    // Picking the game already in the other slot swaps the two
+    const next = slotGameIds.map((id) =>
+      id === gameId ? slotGameIds[openShowcase] : id,
+    );
+    next[openShowcase] = gameId;
+    setSlotGameIds(next);
     setOpenShowcase(null);
     updateShowcaseSlots(next).catch((error) => {
       console.error("Failed to save showcase selection:", error);
@@ -244,8 +276,8 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
 
   // Fixed two slots — long-press props built per slot rather than in a loop,
   // since NUM_SHOWCASE_SLOTS is a compile-time constant.
-  const longPressSlot0 = useLongPress(() => setOpenShowcase(0));
-  const longPressSlot1 = useLongPress(() => setOpenShowcase(1));
+  const longPressSlot0 = useLongPress(() => openPicker(0));
+  const longPressSlot1 = useLongPress(() => openPicker(1));
   const longPressBySlot = [longPressSlot0, longPressSlot1];
 
   // Total time spent playing — game length (playingTime) stands in for
@@ -332,11 +364,10 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {slotCardIds.map((cardId, slot) => (
+              {slotGameIds.map((gameId, slot) => (
                 <ShowcaseSlotCard
                   key={slot}
-                  cardDef={SHOWCASE_CARD_DEFS.find((c) => c.id === cardId)}
-                  recentActivity={recentActivity}
+                  game={showcaseGames.find((g) => g.gameId === gameId)}
                   triggerProps={longPressBySlot[slot]}
                 />
               ))}
@@ -454,12 +485,11 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {slotCardIds.map((cardId, slot) => (
+              {slotGameIds.map((gameId, slot) => (
                 <ShowcaseSlotCard
                   key={slot}
-                  cardDef={SHOWCASE_CARD_DEFS.find((c) => c.id === cardId)}
-                  recentActivity={recentActivity}
-                  triggerProps={{ onClick: () => setOpenShowcase(slot) }}
+                  game={showcaseGames.find((g) => g.gameId === gameId)}
+                  triggerProps={{ onClick: () => openPicker(slot) }}
                 />
               ))}
             </div>
@@ -467,52 +497,94 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
         </CardContent>
       </Card>
 
-      {/* ── Card picker ──────────────────────────────────────────────── */}
+      {/* ── Game picker ──────────────────────────────────────────────── */}
       <Sheet
         open={openShowcase !== null}
         onOpenChange={(open) => !open && setOpenShowcase(null)}
       >
-        <SheetContent side="right" className="overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Choose a stat</SheetTitle>
+        <SheetContent side="right">
+          <SheetHeader className="pb-0">
+            <SheetTitle>Choose a game</SheetTitle>
+            <SheetDescription>Your games, highest Elo first</SheetDescription>
           </SheetHeader>
 
-          <div className="flex flex-col gap-3 px-4 pb-4">
-            {SHOWCASE_CARD_DEFS.map((cardDef) => {
-              const Icon = cardDef.icon;
-              return (
-                <button
-                  key={cardDef.id}
+          {/* Filters stay put while the list scrolls */}
+          <div className="flex flex-col gap-2 px-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search games"
+                aria-label="Search games"
+                className="pl-8"
+              />
+            </div>
+            <div
+              className="flex gap-1.5"
+              role="group"
+              aria-label="Filter by calibration"
+            >
+              {CALIBRATION_FILTERS.map((filter) => (
+                <Button
+                  key={filter.value}
                   type="button"
-                  onClick={() => handleSelectCard(cardDef.id)}
+                  size="sm"
+                  variant={
+                    calibrationFilter === filter.value ? "default" : "outline"
+                  }
+                  aria-pressed={calibrationFilter === filter.value}
+                  onClick={() => setCalibrationFilter(filter.value)}
+                  className="flex-1"
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4">
+            {pickerGames.map((game) => (
+              <button
+                key={game.gameId}
+                type="button"
+                onClick={() => handleSelectGame(game.gameId)}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border border-border p-2.5 text-left transition-colors hover:bg-muted/50",
+                  openShowcase !== null &&
+                    slotGameIds[openShowcase] === game.gameId &&
+                    "border-primary bg-muted/40",
+                )}
+              >
+                <GameThumbnail game={game} size={44} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-foreground">
+                    {game.title}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {playsLabel(game.plays)} ·{" "}
+                    {game.calibrating ? "Calibrating" : "Calibrated"}
+                  </span>
+                </span>
+                <span
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border-2 p-3.5 text-left transition-transform hover:scale-[1.02]",
-                    cardDef.background,
-                    cardDef.border,
+                    "inline-flex shrink-0 items-center px-2 py-1 text-sm font-bold tabular-nums",
+                    ELO_TIER_CLASS[eloTier(game.elo)],
                   )}
                 >
-                  <span
-                    className={cn(
-                      "flex h-11 w-11 shrink-0 items-center justify-center",
-                      cardDef.iconWrapClassName,
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-foreground">
-                      {cardDef.title}
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      {cardDef.description}
-                    </span>
-                  </span>
-                  <span className="shrink-0 font-display text-2xl font-bold leading-none text-foreground">
-                    {cardDef.compute(recentActivity)}
-                  </span>
-                </button>
-              );
-            })}
+                  ELO {game.elo}
+                  {game.calibrating && <CalibratingMark />}
+                </span>
+              </button>
+            ))}
+            {pickerGames.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                {showcaseGames.length === 0
+                  ? "No Elo yet. Play a rated session to earn one."
+                  : "No games match your filters."}
+              </p>
+            )}
           </div>
         </SheetContent>
       </Sheet>

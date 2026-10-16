@@ -27,7 +27,7 @@ import {
 import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import type { FavouriteGame } from "@/db/schema/profile";
-import type { GameMeta } from "@/app/(account)/dashboard/action";
+import type { GameElo, GameMeta } from "@/app/(account)/dashboard/action";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import DotsIcon from "@/components/icons/DotsIcon";
@@ -50,7 +50,8 @@ interface DashboardProfile {
   image: string;
   memberSince: string;
   favouriteGames?: FavouriteGame[];
-  showcaseSlots?: (string | null)[];
+  showcaseSlots?: (number | null)[];
+  gameElos?: GameElo[];
 }
 
 interface TimeFilteredPerformanceProps {
@@ -413,6 +414,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
               recentActivity={recentActivity}
               favouriteGames={profile.favouriteGames}
               showcaseSlots={profile.showcaseSlots}
+              gameElos={profile.gameElos}
             />
           </div>
 

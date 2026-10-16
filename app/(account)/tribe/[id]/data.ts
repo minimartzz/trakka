@@ -61,7 +61,9 @@ export async function getTribeGameSessionsCached(groupId: string) {
         victoryPoints: compGameLogTable.victoryPoints,
         winContrib: compGameLogTable.winContrib,
         coop: compGameLogTable.coop,
+        isVp: compGameLogTable.isVp,
         eloBefore: compGameLogTable.eloBefore,
+        eloAfter: compGameLogTable.eloAfter,
         eloSessionsBefore: compGameLogTable.eloSessionsBefore,
       },
       profile: {
@@ -105,12 +107,15 @@ export async function getTribeMemberElosCached(groupId: string) {
       gameId: playerGameEloTable.gameId,
       elo: playerGameEloTable.elo,
       sessionsPlayed: playerGameEloTable.sessionsPlayed,
+      gameTitle: gameTable.name,
+      thumbnail: gameTable.thumbnail,
     })
     .from(playerGameEloTable)
     .innerJoin(
       profileGroupTable,
       eq(playerGameEloTable.profileId, profileGroupTable.profileId),
     )
+    .leftJoin(gameTable, eq(playerGameEloTable.gameId, gameTable.id))
     .where(eq(profileGroupTable.groupId, groupId));
 }
 

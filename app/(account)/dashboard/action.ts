@@ -5,6 +5,7 @@ import { gameCategoryTable } from "@/db/schema/gameCategory";
 import { gameMechanicTable } from "@/db/schema/gameMechanic";
 import { juncGameCategoryTable } from "@/db/schema/juncGameCategory";
 import { juncGameMechanicTable } from "@/db/schema/juncGameMechanic";
+import { playerGameEloTable } from "@/db/schema/playerGameElo";
 import { profileTable } from "@/db/schema/profile";
 import { db } from "@/utils/db";
 import { createClient } from "@/utils/supabase/server";
@@ -79,14 +80,40 @@ export async function fetchGameMeta(profileId: number): Promise<GameMeta> {
   }
 }
 
-const VALID_SHOWCASE_CARD_IDS = [
-  "unique-games",
-  "avg-length",
-  "heavyweight",
-  "simple",
-];
+// The user's current Elo in every game they've played - for the Showcase
+export interface GameElo {
+  gameId: number;
+  elo: number;
+  sessionsPlayed: number;
+}
 
-export async function updateShowcaseSlots(slotCardIds: (string | null)[]) {
+async function queryGameElosByProfile(profileId: number): Promise<GameElo[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`recent-games:${profileId}`, "elo");
+
+  return db
+    .select({
+      gameId: playerGameEloTable.gameId,
+      elo: playerGameEloTable.elo,
+      sessionsPlayed: playerGameEloTable.sessionsPlayed,
+    })
+    .from(playerGameEloTable)
+    .where(eq(playerGameEloTable.profileId, profileId));
+}
+
+export async function fetchGameElos(profileId: number): Promise<GameElo[]> {
+  try {
+    return await queryGameElosByProfile(profileId);
+  } catch (error) {
+    console.error("Failed to retrieve game Elos", error);
+    return [];
+  }
+}
+
+const NUM_SHOWCASE_SLOTS = 2;
+
+export async function updateShowcaseSlots(slotGameIds: (number | null)[]) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -94,11 +121,10 @@ export async function updateShowcaseSlots(slotCardIds: (string | null)[]) {
   if (!user) return { success: false, message: "Unauthorized" };
 
   if (
-    !slotCardIds.every(
-      (id) => id === null || VALID_SHOWCASE_CARD_IDS.includes(id),
-    )
+    slotGameIds.length > NUM_SHOWCASE_SLOTS ||
+    !slotGameIds.every((id) => id === null || Number.isInteger(id))
   ) {
-    return { success: false, message: "Invalid showcase card selection" };
+    return { success: false, message: "Invalid showcase game selection" };
   }
 
   const [profile] = await db
@@ -111,7 +137,7 @@ export async function updateShowcaseSlots(slotCardIds: (string | null)[]) {
   try {
     await db
       .update(profileTable)
-      .set({ showcaseSlots: slotCardIds })
+      .set({ showcaseSlots: slotGameIds })
       .where(eq(profileTable.id, profile.id));
 
     revalidatePath("/dashboard");

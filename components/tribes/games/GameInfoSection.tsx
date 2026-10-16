@@ -348,21 +348,21 @@ export function GameInfoSection({
                 Mechanics
               </span>
               <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                {(showAllMechanics ? mechanics : mechanics.slice(0, 10)).map(
+                {(showAllMechanics ? mechanics : mechanics.slice(0, 5)).map(
                   (mech) => (
                     <Badge key={mech} variant="outline" className="text-xs">
                       {mech}
                     </Badge>
                   ),
                 )}
-                {mechanics.length > 10 && (
+                {mechanics.length > 5 && (
                   <button
                     onClick={() => setShowAllMechanics((v) => !v)}
                     className="text-xs font-medium text-primary hover:underline ml-1"
                   >
                     {showAllMechanics
                       ? "Show less"
-                      : `+${mechanics.length - 10} more`}
+                      : `+${mechanics.length - 5} more`}
                   </button>
                 )}
               </div>

@@ -3,30 +3,37 @@
 import { useState, useMemo } from "react";
 import { motion } from "motion/react";
 import { Trophy, ThumbsDown, Gamepad2 } from "lucide-react";
-import { type GameSession } from "@/types/tribes";
-import { computeLeadingPlayer } from "./utils";
+import {
+  type GameSession,
+  type MemberElo,
+  type TribeMember,
+} from "@/types/tribes";
+import { computeLeadingPlayers, rankByElo } from "./utils";
 import { FlippablePlayerCard } from "./FlippablePlayerCard";
+import { EloRankingChart } from "./EloRankingChart";
 
 export function LeadingPlayersSection({
   sessions,
+  members,
+  memberElos,
+  currentUserId,
   selectedGameId,
 }: {
   sessions: GameSession[];
+  members: TribeMember[];
+  memberElos: MemberElo[];
+  currentUserId?: number;
   selectedGameId: number;
 }) {
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
 
-  const bestPlayer = useMemo(
-    () => computeLeadingPlayer(sessions, selectedGameId, "winner"),
+  const { best, loser, mostPlays } = useMemo(
+    () => computeLeadingPlayers(sessions, selectedGameId),
     [sessions, selectedGameId],
   );
-  const biggestLoser = useMemo(
-    () => computeLeadingPlayer(sessions, selectedGameId, "loser"),
-    [sessions, selectedGameId],
-  );
-  const mostPlays = useMemo(
-    () => computeLeadingPlayer(sessions, selectedGameId, "most_plays"),
-    [sessions, selectedGameId],
+  const eloRanking = useMemo(
+    () => rankByElo(memberElos, members, selectedGameId),
+    [memberElos, members, selectedGameId],
   );
 
   const toggleFlip = (cardKey: string) => {
@@ -49,8 +56,9 @@ export function LeadingPlayersSection({
           label="Best Player"
           labelIcon={<Trophy className="w-4 h-4" />}
           accentColor="primary"
-          player={bestPlayer}
-          statLabel="Wins"
+          player={best}
+          statLabel="Win rate"
+          showRate
           flipped={!!flippedCards["best"]}
           onFlip={() => toggleFlip("best")}
         />
@@ -58,8 +66,9 @@ export function LeadingPlayersSection({
           label="Biggest Loser"
           labelIcon={<ThumbsDown className="w-4 h-4" />}
           accentColor="rose"
-          player={biggestLoser}
-          statLabel="Losses"
+          player={loser}
+          statLabel="Last place"
+          showRate
           flipped={!!flippedCards["loser"]}
           onFlip={() => toggleFlip("loser")}
         />
@@ -72,6 +81,10 @@ export function LeadingPlayersSection({
           flipped={!!flippedCards["plays"]}
           onFlip={() => toggleFlip("plays")}
         />
+      </div>
+
+      <div className="mt-4">
+        <EloRankingChart rows={eloRanking} currentUserId={currentUserId} />
       </div>
     </motion.section>
   );

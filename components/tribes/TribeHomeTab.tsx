@@ -344,6 +344,7 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           emptyMessage="No sessions recorded yet"
           delay={0.4}
           canEdit={canEditSessions}
+          showRatings
         />
       </section>
 
