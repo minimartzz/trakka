@@ -26,9 +26,10 @@ const PlaceholderGameCards = () => (
 
 interface GamesTabProps {
   favouriteGames: FavouriteGame[];
+  initialClaimCode?: string;
 }
 
-const GamesTab = ({ favouriteGames }: GamesTabProps) => {
+const GamesTab = ({ favouriteGames, initialClaimCode }: GamesTabProps) => {
   const [games, setGames] = useState(favouriteGames);
   const [tappedId, setTappedId] = useState<number | null>(null);
 
@@ -82,7 +83,7 @@ const GamesTab = ({ favouriteGames }: GamesTabProps) => {
         </WipOverlay>
       </section>
 
-      <ClaimAnonymousUser />
+      <ClaimAnonymousUser initialCode={initialClaimCode} />
     </div>
   );
 };

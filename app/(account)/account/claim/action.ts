@@ -10,8 +10,14 @@ import { profileGroupTable } from "@/db/schema/profileGroup";
 import { rollingPlayerStatsTable } from "@/db/schema/rollingPlayerStats";
 import { db } from "@/utils/db";
 import { createClient } from "@/utils/supabase/server";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, min, sql } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
+import {
+  invalidateEloCaches,
+  lockGamesForElo,
+  replayGameElo,
+  type EloReplayAffected,
+} from "@/utils/eloReplay";
 
 // Resolve the caller's profile id from their Supabase session. Never trust a
 // client-supplied id — matches the inline auth pattern used elsewhere in the
@@ -263,6 +269,7 @@ export async function respondToClaim(
       );
     if (!membership) return { success: false, message: "Unauthorized" };
 
+    const eloAffected: EloReplayAffected[] = [];
     const result = await db.transaction(async (tx) => {
       // Re-read under lock; guard against a claim already handled by another
       // admin or from the settings row (optimistic-concurrency check).
@@ -306,6 +313,19 @@ export async function respondToClaim(
         // where the claimer already has a row for this tribe, then delete the
         // anonymous profile.
 
+        // Games the anonymous player has sessions in, with their first date:
+        // each is replayed once the sessions belong to the claimer.
+        const anonGames = await tx
+          .select({
+            gameId: compGameLogTable.gameId,
+            firstPlayed: min(compGameLogTable.datePlayed),
+          })
+          .from(compGameLogTable)
+          .where(eq(compGameLogTable.profileId, anon.id))
+          .groupBy(compGameLogTable.gameId);
+        // Lock before any write so concurrent writers can't deadlock
+        await lockGamesForElo(tx, anonGames.map((g) => g.gameId));
+
         // 1. comp_game_log: repoint participation and (defensively) authorship.
         await tx
           .update(compGameLogTable)
@@ -315,6 +335,13 @@ export async function respondToClaim(
           .update(compGameLogTable)
           .set({ createdBy: claimerId })
           .where(eq(compGameLogTable.createdBy, anon.id));
+
+        // Merge the anonymous player's Elo history into the claimer's. Runs
+        // before the profile is deleted: the replay drops the anonymous
+        // player's player_game_elo rows, which reference it.
+        for (const { gameId, firstPlayed } of anonGames) {
+          eloAffected.push(await replayGameElo(tx, gameId, firstPlayed!));
+        }
 
         // 2. hist_daily_player_stats (histDaily + histMonthly Drizzle consts
         // both map to this one physical table — repoint once). For (profile,
@@ -472,6 +499,7 @@ export async function respondToClaim(
       updateTag(`tribe:${groupId}`);
       updateTag(`recent-games:${anonProfileId}`);
       updateTag(`recent-games:${claimerId}`);
+      invalidateEloCaches(eloAffected);
       revalidatePath("/account");
     }
 

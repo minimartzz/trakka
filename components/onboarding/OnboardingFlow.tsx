@@ -32,6 +32,7 @@ interface OnboardingFlowProps {
   initialStep: number;
   initialState: FlowState;
   defaultImageUrl: string;
+  initialClaimCode?: string;
 }
 
 const OnboardingFlow = ({
@@ -40,6 +41,7 @@ const OnboardingFlow = ({
   initialStep,
   initialState,
   defaultImageUrl,
+  initialClaimCode,
 }: OnboardingFlowProps) => {
   const reduceMotion = useReducedMotion();
 
@@ -233,7 +235,10 @@ const OnboardingFlow = ({
                   <TribeStep tribes={state.tribes} onChange={setTribes} />
                 )}
                 {step.key === "claim" && (
-                  <ClaimStep onClaimRequested={incrementClaimed} />
+                  <ClaimStep
+                    onClaimRequested={incrementClaimed}
+                    initialCode={initialClaimCode}
+                  />
                 )}
                 {step.key === "games" && (
                   <FavouriteGamesStep

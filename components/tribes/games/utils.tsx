@@ -2,9 +2,11 @@ import {
   type GameSession,
   type GameListItem,
   type LeadingPlayer,
+  type MemberElo,
   type TribeMember,
 } from "@/types/tribes";
 import { cn } from "@/lib/utils";
+import { isCalibrated } from "@/utils/elo";
 import {
   Crown,
   TrendingUp,
@@ -18,6 +20,7 @@ import {
   type ScoreStatData,
   type ScoreCardKey,
 } from "./types";
+import { wilsonLowerBound } from "@/utils/playerStatsCalculations";
 
 // ─── Game list ────────────────────────────────────────────────────────────────
 
@@ -54,16 +57,48 @@ export function getDefaultGame(games: GameListItem[]): GameListItem | null {
   return [...games].sort((a, b) => b.playCount - a.playCount)[0];
 }
 
-// ─── Leading player ───────────────────────────────────────────────────────────
+// ─── Leading players ──────────────────────────────────────────────────────────
 
-export function computeLeadingPlayer(
+// Fewest plays of the game before someone can be Best Player or Biggest Loser
+const MIN_LEADING_PLAYS = 3;
+const RECENT_GAMES = 3;
+
+// A running total of VP over some of a player's sessions
+interface VpTally {
+  total: number;
+  games: number;
+}
+
+const addVp = (tally: VpTally, vp: number | null) => {
+  if (vp === null) return;
+  tally.total += vp;
+  tally.games++;
+};
+
+const avgVp = (tally: VpTally) =>
+  tally.games > 0 ? tally.total / tally.games : null;
+
+// Best Player, Biggest Loser and Most Plays for one game, from competitive
+// sessions only. Best Player and Biggest Loser are ranked by rate weighted by
+// plays, so 19 wins in 20 beats 3 in 3. A loss is finishing last.
+export function computeLeadingPlayers(
   sessions: GameSession[],
   gameId: number,
-  mode: "winner" | "loser" | "most_plays",
-): LeadingPlayer | null {
-  const gameSessions = sessions.filter((s) => s.gameId === gameId);
-  if (gameSessions.length === 0) return null;
+): {
+  best: LeadingPlayer | null;
+  loser: LeadingPlayer | null;
+  mostPlays: LeadingPlayer | null;
+} {
+  // Newest first: by date played, then by when they were logged
+  const gameSessions = sessions
+    .filter((s) => s.gameId === gameId && !s.coop && s.players.length > 1)
+    .sort(
+      (a, b) =>
+        b.datePlayed.localeCompare(a.datePlayed) ||
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
+  // Insertion order follows each player's most recent play
   const playerMap = new Map<
     number,
     {
@@ -72,27 +107,23 @@ export function computeLeadingPlayer(
       firstName: string;
       lastName: string;
       image: string | null;
+      plays: number;
       wins: number;
-      losses: number;
-      totalPlays: number;
-      totalWinVp: number;
-      winVpGames: number;
-      totalLossVp: number;
-      lossVpGames: number;
-      totalVp: number;
-      vpGames: number;
-      appearances: {
-        sessionId: string;
-        datePlayed: string;
-        position: number;
-        victoryPoints: number | null;
-        isWinner: boolean;
-      }[];
+      lasts: number;
+      vp: VpTally;
+      winVp: VpTally;
+      lastVp: VpTally;
+      recentGames: LeadingPlayer["recentGames"];
     }
   >();
 
-  gameSessions.forEach((session) => {
-    session.players.forEach((p) => {
+  for (const session of gameSessions) {
+    const positions = session.players.map((p) => p.position);
+    const lastPosition = Math.max(...positions);
+    // Nobody is last in a draw between everyone
+    const hasLast = lastPosition > Math.min(...positions);
+
+    for (const p of session.players) {
       let entry = playerMap.get(p.profileId);
       if (!entry) {
         entry = {
@@ -101,113 +132,146 @@ export function computeLeadingPlayer(
           firstName: p.firstName,
           lastName: p.lastName,
           image: p.image,
+          plays: 0,
           wins: 0,
-          losses: 0,
-          totalPlays: 0,
-          totalWinVp: 0,
-          winVpGames: 0,
-          totalLossVp: 0,
-          lossVpGames: 0,
-          totalVp: 0,
-          vpGames: 0,
-          appearances: [],
+          lasts: 0,
+          vp: { total: 0, games: 0 },
+          winVp: { total: 0, games: 0 },
+          lastVp: { total: 0, games: 0 },
+          recentGames: [],
         };
         playerMap.set(p.profileId, entry);
       }
-      entry.totalPlays++;
+
+      entry.plays++;
+      addVp(entry.vp, p.victoryPoints);
       if (p.isWinner) {
         entry.wins++;
-        if (p.victoryPoints !== null) {
-          entry.totalWinVp += p.victoryPoints;
-          entry.winVpGames++;
-        }
-      } else {
-        entry.losses++;
-        if (p.victoryPoints !== null) {
-          entry.totalLossVp += p.victoryPoints;
-          entry.lossVpGames++;
-        }
+        addVp(entry.winVp, p.victoryPoints);
       }
-      if (p.victoryPoints !== null) {
-        entry.totalVp += p.victoryPoints;
-        entry.vpGames++;
+      if (hasLast && p.position === lastPosition) {
+        entry.lasts++;
+        addVp(entry.lastVp, p.victoryPoints);
       }
-      entry.appearances.push({
-        sessionId: session.sessionId,
-        datePlayed: session.datePlayed,
-        position: p.position,
-        victoryPoints: p.victoryPoints,
-        isWinner: p.isWinner,
-      });
-    });
-  });
-
-  const players = Array.from(playerMap.values());
-  let selected: (typeof players)[number] | null = null;
-
-  if (mode === "winner") {
-    selected =
-      players
-        .filter((p) => p.wins > 0)
-        .sort((a, b) => {
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          const avgA = a.winVpGames > 0 ? a.totalWinVp / a.winVpGames : 0;
-          const avgB = b.winVpGames > 0 ? b.totalWinVp / b.winVpGames : 0;
-          return avgB - avgA;
-        })[0] ?? null;
-  } else if (mode === "loser") {
-    selected =
-      players
-        .filter((p) => p.losses > 0)
-        .sort((a, b) => {
-          if (b.losses !== a.losses) return b.losses - a.losses;
-          const avgA = a.lossVpGames > 0 ? a.totalLossVp / a.lossVpGames : 0;
-          const avgB = b.lossVpGames > 0 ? b.totalLossVp / b.lossVpGames : 0;
-          return avgA - avgB;
-        })[0] ?? null;
-  } else {
-    selected = players.sort((a, b) => b.totalPlays - a.totalPlays)[0] ?? null;
+      if (entry.recentGames.length < RECENT_GAMES) {
+        entry.recentGames.push({
+          sessionId: session.sessionId,
+          datePlayed: session.datePlayed,
+          position: p.position,
+          victoryPoints: p.victoryPoints,
+          isWinner: p.isWinner,
+        });
+      }
+    }
   }
 
-  if (!selected) return null;
+  const players = [...playerMap.values()];
+  const eligible = players.filter((p) => p.plays >= MIN_LEADING_PLAYS);
 
-  const recentGames = [...selected.appearances]
-    .sort(
-      (a, b) =>
-        new Date(b.datePlayed).getTime() - new Date(a.datePlayed).getTime(),
-    )
-    .slice(0, 3);
+  // Ties go to the higher average VP in their wins
+  const best =
+    eligible
+      .filter((p) => p.wins > 0)
+      .sort(
+        (a, b) =>
+          wilsonLowerBound(b.wins, b.plays) -
+            wilsonLowerBound(a.wins, a.plays) ||
+          (avgVp(b.winVp) ?? 0) - (avgVp(a.winVp) ?? 0),
+      )[0] ?? null;
 
-  const count =
-    mode === "winner"
-      ? selected.wins
-      : mode === "loser"
-        ? selected.losses
-        : selected.totalPlays;
+  // Never the Best Player; ties go to the lower average VP when last
+  const loser =
+    eligible
+      .filter((p) => p.lasts > 0 && p !== best)
+      .sort(
+        (a, b) =>
+          wilsonLowerBound(b.lasts, b.plays) -
+            wilsonLowerBound(a.lasts, a.plays) ||
+          (avgVp(a.lastVp) ?? 0) - (avgVp(b.lastVp) ?? 0),
+      )[0] ?? null;
 
-  const avgVp =
-    mode === "winner"
-      ? selected.winVpGames > 0
-        ? Math.round((selected.totalWinVp / selected.winVpGames) * 10) / 10
-        : null
-      : mode === "loser"
-        ? selected.lossVpGames > 0
-          ? Math.round((selected.totalLossVp / selected.lossVpGames) * 10) / 10
-          : null
-        : selected.vpGames > 0
-          ? Math.round((selected.totalVp / selected.vpGames) * 10) / 10
-          : null;
+  // Ties go to whoever played most recently (Map order)
+  const mostPlays = [...players].sort((a, b) => b.plays - a.plays)[0] ?? null;
+
+  const toLeading = (
+    p: (typeof players)[number],
+    count: number,
+    vp: VpTally,
+  ): LeadingPlayer => {
+    const average = avgVp(vp);
+    return {
+      profileId: p.profileId,
+      username: p.username,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      image: p.image,
+      count,
+      plays: p.plays,
+      avgVp: average === null ? null : Math.round(average * 10) / 10,
+      recentGames: p.recentGames,
+    };
+  };
 
   return {
-    profileId: selected.profileId,
-    username: selected.username,
-    firstName: selected.firstName,
-    lastName: selected.lastName,
-    image: selected.image,
-    count,
-    avgVp,
-    recentGames,
+    best: best && toLeading(best, best.wins, best.winVp),
+    loser: loser && toLeading(loser, loser.lasts, loser.lastVp),
+    mostPlays: mostPlays && toLeading(mostPlays, mostPlays.plays, mostPlays.vp),
   };
+}
+
+// ─── Elo ranking ──────────────────────────────────────────────────────────────
+
+export interface EloRankRow {
+  rank: number;
+  profileId: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  image: string | null;
+  // Rounded, as displayed
+  elo: number;
+  sessionsPlayed: number;
+  calibrating: boolean;
+}
+
+// The tribe's members ranked by their Elo in this game, highest first. A tie
+// goes to the member with more Rated Sessions of it.
+export function rankByElo(
+  memberElos: MemberElo[],
+  members: TribeMember[],
+  gameId: number,
+): EloRankRow[] {
+  const byId = new Map(members.map((m) => [m.profileId, m]));
+  return memberElos
+    .filter((e) => e.gameId === gameId && byId.has(e.profileId))
+    .sort((a, b) => b.elo - a.elo || b.sessionsPlayed - a.sessionsPlayed)
+    .map((e, i) => {
+      const m = byId.get(e.profileId)!;
+      return {
+        rank: i + 1,
+        profileId: m.profileId,
+        username: m.username,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        image: m.image,
+        elo: Math.round(e.elo),
+        sessionsPlayed: e.sessionsPlayed,
+        calibrating: !isCalibrated(e.sessionsPlayed),
+      };
+    });
+}
+
+const ALWAYS_SHOWN = 4;
+
+// The collapsed ranking: the top 4, then the current user after a gap (null)
+// when they rank lower than 5th; otherwise simply the top 5
+export function collapseEloRanking(
+  rows: EloRankRow[],
+  currentUserId: number | undefined,
+): (EloRankRow | null)[] {
+  const userIndex = rows.findIndex((r) => r.profileId === currentUserId);
+  if (userIndex <= ALWAYS_SHOWN) return rows.slice(0, ALWAYS_SHOWN + 1);
+  return [...rows.slice(0, ALWAYS_SHOWN), null, rows[userIndex]];
 }
 
 // ─── Score stats ──────────────────────────────────────────────────────────────

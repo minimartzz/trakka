@@ -427,11 +427,11 @@ const GenreOverview: React.FC<GenreOverviewProps> = ({
   const isFull = draft.length >= required;
 
   // Largest radius (at zoom 1) that keeps the labels inside the SVG. Vertices
-  // sit at 90° + k·360/n. Horizontally only half a box needs to clear the
-  // widest vertex — the polygon is allowed to run under the inner half of a
-  // side label on narrow screens, which buys a much bigger chart. Vertically
-  // the top vertex and the lowest one each carry a label reaching TICK_REACH
-  // beyond the vertex, and that whole extent is centred in the SVG.
+  // sit at 90° + k·360/n. Side vertices (non-middle textAnchor) render their
+  // label box entirely on the outward side of the vertex, so the full box
+  // width needs to clear the edge, not just half. Vertically the top vertex
+  // and the lowest one each carry a label reaching TICK_REACH beyond the
+  // vertex, and that whole extent is centred in the SVG.
   const { outerRadius, cy } = useMemo(() => {
     const n = points.length;
     if (n === 0 || width === 0 || height === 0)
@@ -446,7 +446,7 @@ const GenreOverview: React.FC<GenreOverviewProps> = ({
     const reach = TICK_GAP + TICK_REACH;
     const byWidth =
       maxCos > 0
-        ? (width / 2 - TICK_GAP - TICK_W / 2) / maxCos
+        ? (width / 2 - TICK_GAP - TICK_W) / maxCos
         : Number.POSITIVE_INFINITY;
     const byHeight = (height - 2 * reach) / (1 + maxDown);
     const r = Math.floor(Math.max(0, Math.min(byWidth, byHeight)));

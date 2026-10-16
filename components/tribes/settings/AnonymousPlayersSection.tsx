@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Check, Copy, Loader2, Search, X } from "lucide-react";
+import { Check, Copy, Loader2, Search, Share2, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "nextjs-toploader/app";
 import React, { useMemo, useState } from "react";
@@ -20,8 +20,67 @@ import { toast } from "sonner";
 
 interface AnonymousPlayersSectionProps {
   groupId: string;
+  tribeName: string;
   members: AnonymousMember[];
 }
+
+const ShareClaimLink = ({
+  claimCode,
+  firstName,
+  tribeName,
+}: {
+  claimCode: string;
+  firstName: string;
+  tribeName: string;
+}) => {
+  const handleShare = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+    const url = `${baseUrl}/claim/${claimCode}`;
+    const text =
+      `Hi ${firstName} 👋! Your games with ${tribeName} are logged on Trakka ` +
+      `under an anonymous player. Open this link to claim them and own those stats! \n` +
+      `${url}` +
+      `\n\nAlternatively, navigate to your "Account > Games > Claim an Anonymous User"` +
+      `and use the code below to claim\n` +
+      `${claimCode}`;
+    const shareData = {
+      title: `Claim your ${tribeName} player profile on Trakka`,
+      text,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Error sharing claim link", error);
+          toast.error("Failed to open share menu");
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${text}`);
+      toast.success("Claim message copied to clipboard");
+    } catch {
+      toast.error("Failed to copy claim message");
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      type="button"
+      size="icon"
+      className="h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground"
+      onClick={handleShare}
+      aria-label={`Share claim link for ${firstName}`}
+    >
+      <Share2 className="h-4 w-4" />
+    </Button>
+  );
+};
 
 // Shown on an anonymous player's row when a user has a pending claim on them.
 // The SuperAdmin can approve or reject here (same action as the Inbox popover).
@@ -190,6 +249,7 @@ const AnonAvatar = ({ member }: { member: AnonymousMember }) => (
 
 const AnonymousPlayersSection = ({
   groupId,
+  tribeName,
   members,
 }: AnonymousPlayersSectionProps) => {
   const [filter, setFilter] = useState("");
@@ -258,10 +318,17 @@ const AnonymousPlayersSection = ({
                   </TableCell>
                   <TableCell>
                     {member.claimCode && (
-                      <ClaimCodeCopy
-                        claimCode={member.claimCode}
-                        memberName={`${member.firstName} ${member.lastName}`}
-                      />
+                      <div className="flex items-center justify-end">
+                        <ClaimCodeCopy
+                          claimCode={member.claimCode}
+                          memberName={`${member.firstName} ${member.lastName}`}
+                        />
+                        <ShareClaimLink
+                          claimCode={member.claimCode}
+                          firstName={member.firstName}
+                          tribeName={tribeName}
+                        />
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
@@ -301,10 +368,17 @@ const AnonymousPlayersSection = ({
               </div>
             </div>
             {member.claimCode && (
-              <ClaimCodeCopyMobile
-                claimCode={member.claimCode}
-                memberName={`${member.firstName} ${member.lastName}`}
-              />
+              <div className="flex items-center gap-2">
+                <ClaimCodeCopyMobile
+                  claimCode={member.claimCode}
+                  memberName={`${member.firstName} ${member.lastName}`}
+                />
+                <ShareClaimLink
+                  claimCode={member.claimCode}
+                  firstName={member.firstName}
+                  tribeName={tribeName}
+                />
+              </div>
             )}
             {member.claimerId != null && (
               <PendingClaim groupId={groupId} member={member} />

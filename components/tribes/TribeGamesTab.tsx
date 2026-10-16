@@ -3,7 +3,11 @@
 import { useState, useMemo } from "react";
 import { Dices } from "lucide-react";
 import { motion } from "motion/react";
-import { type GameSession, type TribeMember } from "@/types/tribes";
+import {
+  type GameSession,
+  type MemberElo,
+  type TribeMember,
+} from "@/types/tribes";
 import { buildGameList, getDefaultGame } from "./games/utils";
 import { GameSearchSection } from "./games/GameSearchSection";
 import { GameInfoSection } from "./games/GameInfoSection";
@@ -17,6 +21,8 @@ import { PlayerPerformanceSection } from "./games/PlayerPerformanceSection";
 interface TribeGamesTabProps {
   sessions: GameSession[];
   members?: TribeMember[];
+  // Members' current Elo in each game, for the Elo Ranking chart
+  memberElos?: MemberElo[];
   groupId?: string;
   currentUserId?: number;
   selectedGameId?: number | null;
@@ -32,6 +38,7 @@ interface TribeGamesTabProps {
 const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
   sessions,
   members = [],
+  memberElos = [],
   currentUserId,
   selectedGameId: controlledGameId,
   onSelectGame,
@@ -99,6 +106,9 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
           <LeadingPlayersSection
             key={`players-${selectedGameId}`}
             sessions={sessions}
+            members={members}
+            memberElos={memberElos}
+            currentUserId={currentUserId}
             selectedGameId={selectedGameId}
           />
           <ScoresSection
@@ -119,6 +129,7 @@ const TribeGamesTab: React.FC<TribeGamesTabProps> = ({
             selectedGameId={selectedGameId}
             selectedGame={selectedGame}
             members={members}
+            memberElos={memberElos}
             currentUserId={currentUserId ?? null}
           />
         </>

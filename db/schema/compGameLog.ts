@@ -54,6 +54,12 @@ export const compGameLogTable = pgTable(
     coop: boolean("coop").notNull().default(false),
     sessionDescription: text("session_description"),
     rating: smallint("rating"),
+    // Elo for this game before/after this session, and the Rated Sessions of
+    // this game the player had played before it. Null when the session
+    // doesn't affect Elo. Rewritten by replays (see docs/ELO.md).
+    eloBefore: real("elo_before"),
+    eloAfter: real("elo_after"),
+    eloSessionsBefore: smallint("elo_sessions_before"),
   },
   (t) => [
     check("rating_check", sql`${t.rating} >= 0 AND ${t.rating} <= 5`),
@@ -65,6 +71,8 @@ export const compGameLogTable = pgTable(
     ),
     // Fetching all players for a page's sessions (standings) joins on session_id.
     index("comp_game_log_session_idx").on(t.sessionId),
+    // Elo replays load one game's rows from a date onwards.
+    index("comp_game_log_game_date_idx").on(t.gameId, t.datePlayed),
   ],
 );
 

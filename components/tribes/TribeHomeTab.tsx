@@ -237,8 +237,8 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${pastWeeksGames}`,
               content: "Since last week",
             }}
-            icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-br from-accent-5 to-accent-3"
+            icon={<MeepleIcon className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
+            variant="a"
             delay={0.1}
           />
           <StatCard
@@ -249,8 +249,8 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${wpaChange}`,
               content: "Since last week",
             }}
-            icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-5 to-accent-3"
+            icon={<Target className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
+            variant="b"
             delay={0.15}
           />
           <StatCard
@@ -262,8 +262,8 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${timeTrendHours}`,
               content: "hrs since last week",
             }}
-            icon={<Clock className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-bl from-accent-3 to-accent-5"
+            icon={<Clock className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
+            variant="a"
             delay={0.2}
           />
           <StatCard
@@ -274,8 +274,8 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
               value: `${newGamesThisWeek}`,
               content: "new since last week",
             }}
-            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-white" />}
-            color="bg-linear-to-br from-accent-3 to-accent-5"
+            icon={<Library className="sm:w-6 sm:h-6 w-4 h-4 text-black dark:text-white" />}
+            variant="b"
             delay={0.25}
           />
         </div>
@@ -344,6 +344,8 @@ const TribeHomeTab: React.FC<TribeHomeTabProps> = ({
           emptyMessage="No sessions recorded yet"
           delay={0.4}
           canEdit={canEditSessions}
+          showRatings
+          linkToSession
         />
       </section>
 

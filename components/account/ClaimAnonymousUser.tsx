@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, KeyRound, Loader2, Trophy, X } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import posthog from "posthog-js";
 
@@ -30,8 +30,14 @@ interface VerifiedAnon {
 // A single claim row: enter a code -> Verify -> preview the anonymous player's
 // recent games -> Request. Once requested the row locks and the parent appends
 // a fresh row so more codes can be claimed.
-const ClaimRow = ({ onRequested }: { onRequested: () => void }) => {
-  const [code, setCode] = useState("");
+const ClaimRow = ({
+  onRequested,
+  initialCode = "",
+}: {
+  onRequested: () => void;
+  initialCode?: string;
+}) => {
+  const [code, setCode] = useState(initialCode);
   const [verified, setVerified] = useState<VerifiedAnon | null>(null);
   const [locked, setLocked] = useState(false);
   const [pending, setPending] = useState(false);
@@ -208,13 +214,26 @@ const ClaimRow = ({ onRequested }: { onRequested: () => void }) => {
 const ClaimAnonymousUser = ({
   showHeader = true,
   onRequested,
+  initialCode,
 }: {
   // Off when the surrounding surface already titles the section (onboarding)
   showHeader?: boolean;
   onRequested?: () => void;
+  // If the user came from an anonymous user claim
+  initialCode?: string;
 } = {}) => {
   // Each verified request appends a new empty row so more codes can be claimed.
   const [rowKeys, setRowKeys] = useState<number[]>([0]);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (initialCode) {
+      sectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [initialCode]);
 
   const addRow = () => {
     setRowKeys((prev) => [...prev, (prev[prev.length - 1] ?? 0) + 1]);
@@ -222,7 +241,7 @@ const ClaimAnonymousUser = ({
   };
 
   return (
-    <section>
+    <section ref={sectionRef} className="scroll-mt-24">
       {showHeader && (
         <>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
@@ -238,7 +257,11 @@ const ClaimAnonymousUser = ({
       )}
       <div className="flex flex-col gap-3">
         {rowKeys.map((key) => (
-          <ClaimRow key={key} onRequested={addRow} />
+          <ClaimRow
+            key={key}
+            onRequested={addRow}
+            initialCode={key === 0 ? initialCode : undefined}
+          />
         ))}
       </div>
     </section>

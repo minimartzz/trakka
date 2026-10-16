@@ -65,7 +65,7 @@ const TribeHeader: React.FC<TribeHeaderProps> = ({
   return (
     <div className="relative overflow-hidden">
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent-3/5 dark:from-primary/10 dark:to-accent-3/10" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-accent-3/5 dark:from-primary/10 dark:to-accent-3/10" />
 
       {/* Decorative circles */}
       {/* <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
@@ -82,7 +82,7 @@ const TribeHeader: React.FC<TribeHeaderProps> = ({
           >
             {/* Image container with glow effect */}
             <div className="relative">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-3/20 blur-xl scale-110" />
+              <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-primary/20 to-accent-3/20 blur-xl scale-110" />
               <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden ring-4 ring-background shadow-2xl">
                 <Image
                   src={tribeImage}

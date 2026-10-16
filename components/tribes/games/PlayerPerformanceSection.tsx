@@ -26,9 +26,12 @@ import { useContainerSize } from "@/hooks/useContainerSize";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   type GameSession,
+  type MemberElo,
   type TribeMember,
   type GameListItem,
 } from "@/types/tribes";
+import { eloTier, isCalibrated } from "@/utils/elo";
+import { CalibratingMark, ELO_TIER_CLASS } from "@/components/GameSessionCard";
 import {
   buildGamePlayerOptions,
   pickDefaultPlayer,
@@ -204,11 +207,14 @@ function ProfileBanner({
   stats,
   gameTitle,
   isSelf,
+  elo,
 }: {
   player: GamePlayerOption;
   stats: PlayerGameStats;
   gameTitle: string;
   isSelf: boolean;
+  // Their current Elo in this game; null if they have none
+  elo: { elo: number; calibrating: boolean } | null;
 }) {
   const profileStats = [
     {
@@ -277,6 +283,19 @@ function ProfileBanner({
       },
     };
 
+  // Elo in this game, coloured by tier, at the right end of the name row
+  const eloBox = elo && (
+    <span
+      className={cn(
+        "ml-auto inline-flex shrink-0 items-center px-2 py-1 text-base font-bold tabular-nums",
+        ELO_TIER_CLASS[eloTier(elo.elo)],
+      )}
+    >
+      ELO {elo.elo}
+      {elo.calibrating && <CalibratingMark />}
+    </span>
+  );
+
   return (
     <div className="relative overflow-hidden rounded-xl border bg-linear-to-br from-primary/5 via-card to-(--accent-5)/5">
       {/* Decorative blur */}
@@ -295,9 +314,9 @@ function ProfileBanner({
               </AvatarFallback>
             </Avatar>
           </div>
-          <div className="sm:hidden">
+          <div className="sm:hidden min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-lg font-bold tracking-tight truncate">
+              <h3 className="min-w-0 text-lg font-bold tracking-tight truncate">
                 {player.firstName} {player.lastName}
               </h3>
               {isSelf && (
@@ -305,6 +324,7 @@ function ProfileBanner({
                   You
                 </span>
               )}
+              {eloBox}
             </div>
             <p className="text-xs text-muted-foreground truncate">
               @{player.username} · {gameTitle}
@@ -316,7 +336,7 @@ function ProfileBanner({
         <div className="flex-1 min-w-0">
           <div className="hidden sm:block mb-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold tracking-tight truncate">
+              <h3 className="min-w-0 text-xl font-bold tracking-tight truncate">
                 {player.firstName} {player.lastName}
               </h3>
               {isSelf && (
@@ -324,6 +344,7 @@ function ProfileBanner({
                   You
                 </span>
               )}
+              {eloBox}
             </div>
             <p className="text-xs text-muted-foreground truncate">
               @{player.username} · playing{" "}
@@ -958,12 +979,14 @@ export function PlayerPerformanceSection({
   selectedGameId,
   selectedGame,
   members,
+  memberElos,
   currentUserId,
 }: {
   sessions: GameSession[];
   selectedGameId: number;
   selectedGame: GameListItem;
   members: TribeMember[];
+  memberElos: MemberElo[];
   currentUserId: number | null;
 }) {
   const players = useMemo(
@@ -989,6 +1012,19 @@ export function PlayerPerformanceSection({
     () => computeTribeGameStats(sessions, selectedGameId),
     [sessions, selectedGameId],
   );
+
+  // The selected player's current Elo in this game
+  const selectedElo = useMemo(() => {
+    const entry = memberElos.find(
+      (e) => e.profileId === selectedPlayerId && e.gameId === selectedGameId,
+    );
+    return entry
+      ? {
+          elo: Math.round(entry.elo),
+          calibrating: !isCalibrated(entry.sessionsPlayed),
+        }
+      : null;
+  }, [memberElos, selectedPlayerId, selectedGameId]);
 
   const stats = useMemo(
     () =>
@@ -1051,6 +1087,7 @@ export function PlayerPerformanceSection({
             stats={stats}
             gameTitle={selectedGame.gameTitle}
             isSelf={selectedPlayer.profileId === currentUserId}
+            elo={selectedElo}
           />
 
           {/* Scores — stat cards with deltas */}

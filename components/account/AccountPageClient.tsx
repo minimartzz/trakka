@@ -27,6 +27,8 @@ interface AccountPageClientProps {
   tribes: TribeGridCardData[];
   defaultImageUrl: string;
   favouriteGames: FavouriteGame[];
+  initialTab?: string;
+  initialClaimCode?: string;
 }
 
 const AccountPageClient = ({
@@ -35,8 +37,10 @@ const AccountPageClient = ({
   tribes,
   defaultImageUrl,
   favouriteGames,
+  initialTab,
+  initialClaimCode,
 }: AccountPageClientProps) => {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(initialTab ?? "profile");
   const [editMode, setEditMode] = useState(false);
 
   const handleTabChange = (tab: string) => {
@@ -68,7 +72,12 @@ const AccountPageClient = ({
           />
         }
         socialsContent={<SocialsTab tribes={tribes} />}
-        gamesContent={<GamesTab favouriteGames={favouriteGames} />}
+        gamesContent={
+          <GamesTab
+            favouriteGames={favouriteGames}
+            initialClaimCode={initialClaimCode}
+          />
+        }
         accountsContent={<AccountsTab />}
       />
     </div>

@@ -77,7 +77,7 @@ const TribeSettingsPage = ({
   const [, formAction, pending] = useActionState(handleSubmit, null);
 
   return (
-    <div className="w-full px-4 py-8 sm:px-8 lg:px-12">
+    <div className="w-full px-4 py-8 sm:px-8 lg:px-12 mb-12">
       <h1 className="mb-8 text-3xl font-bold">Tribe Settings</h1>
 
       <Form action={formAction} className="flex flex-col gap-10">
@@ -92,6 +92,7 @@ const TribeSettingsPage = ({
 
         <PlayersSection
           groupId={tribe.id}
+          tribeName={tribe.name}
           players={players}
           setPlayers={setPlayers}
           anonymousMembers={anonymousMembers}

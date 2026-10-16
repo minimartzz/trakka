@@ -49,7 +49,14 @@ const getTribesForAccount = async (profileId: number) => {
   }));
 };
 
-const AccountContent = async () => {
+type AccountSearchParams = Promise<{ tab?: string; claim?: string }>;
+
+const AccountContent = async ({
+  searchParams,
+}: {
+  searchParams: AccountSearchParams;
+}) => {
+  const { tab, claim } = await searchParams;
   const user = await fetchUser();
   const tribes = await getTribesForAccount(user.id);
 
@@ -72,14 +79,16 @@ const AccountContent = async () => {
       tribes={tribes}
       defaultImageUrl={GENERIC_IMAGE_URL}
       favouriteGames={favouriteGames}
+      initialTab={tab}
+      initialClaimCode={claim}
     />
   );
 };
 
-const Page = () => {
+const Page = ({ searchParams }: { searchParams: AccountSearchParams }) => {
   return (
     <Suspense fallback={<AccountPageSkeleton />}>
-      <AccountContent />
+      <AccountContent searchParams={searchParams} />
     </Suspense>
   );
 };

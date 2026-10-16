@@ -90,7 +90,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
   delay = 0,
 }) => {
   const [viewType, setViewType] = useState<ViewType>("active");
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("past_month");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("today");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -168,8 +168,13 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
       });
     });
 
+    // Today/Past week show anyone who played; longer windows require a
+    // minimum of games so the list isn't dominated by one-off players.
+    const minGamesPlayed =
+      timeFilter === "today" || timeFilter === "past_week" ? 1 : 4;
+
     return Object.entries(playerStats)
-      .filter(([, data]) => data.gamesPlayed >= 4)
+      .filter(([, data]) => data.gamesPlayed >= minGamesPlayed)
       .map(([id, data]) => ({
         id: parseInt(id),
         username: data.username,
@@ -388,7 +393,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
               {/* Player list - scrollable */}
               <div
                 ref={scrollRef}
-                className="space-y-1 max-h-[350px] overflow-y-auto pr-1"
+                className="space-y-1 max-h-87.5 overflow-y-auto pr-1"
                 onScroll={handleScroll}
               >
                 {visiblePlayers.map((player, index) =>

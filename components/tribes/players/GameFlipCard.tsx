@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Dices, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
-import { PlayerGameStatDetailed } from "@/utils/playerStatsCalculations";
+import { PlayerGameStat } from "@/utils/playerStatsCalculations";
+import { eloTier } from "@/utils/elo";
+import { CalibratingMark, ELO_TIER_CLASS } from "@/components/GameSessionCard";
 
 interface GameFlipCardProps {
-  game: PlayerGameStatDetailed | null;
+  game: PlayerGameStat | null;
   variant: "best" | "worst";
+  // The player's current Elo in this game; null if they have none
+  elo?: { elo: number; calibrating: boolean } | null;
 }
 
-const formatLastPlayed = (dateStr: string | null): string => {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-};
+// e.g. "05 Mar 2026". parseISO reads YYYY-MM-DD as a local date, so the day
+// doesn't shift for users behind UTC
+const formatLastPlayed = (dateStr: string | null): string =>
+  dateStr ? format(parseISO(dateStr), "dd MMM yyyy") : "—";
 
 const StatRow: React.FC<{ label: string; value: string | number }> = ({
   label,
@@ -27,7 +31,7 @@ const StatRow: React.FC<{ label: string; value: string | number }> = ({
   </div>
 );
 
-const GameFlipCard: React.FC<GameFlipCardProps> = ({ game, variant }) => {
+const GameFlipCard: React.FC<GameFlipCardProps> = ({ game, variant, elo }) => {
   const [flipped, setFlipped] = useState(false);
 
   const isBest = variant === "best";
@@ -113,6 +117,18 @@ const GameFlipCard: React.FC<GameFlipCardProps> = ({ game, variant }) => {
             <p className="text-[10px] text-white/50 mt-1 uppercase tracking-wider">
               win rate
             </p>
+            {/* Current Elo in this game, coloured by tier */}
+            {elo && (
+              <span
+                className={cn(
+                  "mt-2 inline-flex items-center px-1.5 py-0.5 text-xs font-bold tabular-nums",
+                  ELO_TIER_CLASS[eloTier(elo.elo)],
+                )}
+              >
+                ELO {elo.elo}
+                {elo.calibrating && <CalibratingMark />}
+              </span>
+            )}
           </div>
 
           {/* Title at bottom */}

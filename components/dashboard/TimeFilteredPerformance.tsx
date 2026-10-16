@@ -27,7 +27,7 @@ import {
 import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import type { FavouriteGame } from "@/db/schema/profile";
-import type { GameMeta } from "@/app/(account)/dashboard/action";
+import type { GameElo, GameMeta } from "@/app/(account)/dashboard/action";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import DotsIcon from "@/components/icons/DotsIcon";
@@ -50,7 +50,8 @@ interface DashboardProfile {
   image: string;
   memberSince: string;
   favouriteGames?: FavouriteGame[];
-  showcaseSlots?: (string | null)[];
+  showcaseSlots?: (number | null)[];
+  gameElos?: GameElo[];
 }
 
 interface TimeFilteredPerformanceProps {
@@ -413,6 +414,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
               recentActivity={recentActivity}
               favouriteGames={profile.favouriteGames}
               showcaseSlots={profile.showcaseSlots}
+              gameElos={profile.gameElos}
             />
           </div>
 
@@ -449,7 +451,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       </section>
 
       {/* ── Section: Detailed Stats ──────────────────────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardDetailedStats
             userId={userId}
@@ -478,7 +480,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
       </section>
 
       {/* ── Section: Tribes + Players ────────────────────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardTribes
           userId={userId}
           sessions={filteredActivities}

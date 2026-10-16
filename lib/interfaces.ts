@@ -39,6 +39,10 @@ export interface SessionDataInterface {
   isHighScore: boolean;
   rating: number | null;
   score?: number | null;
+  // Null when the session doesn't affect Elo
+  eloBefore: number | null;
+  eloAfter: number | null;
+  eloSessionsBefore: number | null;
 }
 // NOTE: SessionDataInterface.coop / GroupedSession.coop added for the
 // competitive-vs-cooperative card distinction on the recent-games page.
@@ -59,6 +63,9 @@ export interface SessionPlayer {
   isFirstPlay: boolean;
   isHighScore: boolean;
   score?: number | null;
+  eloBefore: number | null;
+  eloAfter: number | null;
+  eloSessionsBefore: number | null;
 }
 
 // An expansion played alongside the base game in a session.

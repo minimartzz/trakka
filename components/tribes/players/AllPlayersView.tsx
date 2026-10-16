@@ -16,13 +16,19 @@ import {
   Search,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import {
   type GameSession,
   type TribeMember,
   type HistStatsInterface,
+  type MemberElo,
 } from "@/types/tribes";
 import { calculateBadges, BadgeInfo } from "@/utils/playerStatsCalculations";
+import { eloTier, isCalibrated } from "@/utils/elo";
+import { CalibratingMark, ELO_TIER_CLASS } from "@/components/GameSessionCard";
 import PlayerBadge from "./PlayerBadge";
+
+const TOP_ELO_GAMES = 3;
 
 interface AllPlayersViewProps {
   members: TribeMember[];
@@ -62,6 +68,62 @@ const getRoleBadge = (roleId: number) => {
   );
 };
 
+// One cell of the stats strip: small label over a bold value
+const StatCell: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  valueClassName?: string;
+}> = ({ icon, label, value, valueClassName }) => (
+  <div className="flex flex-col items-center gap-0.5 px-2 py-2">
+    <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      {icon}
+      {label}
+    </span>
+    <span
+      className={cn(
+        "text-lg font-bold leading-tight tabular-nums",
+        valueClassName,
+      )}
+    >
+      {value}
+    </span>
+  </div>
+);
+
+// One of a member's highest-Elo games: thumbnail, title, Elo in its tier
+const TopEloRow: React.FC<{ entry: MemberElo }> = ({ entry }) => {
+  const elo = Math.round(entry.elo);
+  const title = entry.gameTitle ?? "Unknown game";
+  return (
+    <li className="flex items-center gap-2">
+      <span className="relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
+        {entry.thumbnail ? (
+          <Image
+            src={entry.thumbnail}
+            alt={title}
+            fill
+            sizes="24px"
+            className="object-cover"
+          />
+        ) : (
+          <Dices className="size-3.5 text-muted-foreground" />
+        )}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-sm">{title}</span>
+      <span
+        className={cn(
+          "shrink-0 px-1.5 py-0.5 text-xs font-bold tabular-nums",
+          ELO_TIER_CLASS[eloTier(elo)],
+        )}
+      >
+        {elo}
+        {!isCalibrated(entry.sessionsPlayed) && <CalibratingMark />}
+      </span>
+    </li>
+  );
+};
+
 const AllPlayersView: React.FC<AllPlayersViewProps> = ({
   members,
   sessions,
@@ -72,8 +134,8 @@ const AllPlayersView: React.FC<AllPlayersViewProps> = ({
 
   // Calculate badges
   const badgeMap = useMemo(
-    () => calculateBadges(sessions, members, histStats.rollingStats),
-    [sessions, members, histStats.rollingStats],
+    () => calculateBadges(sessions, members, histStats.memberElos),
+    [sessions, members, histStats.memberElos],
   );
 
   // Filter members by search query
@@ -93,6 +155,27 @@ const AllPlayersView: React.FC<AllPlayersViewProps> = ({
   // Get all badges for a member
   const getMemberBadges = (profileId: number): BadgeInfo[] => {
     return badgeMap.get(profileId) || [];
+  };
+
+  // Each member's highest-Elo games, in any Tribe, highest first
+  const topElosByMember = useMemo(() => {
+    const byMember = new Map<number, MemberElo[]>();
+    for (const entry of [...histStats.memberElos].sort(
+      (a, b) => b.elo - a.elo,
+    )) {
+      const list = byMember.get(entry.profileId) ?? [];
+      if (list.length < TOP_ELO_GAMES) list.push(entry);
+      byMember.set(entry.profileId, list);
+    }
+    return byMember;
+  }, [histStats.memberElos]);
+
+  // Current tribe WPA: mean score over Rated Sessions
+  const getWpa = (profileId: number): string => {
+    const rs = histStats.rollingStats.find((s) => s.profileId === profileId);
+    return rs && rs.sessionsPlayed > 0
+      ? (rs.rollingScore / rs.sessionsPlayed).toFixed(2)
+      : "0.00";
   };
 
   return (
@@ -151,6 +234,7 @@ const AllPlayersView: React.FC<AllPlayersViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredMembers.map((member, index) => {
           const badges = getMemberBadges(member.profileId);
+          const topElos = topElosByMember.get(member.profileId) ?? [];
           return (
             <motion.div
               key={member.profileId}
@@ -159,10 +243,10 @@ const AllPlayersView: React.FC<AllPlayersViewProps> = ({
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               <Card
-                className="h-full hover:shadow-lg transition-all cursor-pointer hover:border-primary/20 active:scale-[0.98]"
+                className="h-full gap-4 hover:shadow-lg transition-all cursor-pointer hover:border-primary/20 active:scale-[0.98]"
                 onClick={() => onPlayerSelect(member.profileId)}
               >
-                <CardHeader className="pb-3 relative">
+                <CardHeader className="relative">
                   {/* Badge icons (top-right) */}
                   {badges.length > 0 && (
                     <div className="absolute top-3 right-3 flex gap-1">
@@ -194,67 +278,43 @@ const AllPlayersView: React.FC<AllPlayersViewProps> = ({
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  {/* Stats grid */}
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-2 rounded-lg bg-muted-foreground/15 dark:bg-muted/50">
-                      <Dices className="w-4 h-4 mx-auto mb-1 text-primary" />
-                      <p className="text-lg font-bold">{member.gamesPlayed}</p>
-                      <p className="text-xs text-muted-foreground">Games</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted-foreground/15 dark:bg-muted/50">
-                      <Trophy className="w-4 h-4 mx-auto mb-1 text-amber-500" />
-                      <p className="text-lg font-bold">{member.wins}</p>
-                      <p className="text-xs text-muted-foreground">Wins</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted-foreground/15 dark:bg-muted/50">
-                      <TrendingUp className="w-4 h-4 mx-auto mb-1 text-accent-1" />
-                      <p className="text-lg font-bold tabular-nums">
-                        {(() => {
-                          const rs = histStats.rollingStats.find(
-                            (s) => s.profileId === member.profileId,
-                          );
-                          return rs && rs.sessionsPlayed > 0
-                            ? (rs.rollingScore / rs.sessionsPlayed).toFixed(2)
-                            : "0.00";
-                        })()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">WPA</p>
-                    </div>
+                <CardContent className="space-y-3">
+                  {/* Stats strip: games, wins, current tribe WPA */}
+                  <div className="grid grid-cols-3 divide-x divide-border rounded-lg border bg-muted/30">
+                    <StatCell
+                      icon={<Dices className="size-3 text-primary" />}
+                      label="Games"
+                      value={member.gamesPlayed}
+                    />
+                    <StatCell
+                      icon={<Trophy className="size-3 text-amber-500" />}
+                      label="Wins"
+                      value={member.wins}
+                    />
+                    <StatCell
+                      icon={<TrendingUp className="size-3 text-accent-4" />}
+                      label="WPA"
+                      value={getWpa(member.profileId)}
+                      valueClassName="text-accent-4"
+                    />
                   </div>
 
-                  {/* Win rate bar */}
-                  <div className="mt-3">
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-2">
-                      <motion.div
-                        className={cn(
-                          "h-full rounded-full",
-                          member.winRate < 33
-                            ? "bg-red-500"
-                            : member.winRate <= 66
-                              ? "bg-yellow-500"
-                              : "bg-green-500",
-                        )}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${member.winRate}%` }}
-                        transition={{
-                          duration: 0.5,
-                          delay: index * 0.05 + 0.3,
-                        }}
-                      />
-                    </div>
-                    <p
-                      className={cn(
-                        "text-sm font-bold",
-                        member.winRate < 33
-                          ? "text-red-500"
-                          : member.winRate <= 66
-                            ? "text-yellow-500"
-                            : "text-green-500",
-                      )}
-                    >
-                      {`${member.winRate}%`}
+                  {/* Highest-Elo games */}
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Top Elo
                     </p>
+                    {topElos.length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {topElos.map((entry) => (
+                          <TopEloRow key={entry.gameId} entry={entry} />
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        No rated games yet
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

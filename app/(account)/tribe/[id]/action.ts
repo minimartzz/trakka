@@ -18,6 +18,7 @@ import {
   getRollingPlayerStatsByGroupCached,
   getDailyPlayerStatsByGroupCached,
   getMonthlyPlayerStatsByGroupCached,
+  getTribeMemberElosCached,
 } from "./data";
 
 export async function getTribeMembers(groupId: string) {
@@ -33,6 +34,11 @@ export async function getTribeDetails(groupId: string) {
 export async function getTribeGameSessions(groupId: string) {
   await requireTribeMembership(groupId);
   return getTribeGameSessionsCached(groupId);
+}
+
+export async function getTribeMemberElos(groupId: string) {
+  await requireTribeMembership(groupId);
+  return getTribeMemberElosCached(groupId);
 }
 
 // ========================================

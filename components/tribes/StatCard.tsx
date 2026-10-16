@@ -16,7 +16,8 @@ interface StatCardProps {
     content: string;
   };
   icon: React.ReactNode;
-  color?: string;
+  // Gradient design
+  variant?: "a" | "b";
   delay?: number;
   animate?: boolean;
 }
@@ -39,7 +40,7 @@ const StatCard: React.FC<StatCardProps> = ({
   suffix = "",
   trend,
   icon,
-  color = "default",
+  variant = "a",
   delay = 0,
   animate = true,
 }) => {
@@ -53,7 +54,7 @@ const StatCard: React.FC<StatCardProps> = ({
     ? "text-accent-1"
     : isNegative
       ? "text-destructive"
-      : "text-white";
+      : "text-muted-foreground";
   const Icon = isPositive ? MoveUp : isNegative ? MoveDown : CircleSlash;
 
   // Animated counter effect for numeric values
@@ -99,22 +100,40 @@ const StatCard: React.FC<StatCardProps> = ({
         className={cn(
           "relative overflow-hidden transition-shadow duration-300 h-full",
           "hover:shadow-lg p-2",
-          color,
+          "bg-background",
         )}
       >
+        {/* Mesh gradient */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-0",
+            variant === "a"
+              ? "bg-[radial-gradient(120%_120%_at_85%_15%,var(--accent-2)_0%,transparent_55%),radial-gradient(110%_110%_at_15%_25%,var(--accent-5)_0%,transparent_50%),radial-gradient(130%_130%_at_50%_100%,var(--accent-1)_0%,transparent_60%)]"
+              : "bg-[radial-gradient(120%_120%_at_15%_15%,var(--accent-3)_0%,transparent_55%),radial-gradient(110%_110%_at_90%_30%,var(--accent-1)_0%,transparent_50%),radial-gradient(130%_130%_at_60%_100%,var(--accent-4)_0%,transparent_60%)]",
+            // Pastel in light mode
+            "opacity-45 dark:opacity-35",
+          )}
+        />
+        {/* Lifts the bottom-left corner so the big number always has contrast */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-linear-to-tr from-background/85 via-background/25 to-transparent"
+        />
+
         <CardContent className="relative p-2 sm:p-5">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center text-md text-white font-bold mb-1 gap-2 truncate">
+              <div className="flex items-center text-md text-foreground font-bold mb-1 gap-2 truncate">
                 <div className="sm:hidden">{icon}</div>
                 {title}
               </div>
-              <p className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              <p className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 {typeof displayValue === "number" && decimals > 0
                   ? displayValue.toFixed(decimals)
                   : displayValue}
                 {suffix && (
-                  <span className="text-lg sm:text-xl font-medium text-white ml-1">
+                  <span className="text-lg sm:text-xl font-medium text-foreground ml-1">
                     {suffix}
                   </span>
                 )}
@@ -124,7 +143,7 @@ const StatCard: React.FC<StatCardProps> = ({
             {/* Icon container with gradient background */}
             <div
               className={
-                "hidden sm:flex items-center justify-center w-12 h-12 rounded-full bg-primary"
+                "hidden sm:flex items-center justify-center w-12 h-12 rounded-full text-black dark:text-white"
               }
             >
               <div>{icon}</div>
@@ -144,7 +163,7 @@ const StatCard: React.FC<StatCardProps> = ({
                   {trend.value}
                 </span>
               )}
-              <span className="ml-2 text-gray-300 text-[10px] sm:text-sm">
+              <span className="ml-2 text-muted-foreground text-[10px] sm:text-sm">
                 {trend?.content}
               </span>
             </div>

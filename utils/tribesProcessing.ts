@@ -28,6 +28,11 @@ export interface SessionLogRow {
     | "score"
     | "victoryPoints"
     | "winContrib"
+    | "coop"
+    | "isVp"
+    | "eloBefore"
+    | "eloAfter"
+    | "eloSessionsBefore"
   >;
   profile: Pick<
     SelectProfile,
@@ -59,6 +64,8 @@ export function processGameSessions(logs: SessionLogRow[]): GameSession[] {
         thumbnail: gameDetails?.thumbnail || null,
         playingTime: gameDetails?.playingTime || null,
         gameWeight: gameDetails?.weight || null,
+        coop: compGameLog.coop,
+        isVp: compGameLog.isVp,
         players: [],
       });
     }
@@ -75,10 +82,41 @@ export function processGameSessions(logs: SessionLogRow[]): GameSession[] {
       score: compGameLog.score,
       victoryPoints: compGameLog.victoryPoints,
       winContrib: compGameLog.winContrib,
+      eloBefore: compGameLog.eloBefore,
+      eloAfter: compGameLog.eloAfter,
+      eloSessionsBefore: compGameLog.eloSessionsBefore,
     });
   });
 
   return Array.from(sessionMap.values());
+}
+
+// The player's tribe WPA after each Rated Session they played: the mean of
+// their scores so far, as rolling_player_stats (rollingScore / sessionsPlayed).
+// `sessions` must be every session in the tribe, since WPA is a running mean.
+export function wpaBySession(
+  sessions: GameSession[],
+  profileId: number,
+): Map<string, number> {
+  const ordered = [...sessions].sort(
+    (a, b) =>
+      a.datePlayed.localeCompare(b.datePlayed) ||
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+
+  const result = new Map<string, number>();
+  let total = 0;
+  let count = 0;
+  for (const session of ordered) {
+    if (!session.isVp) continue;
+    const me = session.players.find((p) => p.profileId === profileId);
+    if (me?.score === null || me?.score === undefined) continue;
+
+    total += me.score;
+    count += 1;
+    result.set(session.sessionId, total / count);
+  }
+  return result;
 }
 
 // Process members with stats

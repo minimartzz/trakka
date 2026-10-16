@@ -1,6 +1,11 @@
-import { type GameSession, type TribeMember } from "@/types/tribes";
+import {
+  type GameSession,
+  type MemberElo,
+  type TribeMember,
+} from "@/types/tribes";
 import { SelectRollingPlayerStats } from "@/db/schema/rollingPlayerStats";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
+import { isCalibrated } from "@/utils/elo";
 
 // ── Badge Types ──────────────────────────────────────────────────────
 
@@ -45,8 +50,8 @@ const BADGE_META: Record<
     image: "/badges/marathoner.png",
   },
   elo_king: {
-    label: "ELO King",
-    description: "Highest WPA in the tribe",
+    label: "Elo King",
+    description: "Highest Elo in any game",
     image: "/badges/elo_king.png",
   },
   extrovert: {
@@ -63,7 +68,7 @@ const MIN_GAMES_FOR_BADGE = 4;
 export function calculateBadges(
   sessions: GameSession[],
   members: TribeMember[],
-  rollingStats: SelectRollingPlayerStats[],
+  memberElos: MemberElo[],
 ): Map<number, BadgeInfo[]> {
   const badgeMap = new Map<number, BadgeInfo[]>();
 
@@ -91,7 +96,7 @@ export function calculateBadges(
     );
 
   // 3. Underdog: Most upsets
-  const upsets = calculateUpsets(sessions, rollingStats, eligible);
+  const upsets = calculateUpsets(sessions, eligible);
   const underdog = upsets[0];
   if (underdog)
     addBadge(underdog.profileId, "underdog", `${underdog.value} upsets`);
@@ -106,18 +111,15 @@ export function calculateBadges(
       `${Math.round(marathoner.value)} min avg`,
     );
 
-  // 5. ELO King: Highest WPA
+  // 5. Elo King: Highest Calibrated Elo in any single game
   const eligibleIds = new Set(eligible.map((m) => m.profileId));
-  const validRolling = rollingStats
-    .filter((s) => eligibleIds.has(s.profileId) && s.sessionsPlayed > 0)
-    .map((s) => ({
-      profileId: s.profileId,
-      wpa: s.rollingScore / s.sessionsPlayed,
-    }))
-    .sort((a, b) => b.wpa - a.wpa);
-  const eloKing = validRolling[0];
-  if (eloKing)
-    addBadge(eloKing.profileId, "elo_king", `${eloKing.wpa.toFixed(2)} WPA`);
+  const eloKing = memberElos
+    .filter(
+      (e) =>
+        eligibleIds.has(e.profileId) && isCalibrated(e.sessionsPlayed),
+    )
+    .sort((a, b) => b.elo - a.elo || b.sessionsPlayed - a.sessionsPlayed)[0];
+  if (eloKing) addBadge(eloKing.profileId, "elo_king", "");
 
   // 6. Extrovert: Most unique co-players
   const coPlayers = calculateUniqueCoPlayers(sessions, eligible);
@@ -156,16 +158,15 @@ function calculateAvgGameWeight(
 
 function calculateUpsets(
   sessions: GameSession[],
-  rollingStats: SelectRollingPlayerStats[],
   eligible: TribeMember[],
 ): { profileId: number; value: number }[] {
-  // Build a WPA lookup
-  const wpaMap = new Map<number, number>();
-  rollingStats.forEach((s) => {
-    if (s.sessionsPlayed > 0) {
-      wpaMap.set(s.profileId, s.rollingScore / s.sessionsPlayed);
-    }
-  });
+  // Elo going into the session, only for players who were Calibrated then
+  const calibratedElo = (player: GameSession["players"][number]) =>
+    player.eloBefore !== null &&
+    player.eloSessionsBefore !== null &&
+    isCalibrated(player.eloSessionsBefore)
+      ? player.eloBefore
+      : null;
 
   const upsetCounts: Record<number, number> = {};
   const eligibleIds = new Set(eligible.map((m) => m.profileId));
@@ -175,10 +176,11 @@ function calculateUpsets(
     const losers = session.players.filter((p) => !p.isWinner);
 
     winners.forEach((winner) => {
-      const winnerWpa = wpaMap.get(winner.profileId) ?? 0;
+      const winnerElo = calibratedElo(winner);
+      if (winnerElo === null) return;
       const causedUpset = losers.some((loser) => {
-        const loserWpa = wpaMap.get(loser.profileId) ?? 0;
-        return winnerWpa < loserWpa;
+        const loserElo = calibratedElo(loser);
+        return loserElo !== null && winnerElo < loserElo;
       });
       if (causedUpset) {
         upsetCounts[winner.profileId] =
@@ -244,6 +246,7 @@ function calculateUniqueCoPlayers(
 
 // ── Individual Player Stat Calculations ──────────────────────────────
 
+// A player's competitive stats in one game (used by individual player view)
 export interface PlayerGameStat {
   gameId: number;
   gameTitle: string;
@@ -251,69 +254,8 @@ export interface PlayerGameStat {
   timesPlayed: number;
   wins: number;
   winRate: number;
-}
-
-export function calculatePlayerGameStats(
-  sessions: GameSession[],
-  profileId: number,
-): {
-  allGames: PlayerGameStat[];
-  bestGame: PlayerGameStat | null;
-  worstGame: PlayerGameStat | null;
-} {
-  const gameMap: Record<
-    number,
-    { title: string; imageUrl: string | null; played: number; wins: number }
-  > = {};
-
-  sessions.forEach((session) => {
-    const player = session.players.find((p) => p.profileId === profileId);
-    if (!player) return;
-
-    if (!gameMap[session.gameId]) {
-      gameMap[session.gameId] = {
-        title: session.gameTitle,
-        imageUrl: session.gameImageUrl,
-        played: 0,
-        wins: 0,
-      };
-    }
-    gameMap[session.gameId].played++;
-    if (player.isWinner) gameMap[session.gameId].wins++;
-  });
-
-  const allGames: PlayerGameStat[] = Object.entries(gameMap)
-    .map(([id, data]) => ({
-      gameId: Number(id),
-      gameTitle: data.title,
-      gameImageUrl: data.imageUrl,
-      timesPlayed: data.played,
-      wins: data.wins,
-      winRate:
-        data.played > 0 ? Math.round((data.wins / data.played) * 100) : 0,
-    }))
-    .sort((a, b) => b.timesPlayed - a.timesPlayed);
-
-  // Best game: highest win rate with min 2 wins
-  const bestGame =
-    [...allGames]
-      .filter((g) => g.wins >= 2)
-      .sort((a, b) => b.winRate - a.winRate)[0] || null;
-
-  // Worst game: highest loss rate with min 2 losses
-  const worstGame =
-    [...allGames]
-      .filter((g) => g.timesPlayed - g.wins >= 2)
-      .sort((a, b) => a.winRate - b.winRate)[0] || null;
-
-  return { allGames, bestGame, worstGame };
-}
-
-// ── Detailed per-game stats (used by individual player view) ─────────
-
-export interface PlayerGameStatDetailed extends PlayerGameStat {
   bgaWinRate: number; // BGA formula: sum(isWinner ? numPlayers : 0) / (played * 2) * 100
-  gameWpa: number | null; // avg winContrib for this game (null if never recorded)
+  gameWpa: number | null; // avg score over Rated Sessions (null if none)
   lastPlayed: string | null; // YYYY-MM-DD of most recent session
 }
 
@@ -321,9 +263,9 @@ export function calculatePlayerGameStatsDetailed(
   sessions: GameSession[],
   profileId: number,
 ): {
-  allGames: PlayerGameStatDetailed[];
-  bestGame: PlayerGameStatDetailed | null;
-  worstGame: PlayerGameStatDetailed | null;
+  allGames: PlayerGameStat[];
+  bestGame: PlayerGameStat | null;
+  worstGame: PlayerGameStat | null;
 } {
   const gameMap: Record<
     number,
@@ -340,6 +282,8 @@ export function calculatePlayerGameStatsDetailed(
   > = {};
 
   sessions.forEach((session) => {
+    // Competitive only: co-op and solo results aren't wins over other players
+    if (session.coop || session.players.length < 2) return;
     const player = session.players.find((p) => p.profileId === profileId);
     if (!player) return;
 
@@ -362,8 +306,9 @@ export function calculatePlayerGameStatsDetailed(
       g.wins++;
       g.bgaNumerator += session.players.length;
     }
-    if (player.winContrib !== null) {
-      g.wpaSum += player.winContrib;
+    // WPA only counts Rated Sessions, as in rolling_player_stats
+    if (session.isVp && player.score !== null) {
+      g.wpaSum += player.score;
       g.wpaCount++;
     }
     if (!g.lastPlayed || session.datePlayed > g.lastPlayed) {
@@ -371,7 +316,7 @@ export function calculatePlayerGameStatsDetailed(
     }
   });
 
-  const allGames: PlayerGameStatDetailed[] = Object.entries(gameMap)
+  const allGames: PlayerGameStat[] = Object.entries(gameMap)
     .map(([id, data]) => ({
       gameId: Number(id),
       gameTitle: data.title,
@@ -389,18 +334,44 @@ export function calculatePlayerGameStatsDetailed(
     }))
     .sort((a, b) => b.timesPlayed - a.timesPlayed);
 
+  // Ranked by win rate weighted by plays; ties go to the most played game
+  const eligible = allGames.filter((g) => g.timesPlayed >= MIN_RANKED_PLAYS);
+  const losses = (g: PlayerGameStat) => g.timesPlayed - g.wins;
+
   const bestGame =
-    [...allGames]
-      .filter((g) => g.wins >= 2)
-      .sort((a, b) => b.winRate - a.winRate)[0] ?? null;
+    eligible
+      .filter((g) => g.wins > 0)
+      .sort(
+        (a, b) =>
+          wilsonLowerBound(b.wins, b.timesPlayed) -
+          wilsonLowerBound(a.wins, a.timesPlayed),
+      )[0] ?? null;
 
   const worstGame =
-    [...allGames]
-      .filter((g) => g.timesPlayed - g.wins >= 2)
-      .sort((a, b) => a.winRate - b.winRate)[0] ?? null;
+    eligible
+      .filter((g) => losses(g) > 0 && g.gameId !== bestGame?.gameId)
+      .sort(
+        (a, b) =>
+          wilsonLowerBound(losses(b), b.timesPlayed) -
+          wilsonLowerBound(losses(a), a.timesPlayed),
+      )[0] ?? null;
 
   return { allGames, bestGame, worstGame };
 }
+
+// Fewest plays of a game before it can be the best or worst game
+const MIN_RANKED_PLAYS = 3;
+
+// Lower bound of the 95% Wilson score interval: a rate discounted for a small
+// sample, so 19 wins in 20 plays ranks above 3 in 3
+export const wilsonLowerBound = (successes: number, trials: number): number => {
+  const z = 1.96;
+  const p = successes / trials;
+  const z2n = (z * z) / trials;
+  return (
+    (p + z2n / 2 - z * Math.sqrt((p * (1 - p) + z2n / 4) / trials)) / (1 + z2n)
+  );
+};
 
 export interface WeightBreakdown {
   label: string;
@@ -494,18 +465,31 @@ export function calculateWinsByPlayerCount(
 
 // ── Comparative Stats ────────────────────────────────────────────────
 
+// The player's record with one other player
 export interface ComparativeStat {
   profileId: number;
   username: string;
   firstName: string;
   lastName: string;
   image: string | null;
-  gamesPlayed: number;
+  // Sessions of any type played together
+  sessionsTogether: number;
+  // Head-to-heads: competitive sessions where the player finished ahead of
+  // them (a win) or behind them (a loss). A shared position, a draw or
+  // teammates, counts as neither.
   wins: number;
   losses: number;
+  // The most recent head-to-heads, newest first
+  recent: {
+    sessionId: string;
+    datePlayed: string;
+    position: number;
+    theirPosition: number;
+  }[];
 }
 
 const MIN_GAMES_COMPARATIVE = 3;
+const RECENT_HEAD_TO_HEADS = 3;
 
 export function calculateComparativeStats(
   sessions: GameSession[],
@@ -515,90 +499,86 @@ export function calculateComparativeStats(
   dominating: ComparativeStat | null;
   bestBuddy: ComparativeStat | null;
 } {
-  // Track record against every other player
-  const records: Record<
-    number,
-    {
-      username: string;
-      firstName: string;
-      lastName: string;
-      image: string | null;
-      gamesTogether: number;
-      winsAgainst: number;
-      lossesAgainst: number;
-    }
-  > = {};
+  const newestFirst = [...sessions].sort(
+    (a, b) =>
+      b.datePlayed.localeCompare(a.datePlayed) ||
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
-  sessions.forEach((session) => {
+  // Insertion order follows the most recent session together
+  const records = new Map<number, ComparativeStat>();
+  for (const session of newestFirst) {
     const me = session.players.find((p) => p.profileId === profileId);
-    if (!me) return;
+    if (!me) continue;
+    const competitive = !session.coop && session.players.length > 1;
 
-    session.players.forEach((other) => {
-      if (other.profileId === profileId) return;
+    for (const other of session.players) {
+      if (other.profileId === profileId) continue;
 
-      if (!records[other.profileId]) {
-        records[other.profileId] = {
+      let record = records.get(other.profileId);
+      if (!record) {
+        record = {
+          profileId: other.profileId,
           username: other.username,
           firstName: other.firstName,
           lastName: other.lastName,
           image: other.image,
-          gamesTogether: 0,
-          winsAgainst: 0,
-          lossesAgainst: 0,
+          sessionsTogether: 0,
+          wins: 0,
+          losses: 0,
+          recent: [],
         };
+        records.set(other.profileId, record);
       }
+      record.sessionsTogether++;
 
-      records[other.profileId].gamesTogether++;
-
-      if (me.isWinner && !other.isWinner) {
-        records[other.profileId].winsAgainst++;
-      } else if (!me.isWinner && other.isWinner) {
-        records[other.profileId].lossesAgainst++;
+      if (!competitive || me.position === other.position) continue;
+      if (me.position < other.position) record.wins++;
+      else record.losses++;
+      if (record.recent.length < RECENT_HEAD_TO_HEADS) {
+        record.recent.push({
+          sessionId: session.sessionId,
+          datePlayed: session.datePlayed,
+          position: me.position,
+          theirPosition: other.position,
+        });
       }
-    });
-  });
+    }
+  }
 
-  const qualified = Object.entries(records).filter(
-    ([, r]) => r.gamesTogether >= MIN_GAMES_COMPARATIVE,
-  );
+  const all = [...records.values()];
+  const headToHeads = (r: ComparativeStat) => r.wins + r.losses;
+  // Most head-to-heads first, so ranking ties go to the bigger record
+  const rivals = all
+    .filter((r) => headToHeads(r) >= MIN_GAMES_COMPARATIVE)
+    .sort((a, b) => headToHeads(b) - headToHeads(a));
 
-  const toStat = ([id, r]: [
-    string,
-    (typeof records)[number],
-  ]): ComparativeStat => ({
-    profileId: Number(id),
-    username: r.username,
-    firstName: r.firstName,
-    lastName: r.lastName,
-    image: r.image,
-    gamesPlayed: r.gamesTogether,
-    wins: r.winsAgainst,
-    losses: r.lossesAgainst,
-  });
-
-  // Nemesis: player they've lost to the most
-  const nemesisEntry = [...qualified].sort(
-    (a, b) => b[1].lossesAgainst - a[1].lossesAgainst,
-  )[0];
+  // Nemesis: the worst record against them, weighted by games
   const nemesis =
-    nemesisEntry && nemesisEntry[1].lossesAgainst > 0
-      ? toStat(nemesisEntry)
-      : null;
+    rivals
+      .filter((r) => r.losses > 0)
+      .sort(
+        (a, b) =>
+          wilsonLowerBound(b.losses, headToHeads(b)) -
+          wilsonLowerBound(a.losses, headToHeads(a)),
+      )[0] ?? null;
 
-  // Dominating: player they've beaten the most
-  const dominatingEntry = [...qualified].sort(
-    (a, b) => b[1].winsAgainst - a[1].winsAgainst,
-  )[0];
+  // Dominating: the best record against them, never also the Nemesis
   const dominating =
-    dominatingEntry && dominatingEntry[1].winsAgainst > 0
-      ? toStat(dominatingEntry)
-      : null;
+    rivals
+      .filter((r) => r.wins > 0 && r !== nemesis)
+      .sort(
+        (a, b) =>
+          wilsonLowerBound(b.wins, headToHeads(b)) -
+          wilsonLowerBound(a.wins, headToHeads(a)),
+      )[0] ?? null;
 
-  // Best buddy: player they've played the most games with
-  const buddyEntry = [...qualified].sort(
-    (a, b) => b[1].gamesTogether - a[1].gamesTogether,
-  )[0];
-  const bestBuddy = buddyEntry ? toStat(buddyEntry) : null;
+  // Best buddy: the most sessions of any type together; ties go to whoever
+  // they played with most recently
+  const bestBuddy =
+    all
+      .filter((r) => r.sessionsTogether >= MIN_GAMES_COMPARATIVE)
+      .sort((a, b) => b.sessionsTogether - a.sessionsTogether)[0] ?? null;
 
   return { nemesis, dominating, bestBuddy };
 }
@@ -922,9 +902,11 @@ export interface H2HMostPlayedGame {
 }
 
 export interface HeadToHeadResult {
+  // Every session together, of any type
   sharedSessions: GameSession[];
 
-  // H2H record (position-based: lower position = better)
+  // H2H record, competitive sessions only (position-based: lower position =
+  // better; a shared position is a tie)
   p1H2HWins: number;
   p2H2HWins: number;
   h2hTies: number;
@@ -948,13 +930,18 @@ export function calculateHeadToHead(
   p1Id: number,
   p2Id: number,
 ): HeadToHeadResult {
+  // Oldest first: by date played, then by when they were logged
   const sharedSessions = sessions
     .filter(
       (s) =>
         s.players.some((p) => p.profileId === p1Id) &&
         s.players.some((p) => p.profileId === p2Id),
     )
-    .sort((a, b) => a.datePlayed.localeCompare(b.datePlayed));
+    .sort(
+      (a, b) =>
+        a.datePlayed.localeCompare(b.datePlayed) ||
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
 
   let p1H2HWins = 0;
   let p2H2HWins = 0;
@@ -992,48 +979,50 @@ export function calculateHeadToHead(
     }
   > = {};
 
-  const results: (number | null)[] = []; // profileId of winner, null = tie
+  // profileId of who finished ahead in each competitive session, oldest first
+  const results: number[] = [];
 
   sharedSessions.forEach((session) => {
     const p1 = session.players.find((p) => p.profileId === p1Id)!;
     const p2 = session.players.find((p) => p.profileId === p2Id)!;
 
-    let p1Won = false;
-    let p2Won = false;
-    let tie = false;
+    // Finishing ahead wins. A shared position is a tie: a draw, teammates,
+    // or a co-op session
+    const p1Won = p1.position < p2.position;
+    const p2Won = p2.position < p1.position;
+    const tie = !p1Won && !p2Won;
 
-    if (p1.position < p2.position) {
-      p1Won = true;
-      p1H2HWins++;
-    } else if (p2.position < p1.position) {
-      p2Won = true;
-      p2H2HWins++;
-    } else {
-      tie = true;
-      h2hTies++;
+    // The head-to-head record, breakdowns and streaks are competitive only
+    if (!session.coop) {
+      if (p1Won) p1H2HWins++;
+      else if (p2Won) p2H2HWins++;
+      else h2hTies++;
+
+      // Player count bin
+      const count = session.players.length;
+      const pcBin =
+        count <= 2 ? "2p" : count === 3 ? "3p" : count === 4 ? "4p" : "5p+";
+      pcBins[pcBin].total++;
+      if (p1Won) pcBins[pcBin].p1++;
+      else if (p2Won) pcBins[pcBin].p2++;
+      else pcBins[pcBin].ties++;
+
+      // Weight bin
+      const weight = session.gameWeight;
+      const wBin =
+        weight === null || (weight >= 2.5 && weight <= 3.5)
+          ? "Medium"
+          : weight < 2.5
+            ? "Light"
+            : "Heavy";
+      wBins[wBin].total++;
+      if (p1Won) wBins[wBin].p1++;
+      else if (p2Won) wBins[wBin].p2++;
+      else wBins[wBin].ties++;
+
+      // Ties neither extend nor end a streak
+      if (!tie) results.push(p1Won ? p1Id : p2Id);
     }
-
-    // Player count bin
-    const count = session.players.length;
-    const pcBin =
-      count <= 2 ? "2p" : count === 3 ? "3p" : count === 4 ? "4p" : "5p+";
-    pcBins[pcBin].total++;
-    if (p1Won) pcBins[pcBin].p1++;
-    else if (p2Won) pcBins[pcBin].p2++;
-    else pcBins[pcBin].ties++;
-
-    // Weight bin
-    const weight = session.gameWeight;
-    const wBin =
-      weight === null || (weight >= 2.5 && weight <= 3.5)
-        ? "Medium"
-        : weight < 2.5
-          ? "Light"
-          : "Heavy";
-    wBins[wBin].total++;
-    if (p1Won) wBins[wBin].p1++;
-    else if (p2Won) wBins[wBin].p2++;
-    else wBins[wBin].ties++;
 
     // Game tracking
     if (!gameMap[session.gameId]) {
@@ -1053,8 +1042,6 @@ export function calculateHeadToHead(
     else if (p2Won) g.p2Wins++;
     else g.ties++;
     g.sessions.push({ session, p1Won, p2Won, tie });
-
-    results.push(p1Won ? p1Id : p2Won ? p2Id : null);
   });
 
   // Most played game
@@ -1080,19 +1067,12 @@ export function calculateHeadToHead(
   let runCount = 0;
 
   for (const winner of results) {
-    if (winner === null) {
-      if (runPlayer !== null) {
-        completedStreaks.push({ profileId: runPlayer, streak: runCount });
-        runPlayer = null;
-        runCount = 0;
-      }
-    } else if (runPlayer === null) {
-      runPlayer = winner;
-      runCount = 1;
-    } else if (winner === runPlayer) {
+    if (winner === runPlayer) {
       runCount++;
     } else {
-      completedStreaks.push({ profileId: runPlayer, streak: runCount });
+      if (runPlayer !== null) {
+        completedStreaks.push({ profileId: runPlayer, streak: runCount });
+      }
       runPlayer = winner;
       runCount = 1;
     }

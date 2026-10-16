@@ -3,7 +3,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { format } from "date-fns";
-import { Crown, Dices, Medal, Swords, Trophy, User, Users } from "lucide-react";
+import {
+  Crown,
+  Dices,
+  Gauge,
+  Medal,
+  Swords,
+  Trophy,
+  User,
+  Users,
+} from "lucide-react";
 import { HandshakeIcon, SwordIcon } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,10 +37,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { GroupedSession } from "@/lib/interfaces";
+import { cn } from "@/lib/utils";
+import { eloDisplay, eloTier, type EloDisplay } from "@/utils/elo";
+import {
+  CalibratingMark,
+  ELO_TIER_TEXT_CLASS,
+} from "@/components/GameSessionCard";
 import type { FavouriteGame } from "@/db/schema/profile";
 import type { GameMeta } from "@/app/(account)/dashboard/action";
 import { useIsMobile } from "@/hooks/use-mobile";
 import DotsIcon from "@/components/icons/DotsIcon";
+import { sessionHref, useRowLink } from "@/hooks/use-row-link";
+import SessionTitleLink from "@/components/SessionTitleLink";
 import {
   GameThumb,
   HeaderIcon,
@@ -107,8 +124,26 @@ const sessionStats = (session: GroupedSession, userId: number) => {
     winningVp: session.isVp && vps.length > 0 ? String(Math.max(...vps)) : "—",
     wpa:
       me?.score !== null && me?.score !== undefined ? me.score.toFixed(2) : "—",
+    // Null when the session doesn't affect Elo
+    elo: me ? eloDisplay(me) : null,
   };
 };
+
+// The user's Elo after the session, in its tier colour
+const EloValue: React.FC<{ elo: EloDisplay | null }> = ({ elo }) =>
+  elo ? (
+    <span
+      className={cn(
+        "text-sm font-bold tabular-nums",
+        ELO_TIER_TEXT_CLASS[eloTier(elo.elo)],
+      )}
+    >
+      {elo.elo}
+      {elo.calibrating && <CalibratingMark />}
+    </span>
+  ) : (
+    <span className="text-sm text-muted-foreground">—</span>
+  );
 
 const PlayersDice: React.FC<{ session: GroupedSession }> = ({ session }) => (
   <Tooltip>
@@ -142,6 +177,7 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
   delay = 0,
 }) => {
   const isMobile = useIsMobile();
+  const rowLink = useRowLink();
   const pageSize = isMobile ? 5 : 10;
 
   const [type, setType] = useState<SessionType>("all");
@@ -241,7 +277,8 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                       return (
                         <div
                           key={session.sessionId}
-                          className="rounded-lg border bg-muted/30 p-3"
+                          onClick={rowLink(sessionHref(session.sessionId))}
+                          className="cursor-pointer rounded-lg border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
                         >
                           <div className="flex items-center gap-3">
                             <GameThumb
@@ -254,7 +291,10 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                                 className="truncate font-medium"
                                 title={session.gameTitle}
                               >
-                                {session.gameTitle}
+                                <SessionTitleLink
+                                  sessionId={session.sessionId}
+                                  gameTitle={session.gameTitle}
+                                />
                               </p>
                               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                                 <TypeIcon session={session} />
@@ -268,7 +308,7 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                             <OutcomeCircle session={session} />
                           </div>
 
-                          <div className="mt-3 grid grid-cols-4 gap-2 border-t pt-3 text-center">
+                          <div className="mt-3 grid grid-cols-5 gap-2 border-t pt-3 text-center">
                             <div>
                               <HeaderIcon label="Players">
                                 <Users className="size-3.5" />
@@ -300,6 +340,14 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                               <p className="mt-1 text-sm tabular-nums text-accent-4">
                                 {stats.wpa}
                               </p>
+                            </div>
+                            <div>
+                              <HeaderIcon label="Elo">
+                                <Gauge className="size-3.5" />
+                              </HeaderIcon>
+                              <div className="mt-1 flex justify-center">
+                                <EloValue elo={stats.elo} />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -341,6 +389,11 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                               <Swords className="size-4" />
                             </HeaderIcon>
                           </TableHead>
+                          <TableHead className="w-16 text-right">
+                            <HeaderIcon label="Elo">
+                              <Gauge className="size-4" />
+                            </HeaderIcon>
+                          </TableHead>
                           <TableHead className="w-8" />
                         </TableRow>
                       </TableHeader>
@@ -351,7 +404,8 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                           return (
                             <TableRow
                               key={session.sessionId}
-                              className="transition-colors hover:bg-muted/50"
+                              onClick={rowLink(sessionHref(session.sessionId))}
+                              className="cursor-pointer transition-colors hover:bg-muted/50"
                             >
                               <TableCell className="w-8">
                                 <TypeIcon session={session} />
@@ -373,7 +427,10 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                                     className="block max-w-40 truncate font-medium sm:max-w-60"
                                     title={session.gameTitle}
                                   >
-                                    {session.gameTitle}
+                                    <SessionTitleLink
+                                  sessionId={session.sessionId}
+                                  gameTitle={session.gameTitle}
+                                />
                                   </span>
                                 </div>
                               </TableCell>
@@ -391,6 +448,9 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                               </TableCell>
                               <TableCell className="w-16 text-right tabular-nums text-accent-4">
                                 {stats.wpa}
+                              </TableCell>
+                              <TableCell className="w-16 text-right">
+                                <EloValue elo={stats.elo} />
                               </TableCell>
                               <TableCell className="w-8">
                                 <HighScoreMark session={session} />
