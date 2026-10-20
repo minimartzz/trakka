@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withPostHogConfig } from "@posthog/nextjs-config";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -26,13 +26,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: [
-          ...securityHeaders,
-          {
-            key: "Document-Policy",
-            value: "js-profiling",
-          },
-        ],
+        headers: securityHeaders,
       },
     ];
   },
@@ -61,40 +55,11 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
-  org: "minimartzz",
-
-  project: "trakka",
-
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
-
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
-
-  // No tunnelRoute: routing every Sentry envelope through a Vercel Function billed
-  // us twice over (incoming Fast Origin Transfer for the payload, plus Active CPU to
-  // forward it) for the sole benefit of dodging ad-blockers. The browser now talks to
-  // Sentry directly; ad-blocked clients simply don't report.
-
-  webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
-
-    // Tree-shaking options for reducing bundle size
-    treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true,
-    },
+export default withPostHogConfig(nextConfig, {
+  personalApiKey: process.env.POSTHOG_API_KEY!,
+  projectId: process.env.POSTHOG_PROJECT_ID!,
+  sourcemaps: {
+    // Only production builds upload source maps; previews and local builds skip it.
+    enabled: process.env.VERCEL_ENV === "production",
   },
-  authToken: process.env.SENTRY_AUTH_TOKEN,
 });

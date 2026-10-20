@@ -48,6 +48,3 @@ certs
 graphify-out/
 .impeccable
 plans/
-
-# Sentry Config File
-.env.sentry-build-plugin

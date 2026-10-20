@@ -2,6 +2,12 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.7.1] Migration to PostHog - 2026-10-21
+
+## Changed
+
+- Migration for web analytics and error tracking to PostHog only away from Sentry
+
 ## [0.7.0] ELO System - 2026-10-16
 
 Games now have an ELO system attached to it. The calibration period last around 10 games and it's globally tagged to your account.
