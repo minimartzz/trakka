@@ -7,11 +7,14 @@ let posthogServer: PostHog | null = null;
 // right away, because serverless functions can freeze before a batch flushes.
 export function getPostHogServer() {
   if (!posthogServer) {
-    posthogServer = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID!, {
-      host: "https://us.i.posthog.com",
-      flushAt: 1,
-      flushInterval: 0,
-    });
+    posthogServer = new PostHog(
+      process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!,
+      {
+        host: "https://us.i.posthog.com",
+        flushAt: 1,
+        flushInterval: 0,
+      },
+    );
   }
   return posthogServer;
 }

@@ -1,6 +1,6 @@
 import posthog from "posthog-js";
 
-const posthogProjectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID;
+const posthogProjectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const posthogHost = "https://us.i.posthog.com";
 
 if (posthogProjectToken && posthogHost) {
@@ -20,7 +20,7 @@ if (posthogProjectToken && posthogHost) {
 } else if (process.env.NODE_ENV === "development") {
   const missingVariable = posthogProjectToken
     ? "https://us.i.posthog.com"
-    : "NEXT_PUBLIC_POSTHOG_PROJECT_ID";
+    : "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN";
 
   throw new Error(
     `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once ${missingVariable} is configured`,
