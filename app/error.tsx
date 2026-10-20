@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -16,7 +17,7 @@ export default function Error({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   useEffect(() => {
-    console.error(error);
+    posthog.captureException(error);
   }, [error]);
 
   return (
