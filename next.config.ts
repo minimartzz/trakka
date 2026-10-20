@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
 
 export default withPostHogConfig(nextConfig, {
   personalApiKey: process.env.POSTHOG_API_KEY!,
-  projectId: process.env.POSTHOG_PROJECT_ID!,
+  projectId: process.env.NEXT_PUBLIC_POSTHOG_PROJECT_ID!,
   sourcemaps: {
     // Only production builds upload source maps; previews and local builds skip it.
     enabled: process.env.VERCEL_ENV === "production",
