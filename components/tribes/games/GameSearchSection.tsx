@@ -13,11 +13,14 @@ export function GameSearchSection({
   selectedGameId,
   selectedGame,
   onSelectGame,
+  showHeading = true,
 }: {
   gameList: GameListItem[];
   selectedGameId: number | null;
   selectedGame: GameListItem | null;
   onSelectGame: (gameId: number) => void;
+  // Off where the picker sits in a toolbar row of its own
+  showHeading?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -54,10 +57,12 @@ export function GameSearchSection({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <div className="flex items-center gap-2 mb-4">
-        <Dices className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-semibold">Game Analytics</h2>
-      </div>
+      {showHeading && (
+        <div className="flex items-center gap-2 mb-4">
+          <Dices className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">Game Analytics</h2>
+        </div>
+      )}
 
       <div ref={dropdownRef} className="relative">
         <div
