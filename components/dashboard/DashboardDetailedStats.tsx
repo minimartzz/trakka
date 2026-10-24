@@ -44,7 +44,7 @@ import {
   ELO_TIER_TEXT_CLASS,
 } from "@/components/GameSessionCard";
 import type { FavouriteGame } from "@/db/schema/profile";
-import type { GameMeta } from "@/app/(account)/dashboard/action";
+import type { GameMeta } from "@/app/(account)/dashboard/data";
 import { useIsMobile } from "@/hooks/use-mobile";
 import DotsIcon from "@/components/icons/DotsIcon";
 import { sessionHref, useRowLink } from "@/hooks/use-row-link";

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Ghost, Sparkles, Trophy } from "lucide-react";
 import {
   Tooltip,
@@ -92,11 +93,24 @@ export const PlayerIdentity: React.FC<{
     <PlayerAvatar player={player} />
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-        <span
-          className={cn("truncate font-semibold", isViewer && "text-primary")}
-        >
-          {player.firstName} {player.lastName}
-        </span>
+        {/* Anonymous players have no public page to link to */}
+        {player.isAnonymous ? (
+          <span
+            className={cn("truncate font-semibold", isViewer && "text-primary")}
+          >
+            {player.firstName} {player.lastName}
+          </span>
+        ) : (
+          <Link
+            href={`/player/${player.username}`}
+            className={cn(
+              "truncate font-semibold underline-offset-4 hover:underline",
+              isViewer && "text-primary",
+            )}
+          >
+            {player.firstName} {player.lastName}
+          </Link>
+        )}
         {isViewer && (
           <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
             You

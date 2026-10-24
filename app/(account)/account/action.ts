@@ -96,3 +96,37 @@ export async function updateProfileImage(image: string) {
     return { success: false, message: "Failed to update profile picture" };
   }
 }
+
+/**
+ * Turns the caller's public player page (/player/[username]) on or off.
+ * Saved straight from the Account Visibility switch, no form.
+ */
+export async function updateProfileVisibility(isPublic: boolean) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Unauthorized" };
+  if (typeof isPublic !== "boolean")
+    return { success: false, message: "Invalid visibility value" };
+
+  try {
+    const [updated] = await db
+      .update(profileTable)
+      .set({ isPublic })
+      .where(eq(profileTable.uuid, user.id))
+      .returning({ id: profileTable.id });
+
+    if (!updated) return { success: false, message: "Unauthorized" };
+
+    revalidatePath("/account");
+
+    return {
+      success: true,
+      message: isPublic
+        ? "Your profile is now public"
+        : "Your profile is now private",
+    };
+  } catch (error) {
+    console.error("Failed to update profile visibility in Database:", error);
+    return { success: false, message: "Failed to update profile visibility" };
+  }
+}

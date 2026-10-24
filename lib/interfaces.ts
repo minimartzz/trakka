@@ -28,6 +28,7 @@ export interface SessionDataInterface {
   lastName: string;
   username: string;
   profilePic: string;
+  isAnonymous: boolean;
   isVp: boolean;
   coop: boolean;
   teamId: number | null;
@@ -55,6 +56,7 @@ export interface SessionPlayer {
   lastName: string;
   username: string;
   profilePic: string;
+  isAnonymous: boolean;
   teamId: number | null;
   victoryPoints: number | null;
   position: number;

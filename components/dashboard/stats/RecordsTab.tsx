@@ -20,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { GroupedSession } from "@/lib/interfaces";
-import type { GameMeta } from "@/app/(account)/dashboard/action";
+import type { GameMeta } from "@/app/(account)/dashboard/data";
 import { chronological, sessionResult, sessionType } from "./shared";
 
 interface RecordsTabProps {

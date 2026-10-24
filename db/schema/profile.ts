@@ -53,6 +53,8 @@ export const profileTable = pgTable("profile", {
   gender: varchar("gender", { enum: ["Male", "Female", "Others"] }).notNull(),
   image: text("image").notNull(),
   isAnonymous: boolean("is_anonymous").notNull().default(false),
+  // Public player page (/player/[username]) visibility; owners can turn it off
+  isPublic: boolean("is_public").notNull().default(true),
   // ==== Claim-related ====
   claimCode: varchar("claim_code").unique(),
   // Pending-claim lock: Set to the claiming user's profile id while a claim

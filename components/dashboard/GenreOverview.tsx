@@ -49,7 +49,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { GroupedSession } from "@/lib/interfaces";
-import type { GameMeta } from "@/app/(account)/dashboard/action";
+import type { GameMeta } from "@/app/(account)/dashboard/data";
 import { useContainerSize } from "@/hooks/useContainerSize";
 
 interface GenreOverviewProps {

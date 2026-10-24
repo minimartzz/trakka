@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { motion } from "motion/react";
 import { TrendingUp, ChevronDown, Calendar, Users, Trophy } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -22,6 +23,7 @@ interface LeaderboardPlayer {
   firstName: string;
   lastName: string;
   image: string | null;
+  isAnonymous: boolean;
   gamesPlayed: number;
   wins: number;
 }
@@ -144,6 +146,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
         firstName: string;
         lastName: string;
         image: string | null;
+        isAnonymous: boolean;
         gamesPlayed: number;
         wins: number;
       }
@@ -157,6 +160,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             firstName: player.firstName,
             lastName: player.lastName,
             image: player.image,
+            isAnonymous: player.isAnonymous ?? true,
             gamesPlayed: 0,
             wins: 0,
           };
@@ -181,6 +185,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
         firstName: data.firstName,
         lastName: data.lastName,
         image: data.image,
+        isAnonymous: data.isAnonymous,
         gamesPlayed: data.gamesPlayed,
         wins: data.wins,
       }));
@@ -285,7 +290,18 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
               isTopThree && styles.text,
             )}
           >
-            {player.firstName} {player.lastName}
+            {player.isAnonymous ? (
+              <>
+                {player.firstName} {player.lastName}
+              </>
+            ) : (
+              <Link
+                href={`/player/${player.username}`}
+                className="underline-offset-4 hover:underline"
+              >
+                {player.firstName} {player.lastName}
+              </Link>
+            )}
           </p>
           <p className="text-xs text-muted-foreground">
             {player.secondaryText}

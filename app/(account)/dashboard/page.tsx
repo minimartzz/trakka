@@ -1,4 +1,4 @@
-import { fetchSessions } from "@/app/(account)/recent-games/action";
+import { fetchSessions } from "@/app/(account)/recent-games/data";
 import { getDailyPlayerStats } from "@/app/(account)/tribe/[id]/action";
 import TimeFilteredPerformance from "@/components/dashboard/TimeFilteredPerformance";
 import { SessionDataInterface } from "@/lib/interfaces";
@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
-import { fetchGameElos, fetchGameMeta } from "./action";
+import { fetchGameElos, fetchGameMeta } from "./data";
 
 const fetchSessionsByProfile = async (
   id: number,

@@ -1,4 +1,4 @@
-import { fetchSessions } from "@/app/(account)/recent-games/action";
+import { fetchSessions } from "@/app/(account)/recent-games/data";
 import { filterSessionData } from "@/utils/recordsProcessing";
 import { GroupedSession } from "@/lib/interfaces";
 import ProfileDemo, { type DemoProfile } from "./profile-demo";

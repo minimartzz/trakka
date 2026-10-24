@@ -27,7 +27,7 @@ import {
 import { GroupedSession, SessionDataInterface } from "@/lib/interfaces";
 import { SelectHistDailyPlayerStats } from "@/db/schema/histDailyPlayerStats";
 import type { FavouriteGame } from "@/db/schema/profile";
-import type { GameElo, GameMeta } from "@/app/(account)/dashboard/action";
+import type { GameElo, GameMeta } from "@/app/(account)/dashboard/data";
 import { topGames, topOpponents } from "@/utils/dashboardProcessing";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import DotsIcon from "@/components/icons/DotsIcon";

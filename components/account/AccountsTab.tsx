@@ -1,8 +1,70 @@
-import WipOverlay from "@/components/account/WipOverlay";
-import { Link2, Eye } from "lucide-react";
-import React from "react";
+"use client";
 
-const AccountsTab = () => {
+import { updateProfileVisibility } from "@/app/(account)/account/action";
+import WipOverlay from "@/components/account/WipOverlay";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { SITE_URL } from "@/lib/seo";
+import { Check, Copy, Eye, Link2, Share } from "lucide-react";
+import React, { useState, useTransition } from "react";
+import { toast } from "sonner";
+
+interface AccountsTabProps {
+  username: string;
+  isPublic: boolean;
+}
+
+const AccountsTab = ({ username, isPublic: initialIsPublic }: AccountsTabProps) => {
+  const [isPublic, setIsPublic] = useState(initialIsPublic);
+  const [copied, setCopied] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const profileUrl = `${SITE_URL}/player/${username}`;
+
+  // Saves on flip; the switch moves straight away and moves back on failure
+  const handleVisibilityChange = (checked: boolean) => {
+    setIsPublic(checked);
+    startTransition(async () => {
+      const result = await updateProfileVisibility(checked);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        setIsPublic(!checked);
+        toast.error(result.message);
+      }
+    });
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      return true;
+    } catch {
+      toast.error("Couldn't copy the link");
+      return false;
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My Trakka profile",
+          text: "See how I'm doing on Trakka",
+          url: profileUrl,
+        });
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Error sharing profile link", error);
+          toast.error("Failed to open share menu");
+        }
+      }
+      return;
+    }
+    if (await handleCopy()) toast.success("Link copied to clipboard!");
+  };
+
   return (
     <div className="flex flex-col gap-8 py-6">
       <section>
@@ -37,15 +99,52 @@ const AccountsTab = () => {
         <p className="mb-4 text-sm text-muted-foreground">
           Control who can see your profile and stats.
         </p>
-        <WipOverlay>
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-1.5">
-              <div className="h-3.5 w-40 rounded bg-muted" />
-              <div className="h-3 w-56 rounded bg-muted" />
-            </div>
-            <div className="h-6 w-11 shrink-0 rounded-full bg-muted" />
+        <div className="rounded-lg border p-4">
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="public-profile" className="space-y-1">
+              <span className="block text-sm font-medium">Public profile</span>
+              <span className="block text-sm text-muted-foreground">
+                Anyone with the link can see your stats.
+              </span>
+            </label>
+            <Switch
+              id="public-profile"
+              checked={isPublic}
+              onCheckedChange={handleVisibilityChange}
+              disabled={isPending}
+            />
           </div>
-        </WipOverlay>
+
+          {isPublic && (
+            <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center">
+              <span className="min-w-0 flex-1 truncate rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm">
+                {profileUrl}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  className="h-11 flex-1 gap-2 sm:h-9 sm:flex-none"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                {/* Signal violet marks share actions (DESIGN.md), as in ShareButton */}
+                <Button
+                  onClick={handleShare}
+                  className="h-11 flex-1 gap-2 bg-accent-4 text-white hover:bg-accent-4/80 sm:h-9 sm:flex-none dark:bg-accent-4/80 dark:hover:bg-accent-4"
+                >
+                  <Share className="h-4 w-4" />
+                  Share
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

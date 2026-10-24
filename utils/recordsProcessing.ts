@@ -51,6 +51,7 @@ export const filterSessionData = (
       lastName: record.lastName,
       username: record.username,
       profilePic: record.profilePic,
+      isAnonymous: record.isAnonymous,
       teamId: record.teamId,
       victoryPoints: record.victoryPoints,
       position: record.position,

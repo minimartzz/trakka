@@ -314,14 +314,29 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
       {/* Name + username */}
       <div className="min-w-0 flex-1">
-        <span
-          className={cn(
-            "block truncate font-medium text-foreground",
-            highlight && "font-semibold text-primary",
-          )}
-        >
-          {player.firstName}
-        </span>
+        {/* The name opens the player's page; the rest of the card the
+            session's (useRowLink skips clicks on links). Anonymous players
+            have no page. */}
+        {player.isAnonymous ? (
+          <span
+            className={cn(
+              "block truncate font-medium text-foreground",
+              highlight && "font-semibold text-primary",
+            )}
+          >
+            {player.firstName}
+          </span>
+        ) : (
+          <Link
+            href={`/player/${player.username}`}
+            className={cn(
+              "block truncate font-medium text-foreground underline-offset-4 hover:underline",
+              highlight && "font-semibold text-primary",
+            )}
+          >
+            {player.firstName}
+          </Link>
+        )}
         <span className="block truncate text-xs text-muted-foreground">
           @{player.username}
         </span>
