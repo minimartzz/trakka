@@ -1,6 +1,4 @@
-// Sections of the public player page (/player/[username]), top to bottom:
-// identity row, latest-session banner, records strip, then the weekly and
-// difficulty charts. Server-rendered; nothing here is interactive.
+// Layout for public players page
 import Image from "next/image";
 import {
   differenceInCalendarDays,
@@ -8,29 +6,20 @@ import {
   formatDistanceToNowStrict,
   parseISO,
 } from "date-fns";
-import { Trophy } from "lucide-react";
 import { CalibratingMark, EloArrow } from "@/components/GameSessionCard";
 import type { GroupedSession } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
-import { eloDisplay } from "@/utils/elo";
+import { ELO_TIER_CLASS, eloDisplay, eloTier } from "@/utils/elo";
 import type {
-  difficultyBreakdown,
   highestEloGame,
   mostPlayedGame,
   topTribe,
-  weeklySessions,
 } from "@/utils/playerProfile";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
 import { formatWpa, sessionMode } from "@/utils/sessionPage";
+import { getWeightColor } from "@/components/tribes/games/utils";
 
 const WIN_TEXT = "text-emerald-600 dark:text-emerald-400";
-
-const MODE_LABEL = {
-  rated: "Rated",
-  unrated: "Unrated",
-  coop: "Co-op",
-  solo: "Solo",
-};
 
 const lastPlayedLabel = (datePlayed: string) => {
   const date = parseISO(datePlayed);
@@ -39,21 +28,6 @@ const lastPlayedLabel = (datePlayed: string) => {
   if (days === 1) return "yesterday";
   return formatDistanceToNowStrict(date, { addSuffix: true });
 };
-
-const Thumb: React.FC<{ src: string | null; size: number; className?: string }> = ({
-  src,
-  size,
-  className,
-}) => (
-  <div
-    className={cn("relative shrink-0 overflow-hidden rounded-md bg-muted", className)}
-    style={{ width: size, height: size }}
-  >
-    {src && (
-      <Image src={src} alt="" fill sizes={`${size}px`} className="object-cover" />
-    )}
-  </div>
-);
 
 // ── Identity ────────────────────────────────────────────────────────────────
 
@@ -65,48 +39,37 @@ export const PlayerHeader: React.FC<{
   joinedAt: Date | null;
   lastPlayed: string | null;
 }> = ({ firstName, lastName, username, image, joinedAt, lastPlayed }) => (
-  <header className="flex items-center gap-4 sm:gap-6">
-    <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-22">
+  <header className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-8 sm:text-left">
+    <div className="relative flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-36">
       {image ? (
-        <Image src={image} alt="" fill sizes="88px" className="object-cover" priority />
+        <Image src={image} alt="" fill sizes="144px" className="object-cover" priority />
       ) : (
-        <span className="font-display text-3xl font-bold text-muted-foreground">
+        <span className="font-display text-5xl font-bold text-muted-foreground">
           {firstName.charAt(0).toUpperCase()}
         </span>
       )}
     </div>
-    <div className="min-w-0">
+    <div className="min-w-0 max-w-full">
       <h1 className="truncate font-display text-4xl font-bold leading-[1.05] sm:text-5xl">
         {firstName} {lastName}
       </h1>
-      <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-        @{username}
-        {joinedAt && <> · Joined {format(joinedAt, "MMM yyyy")}</>}
-        {lastPlayed && <> · Last played {lastPlayedLabel(lastPlayed)}</>}
-      </p>
+      <p className="mt-1 text-muted-foreground sm:text-lg font-bold">@{username}</p>
+      <div className="mt-2 space-y-0.5 text-sm text-muted-foreground sm:text-base">
+        {joinedAt && <p>Member since: {format(joinedAt, "MMM yyyy")}</p>}
+        {lastPlayed && <p>Last played: {lastPlayedLabel(lastPlayed)}</p>}
+      </div>
     </div>
   </header>
 );
 
 // ── Latest session ──────────────────────────────────────────────────────────
 
-const ResultFigure: React.FC<{
-  value: React.ReactNode;
-  label: React.ReactNode;
-  className?: string;
-}> = ({ value, label, className }) => (
-  <div className="text-right">
-    <div className={cn("font-display text-4xl font-bold leading-none sm:text-5xl", className)}>
-      {value}
-    </div>
-    <div className="mt-1.5 text-xs text-muted-foreground">{label}</div>
-  </div>
-);
-
 export const LatestSessionBanner: React.FC<{
   session: GroupedSession;
   profileId: number;
-}> = ({ session, profileId }) => {
+  // Full-size game image; the session only carries the thumbnail
+  image: string | null;
+}> = ({ session, profileId, image }) => {
   const me = session.players.find((p) => p.profileId === profileId);
   if (!me) return null;
 
@@ -117,73 +80,81 @@ export const LatestSessionBanner: React.FC<{
     ? new Set(session.players.map((p) => p.teamId)).size
     : session.numPlayers;
   const elo = eloDisplay(me);
+  const src = image ?? session.gameImage;
 
   return (
     <section
       aria-label="Latest session"
-      className="rounded-xl border bg-primary/8 p-4 sm:p-6 dark:bg-primary/15"
+      className="flex gap-4 rounded-xl border bg-primary/8 p-4 dark:bg-primary/15"
     >
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-4">
-          <Thumb src={session.gameImage} size={72} />
+      <div className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-28">
+        {src && <Image src={src} alt="" fill sizes="112px" className="object-cover" />}
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5 sm:gap-2">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="truncate font-display text-3xl font-bold leading-tight sm:text-4xl">
+            <h2 className="truncate font-display text-xl font-bold leading-tight sm:text-2xl">
               {session.gameTitle}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Latest session · {format(parseISO(session.datePlayed), "EEE d MMM yyyy")} ·{" "}
-              {MODE_LABEL[mode]} · {session.tribe}
+              {format(parseISO(session.datePlayed), "EEE d MMM yyyy")}
             </p>
+          </div>
+          <div
+            className={cn(
+              "shrink-0 font-display text-2xl font-bold leading-none sm:text-3xl",
+              me.isWinner && WIN_TEXT,
+            )}
+          >
+            {competitive ? (
+              <>
+                {positionOrdinalSuffix(me.position)}
+                <span className="text-lg text-muted-foreground">/{places}</span>
+              </>
+            ) : me.isWinner ? (
+              "Won"
+            ) : (
+              "Lost"
+            )}
           </div>
         </div>
 
-        <div className="flex shrink-0 justify-end gap-6 sm:gap-8">
-          {competitive ? (
-            <ResultFigure
-              value={
-                <>
-                  {positionOrdinalSuffix(me.position)}
-                  <span className="text-xl text-muted-foreground"> /{places}</span>
-                </>
-              }
-              label={
-                <span className="inline-flex items-center gap-1">
-                  {me.isWinner && <Trophy className={cn("size-3", WIN_TEXT)} />}
-                  {me.isWinner ? "Won" : "Position"}
-                </span>
-              }
-              className={cn(me.isWinner && WIN_TEXT)}
-            />
-          ) : (
-            <ResultFigure
-              value={me.isWinner ? "Won" : "Lost"}
-              label={
-                <span className="inline-flex items-center gap-1">
-                  {me.isWinner && <Trophy className={cn("size-3", WIN_TEXT)} />}
-                  Result
-                </span>
-              }
-              className={cn(me.isWinner && WIN_TEXT)}
-            />
-          )}
+        <div className="flex items-center gap-3 sm:gap-4">
           {me.victoryPoints !== null && (
-            <ResultFigure value={me.victoryPoints} label={competitive ? "VP" : "Score"} />
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-foreground/20 sm:size-13">
+              <span className="flex flex-col items-center leading-none">
+                <span className="font-display text-sm font-bold tabular-nums sm:text-base">
+                  {me.victoryPoints}
+                </span>
+                <span className="text-[0.625rem] uppercase text-muted-foreground">
+                  {competitive ? "VP" : "Score"}
+                </span>
+              </span>
+            </span>
           )}
           {elo && (
-            <ResultFigure
-              value={
-                <span className="inline-flex items-center">
-                  <EloArrow delta={elo.delta} className="size-6" />
-                  {elo.delta === 0 ? "±0" : Math.abs(elo.delta)}
-                  {elo.calibrating && <CalibratingMark />}
-                </span>
-              }
-              label="Elo change"
+            <span
               className={cn(
-                elo.delta > 0 && WIN_TEXT,
-                elo.delta < 0 && "text-destructive",
+                "relative inline-flex items-center rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums sm:px-3 sm:py-1.5 sm:text-base",
+                ELO_TIER_CLASS[eloTier(elo.elo)],
               )}
-            />
+            >
+              ELO {elo.elo}
+              {elo.calibrating && <CalibratingMark />}
+              {elo.delta !== 0 && (
+                <span
+                  className={cn(
+                    "absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full",
+                    elo.delta > 0
+                      ? "bg-emerald-300 text-emerald-950"
+                      : "bg-red-300 text-red-950",
+                  )}
+                >
+                  <EloArrow delta={elo.delta} className="size-3" />
+                </span>
+              )}
+            </span>
           )}
         </div>
       </div>
@@ -193,30 +164,83 @@ export const LatestSessionBanner: React.FC<{
 
 // ── Records ─────────────────────────────────────────────────────────────────
 
-const RecordCell: React.FC<{
+// Mesh gradients in the style of the dashboard stat cards, one per highlight.
+// The first two are the dashboard's own; written out in full so Tailwind sees them.
+const MESH = {
+  sessions:
+    "bg-[radial-gradient(120%_120%_at_85%_15%,var(--accent-2)_0%,transparent_55%),radial-gradient(110%_110%_at_15%_25%,var(--accent-5)_0%,transparent_50%),radial-gradient(130%_130%_at_50%_100%,var(--accent-1)_0%,transparent_60%)]",
+  wpa: "bg-[radial-gradient(120%_120%_at_15%_15%,var(--accent-3)_0%,transparent_55%),radial-gradient(110%_110%_at_90%_30%,var(--accent-1)_0%,transparent_50%),radial-gradient(130%_130%_at_60%_100%,var(--accent-4)_0%,transparent_60%)]",
+  complexity:
+    "bg-[radial-gradient(120%_120%_at_10%_90%,var(--accent-4)_0%,transparent_55%),radial-gradient(110%_110%_at_90%_10%,var(--accent-2)_0%,transparent_50%),radial-gradient(130%_130%_at_50%_0%,var(--accent-1)_0%,transparent_55%)]",
+  played:
+    "bg-[radial-gradient(120%_120%_at_90%_20%,var(--accent-1)_0%,transparent_55%),radial-gradient(110%_110%_at_10%_60%,var(--accent-3)_0%,transparent_50%),radial-gradient(130%_130%_at_70%_100%,var(--accent-5)_0%,transparent_60%)]",
+  elo: "bg-[radial-gradient(120%_120%_at_20%_10%,var(--accent-5)_0%,transparent_55%),radial-gradient(110%_110%_at_95%_50%,var(--accent-1)_0%,transparent_50%),radial-gradient(130%_130%_at_30%_100%,var(--accent-3)_0%,transparent_60%)]",
+  tribe:
+    "bg-[radial-gradient(120%_120%_at_50%_0%,var(--accent-2)_0%,transparent_55%),radial-gradient(110%_110%_at_0%_100%,var(--accent-4)_0%,transparent_50%),radial-gradient(130%_130%_at_100%_80%,var(--accent-5)_0%,transparent_55%)]",
+};
+
+// Every highlight is the same-sized card: bold label top left, value bottom right
+const HighlightCard: React.FC<{
   label: string;
-  value: React.ReactNode;
-  detail?: React.ReactNode;
-  image?: string | null;
-  big?: boolean;
-}> = ({ label, value, detail, image, big }) => (
-  <div className="min-w-0 p-4 sm:px-5">
-    <dt className="text-sm text-muted-foreground">{label}</dt>
-    <dd className="mt-1 flex min-w-0 items-center gap-2.5">
-      {image !== undefined && <Thumb src={image} size={36} />}
-      <div className="min-w-0">
-        <div
-          className={cn(
-            "truncate font-display font-bold leading-tight",
-            big ? "text-4xl sm:text-5xl" : "text-2xl",
-          )}
-        >
-          {value}
-        </div>
-        {detail && <div className="truncate text-sm text-muted-foreground">{detail}</div>}
-      </div>
-    </dd>
+  mesh: string;
+  children: React.ReactNode;
+}> = ({ label, mesh, children }) => (
+  <div className="relative h-36 min-w-0 overflow-hidden rounded-xl bg-background shadow-sm">
+    <div
+      aria-hidden
+      className={cn("pointer-events-none absolute inset-0 opacity-45 dark:opacity-35", mesh)}
+    />
+    {/* Lifts the bottom-right corner so the value always has contrast */}
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 bg-linear-to-tl from-background/85 via-background/25 to-transparent"
+    />
+    <div className="relative flex h-full flex-col justify-between p-4">
+      <p className="text-sm font-bold text-foreground/80">{label}</p>
+      <div className="min-w-0 text-right">{children}</div>
+    </div>
   </div>
+);
+
+const StatHighlight: React.FC<{
+  label: string;
+  mesh: string;
+  value: React.ReactNode;
+  className?: string;
+}> = ({ label, mesh, value, className }) => (
+  <HighlightCard label={label} mesh={mesh}>
+    <span
+      className={cn("font-display text-5xl font-bold leading-none tabular-nums", className)}
+    >
+      {value}
+    </span>
+  </HighlightCard>
+);
+
+// shortcut: sized by character count, not measured width; swap for a fit-text
+// hook if real names still clip
+const fitText = (text: string) =>
+  text.length <= 10 ? "text-2xl" : text.length <= 18 ? "text-xl" : "text-base";
+
+const NamedHighlight: React.FC<{
+  label: string;
+  mesh: string;
+  name: string | undefined;
+  detail: React.ReactNode;
+}> = ({ label, mesh, name = "—", detail }) => (
+  <HighlightCard label={label} mesh={mesh}>
+    <div
+      title={name}
+      className={cn("line-clamp-2 font-display font-bold leading-tight wrap-break-word", fitText(name))}
+    >
+      {name}
+    </div>
+    {detail && (
+      <div className="mt-1 font-display text-xl font-bold leading-tight text-muted-foreground">
+        {detail}
+      </div>
+    )}
+  </HighlightCard>
 );
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -224,123 +248,49 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 export const RecordsStrip: React.FC<{
   wpa: number | null;
   sessionCount: number;
+  complexity: number | null;
   topGame: ReturnType<typeof mostPlayedGame>;
   topElo: ReturnType<typeof highestEloGame>;
   tribe: ReturnType<typeof topTribe>;
-}> = ({ wpa, sessionCount, topGame, topElo, tribe }) => (
-  // One strip of cells split by hairlines (the border colour showing through
-  // a 1px gap); 2 columns on mobile with Top tribe spanning the last row
-  <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border lg:grid-cols-[1fr_1fr_1.4fr_1.4fr_1.4fr] [&>*]:bg-card [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
-    <RecordCell label="Avg WPA" value={formatWpa(wpa)} detail="per Rated Session" big />
-    <RecordCell label="Sessions" value={sessionCount} detail="played" big />
-    <RecordCell
-      label="Most played"
-      value={topGame?.gameTitle ?? "—"}
-      detail={topGame && plural(topGame.count, "play")}
-      image={topGame ? topGame.gameImage : undefined}
+}> = ({ wpa, sessionCount, complexity, topGame, topElo, tribe }) => (
+  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+    <StatHighlight label="Sessions" mesh={MESH.sessions} value={sessionCount} />
+    <StatHighlight label="Average WPA" mesh={MESH.wpa} value={formatWpa(wpa)} />
+    <StatHighlight
+      label="Average Complexity"
+      mesh={MESH.complexity}
+      value={complexity === null ? "—" : complexity.toFixed(1)}
+      className={complexity === null ? undefined : getWeightColor(complexity)}
     />
-    <RecordCell
-      label="Highest Elo"
-      value={topElo?.gameTitle ?? "—"}
+    <NamedHighlight
+      label="Most played"
+      mesh={MESH.played}
+      name={topGame?.gameTitle}
+      detail={topGame && plural(topGame.count, "play")}
+    />
+    <NamedHighlight
+      label="Highest ELO"
+      mesh={MESH.elo}
+      name={topElo?.gameTitle}
       detail={
         topElo && (
-          <>
-            {Math.round(topElo.elo).toLocaleString()}
+          <span
+            className={cn(
+              "inline-flex items-center rounded-lg px-2 py-0.5 font-bold tabular-nums",
+              ELO_TIER_CLASS[eloTier(topElo.elo)],
+            )}
+          >
+            ELO {Math.round(topElo.elo)}
             {!topElo.calibrated && <CalibratingMark />}
-          </>
+          </span>
         )
       }
-      image={topElo ? topElo.gameImage : undefined}
     />
-    <RecordCell
-      label="Top tribe"
-      value={tribe?.name ?? "—"}
+    <NamedHighlight
+      label="Top Tribe"
+      mesh={MESH.tribe}
+      name={tribe?.name}
       detail={tribe && plural(tribe.count, "session")}
-      image={tribe ? tribe.image : undefined}
     />
-  </dl>
+  </div>
 );
-
-// ── Sessions per week ───────────────────────────────────────────────────────
-
-// 52 bars, each with its count printed on top; empty weeks stay as gaps.
-// Scrolls sideways inside its card when the bars would get too thin.
-export const WeeklySessionsChart: React.FC<{
-  weeks: ReturnType<typeof weeklySessions>;
-}> = ({ weeks }) => {
-  const max = Math.max(1, ...weeks.map((w) => w.count));
-  const total = weeks.reduce((sum, w) => sum + w.count, 0);
-
-  return (
-    <section className="rounded-xl border bg-card p-4 sm:p-6">
-      <h2 className="text-lg">Sessions per week</h2>
-      <p className="text-sm text-muted-foreground">
-        {plural(total, "session")} in the last 12 months
-      </p>
-      <div className="-mx-4 mt-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div
-          role="img"
-          aria-label={`Sessions per week for the last 52 weeks, ${plural(total, "session")} in total`}
-          className="grid min-w-[620px] grid-cols-[repeat(52,minmax(0,1fr))] gap-x-[3px]"
-        >
-          {weeks.map((week) => {
-            const weekStart = parseISO(week.weekStart);
-            return (
-              <div key={week.weekStart} className="flex flex-col">
-                <div className="flex h-36 flex-col justify-end">
-                  {week.count > 0 && (
-                    <>
-                      <span className="mb-1 text-center text-[10px] font-semibold leading-none text-muted-foreground">
-                        {week.count}
-                      </span>
-                      <span
-                        className="block rounded-t-[2px] bg-primary"
-                        style={{ height: `${(week.count / max) * 100 * 0.82}%` }}
-                      />
-                    </>
-                  )}
-                </div>
-                <span className="mt-0.5 h-px bg-border" />
-                {/* Month name under each month's first Monday */}
-                <span className="mt-1.5 h-4 overflow-visible whitespace-nowrap text-[11px] leading-none text-muted-foreground">
-                  {weekStart.getDate() <= 7 ? format(weekStart, "MMM") : ""}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ── Game difficulty ─────────────────────────────────────────────────────────
-
-export const DifficultyBars: React.FC<{
-  bands: ReturnType<typeof difficultyBreakdown>;
-}> = ({ bands }) => {
-  const max = Math.max(1, ...bands.map((b) => b.count));
-  return (
-    <section className="rounded-xl border bg-card p-4 sm:p-6">
-      <h2 className="text-lg">Game difficulty</h2>
-      <p className="text-sm text-muted-foreground">Sessions by game weight</p>
-      <ul className="mt-4 space-y-3">
-        {bands.map((band) => (
-          <li
-            key={band.label}
-            className="grid grid-cols-[5.5rem_1fr_2.5rem] items-center gap-3 text-sm"
-          >
-            <span className="text-muted-foreground">{band.label}</span>
-            <span aria-hidden className="h-3.5 rounded-[2px] bg-muted">
-              <span
-                className="block h-full rounded-[2px] bg-primary"
-                style={{ width: `${(band.count / max) * 100}%` }}
-              />
-            </span>
-            <span className="text-right font-semibold">{band.count}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-};

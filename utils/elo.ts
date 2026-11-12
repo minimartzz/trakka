@@ -212,3 +212,15 @@ const ELO_TIERS: [upTo: number, tier: EloTier][] = [
 
 export const eloTier = (elo: number): EloTier =>
   ELO_TIERS.find(([upTo]) => elo <= upTo)?.[1] ?? "maroon";
+
+// Elo box colour by tier. Iron, bronze, purple and maroon are dark enough for
+// white text; the lighter tiers use the dark text of the gain pill
+export const ELO_TIER_CLASS: Record<EloTier, string> = {
+  iron: "bg-elo-iron text-white",
+  bronze: "bg-elo-bronze text-white",
+  silver: "bg-elo-silver text-[oklch(25.3%_0.0321_265.95)]",
+  gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
+  emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
+  purple: "bg-elo-purple text-white",
+  maroon: "bg-elo-maroon text-white",
+};

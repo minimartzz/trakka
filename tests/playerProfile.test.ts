@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  averageComplexity,
+  filterGames,
+  playedGames,
+  playTimeRange,
   averageWpa,
-  difficultyBreakdown,
   highestEloGame,
+  lastMonthAverages,
   mostPlayedGame,
+  topTags,
   topTribe,
   weeklySessions,
 } from "@/utils/playerProfile";
@@ -205,7 +210,7 @@ describe("weeklySessions", () => {
       today,
     );
     expect(weeks[51].count).toBe(1);
-    expect(weeks[50]).toEqual({ weekStart: "2026-10-12", count: 2 });
+    expect(weeks[50]).toMatchObject({ weekStart: "2026-10-12", count: 2 });
   });
 
   it("keeps empty weeks and drops sessions before the first week", () => {
@@ -217,24 +222,90 @@ describe("weeklySessions", () => {
     expect(weeks[25].count).toBe(0);
     expect(weeks.reduce((sum, w) => sum + w.count, 0)).toBe(2);
   });
+
+  it("splits each week by complexity tier and player count", () => {
+    const solo = [player(ME)];
+    const crowd = [1, 2, 3, 4, 5, 6].map((id) => player(id));
+    const [week] = weeklySessions(
+      [
+        session({ datePlayed: "2026-10-20", gameWeight: 2.5, players: solo }),
+        session({ datePlayed: "2026-10-20", gameWeight: 3.6, players: crowd }),
+        session({ datePlayed: "2026-10-20", gameWeight: null }),
+      ],
+      today,
+    ).slice(-1);
+    expect(week).toMatchObject({ count: 3, light: 1, medium: 0, heavy: 1 });
+    expect(week).toMatchObject({ p1: 1, p2: 1, p5plus: 1 });
+  });
 });
 
-describe("difficultyBreakdown", () => {
+describe("lastMonthAverages", () => {
+  // A Thursday: the last 4 weeks start Monday 28 Sep 2026
+  const today = new Date(2026, 9, 22);
+
+  it("averages the last 4 weeks, current week included", () => {
+    const averages = lastMonthAverages(
+      [
+        session({ datePlayed: "2026-10-21", gameWeight: 2 }),
+        session({ datePlayed: "2026-09-28", gameWeight: 4 }),
+        session({ datePlayed: "2026-09-27", gameWeight: 5 }),
+      ],
+      today,
+    );
+    expect(averages).toEqual({ sessionsPerWeek: 0.5, complexity: 3, players: 2 });
+  });
+
+  it("has no complexity or player average without recent sessions", () => {
+    expect(lastMonthAverages([], today)).toEqual({
+      sessionsPerWeek: 0,
+      complexity: null,
+      players: null,
+    });
+  });
+});
+
+describe("averageComplexity", () => {
   const weighing = (gameWeight: number | null) => session({ gameWeight });
 
-  it("counts sessions per weight band, in band order, edges inclusive", () => {
-    const sessions = [1.8, 2.5, 2.6, 3.5, 4.5, 4.8].map(weighing);
-    expect(difficultyBreakdown(sessions)).toEqual([
-      { label: "Light", count: 2 },
-      { label: "Medium", count: 2 },
-      { label: "Heavy", count: 1 },
-      { label: "Very Heavy", count: 1 },
+  it("averages weight per session, skipping unknown weights", () => {
+    const sessions = [2, 3, 4, null, 0].map(weighing);
+    expect(averageComplexity(sessions)).toBe(3);
+  });
+
+  it("is null with no known weights", () => {
+    expect(averageComplexity([weighing(null)])).toBeNull();
+  });
+});
+
+describe("topTags", () => {
+  const labels = {
+    10: ["Engine Building", "Hand Management", "Engine Building"],
+    20: ["Worker Placement", "Hand Management"],
+  };
+  const of = (gameId: number, datePlayed = "2026-10-01") =>
+    session({ gameId, datePlayed });
+
+  it("ranks labels by sessions, with share out of every session", () => {
+    // Game 30 has no labels but still counts toward the total
+    const tags = topTags([of(10), of(10), of(20), of(30)], labels);
+    expect(tags).toEqual([
+      { label: "Hand Management", sessions: 3, share: 0.75 },
+      { label: "Engine Building", sessions: 2, share: 0.5 },
+      { label: "Worker Placement", sessions: 1, share: 0.25 },
     ]);
   });
 
-  it("leaves out games with no known weight", () => {
-    const counts = difficultyBreakdown([weighing(null), weighing(0)]);
-    expect(counts.every((band) => band.count === 0)).toBe(true);
+  it("breaks ties by most recent play, then alphabetically", () => {
+    const tags = topTags(
+      [of(10, "2026-10-01"), of(20, "2026-10-05")],
+      { 10: ["B", "C"], 20: ["A", "D"] },
+    );
+    expect(tags.map((t) => t.label)).toEqual(["A", "D", "B", "C"]);
+  });
+
+  it("returns at most the limit, and nothing without labels", () => {
+    expect(topTags([of(10), of(20)], labels, 2)).toHaveLength(2);
+    expect(topTags([of(10)], {})).toEqual([]);
   });
 });
 
@@ -261,5 +332,90 @@ describe("topTribe", () => {
       session({ ...dice, datePlayed: "2026-09-04" }),
     ];
     expect(topTribe(sessions)?.tribeId).toBe("t2");
+  });
+});
+
+describe("playedGames", () => {
+  const play = (gameId: number, datePlayed: string, gameTitle = `G${gameId}`) =>
+    session({ gameId, gameTitle, datePlayed });
+
+  it("puts favourites first, then most played, then most recent", () => {
+    const games = playedGames(
+      [
+        play(1, "2026-10-01"),
+        play(1, "2026-10-02"),
+        play(2, "2026-10-03"),
+        play(3, "2026-10-05"),
+        play(4, "2026-09-01"),
+      ],
+      [],
+      new Set([4]),
+    );
+    expect(games.map((g) => g.gameId)).toEqual([4, 1, 3, 2]);
+    expect(games[1]).toMatchObject({ plays: 2, lastPlayed: "2026-10-02", favourite: false });
+    expect(games[0].favourite).toBe(true);
+  });
+
+  it("attaches the current Elo, rounded, with calibration", () => {
+    const [game] = playedGames(
+      [play(1, "2026-10-01")],
+      [{ gameId: 1, elo: 212.6, sessionsPlayed: 3 }],
+      new Set(),
+    );
+    expect(game.elo).toEqual({ elo: 213, calibrating: true });
+  });
+});
+
+describe("playTimeRange", () => {
+  it("buckets minutes into the filter ranges, edges inclusive upward", () => {
+    expect([29, 30, 60, 61, 120, 121].map(playTimeRange)).toEqual([
+      "under30",
+      "30to60",
+      "30to60",
+      "1to2h",
+      "1to2h",
+      "over2h",
+    ]);
+    expect(playTimeRange(null)).toBeNull();
+    expect(playTimeRange(0)).toBeNull();
+  });
+});
+
+describe("filterGames", () => {
+  const game = (title: string, over: Partial<Parameters<typeof filterGames>[0][number]> = {}) => ({
+    title,
+    weight: 2,
+    playingTime: 45,
+    categories: ["Animals"],
+    mechanics: ["Engine Building"],
+    ...over,
+  });
+  const none = { categories: [], mechanics: [], complexity: [], playTime: [] };
+  const games = [
+    game("Wingspan"),
+    game("Brass", { weight: 3.9, playingTime: 120, categories: ["Economic"] }),
+    game("Mystery", { weight: null, playingTime: null }),
+  ];
+  const titles = (gs: { title: string }[]) => gs.map((g) => g.title);
+
+  it("searches titles case-insensitively", () => {
+    expect(titles(filterGames(games, "  wING ", none))).toEqual(["Wingspan"]);
+  });
+
+  it("matches any option within a filter and every filter in use", () => {
+    expect(
+      titles(filterGames(games, "", { ...none, categories: ["Animals", "Economic"] })),
+    ).toEqual(["Wingspan", "Brass", "Mystery"]);
+    expect(
+      titles(filterGames(games, "", { ...none, categories: ["Economic"], complexity: ["light"] })),
+    ).toEqual([]);
+  });
+
+  it("drops games missing a value once that filter is in use", () => {
+    expect(titles(filterGames(games, "", { ...none, complexity: ["light", "heavy"] }))).toEqual([
+      "Wingspan",
+      "Brass",
+    ]);
+    expect(titles(filterGames(games, "", { ...none, playTime: ["30to60"] }))).toEqual(["Wingspan"]);
   });
 });

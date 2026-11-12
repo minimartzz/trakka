@@ -6,22 +6,27 @@
  * stats unless they've turned their profile private. Rendered on every
  * request so a visibility change applies straight away.
  */
-import { fetchGameElos } from "@/app/(account)/dashboard/data";
+import { fetchGameElos, fetchGameMeta } from "@/app/(account)/dashboard/data";
 import { fetchSessions } from "@/app/(account)/recent-games/data";
 import {
-  DifficultyBars,
   LatestSessionBanner,
   PlayerHeader,
   RecordsStrip,
-  WeeklySessionsChart,
 } from "@/components/player/PlayerSections";
+import PlayerGames from "@/components/player/PlayerGames";
+import PlayerTabs from "@/components/player/PlayerTabs";
+import SessionFrequencyChart from "@/components/player/SessionFrequencyChart";
+import TopTagsChart from "@/components/player/TopTagsChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { absoluteUrl } from "@/lib/seo";
 import {
+  averageComplexity,
   averageWpa,
-  difficultyBreakdown,
   highestEloGame,
+  lastMonthAverages,
   mostPlayedGame,
+  playedGames,
+  topTags,
   topTribe,
   weeklySessions,
 } from "@/utils/playerProfile";
@@ -32,7 +37,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getPlayerProfile, type PlayerProfile } from "./data";
+import { getGameImages, getPlayerProfile, type PlayerProfile } from "./data";
 
 type PlayerParams = Promise<{ username: string }>;
 
@@ -76,9 +81,10 @@ const PrivateNotice = () => (
 );
 
 const PlayerStats = async ({ profile }: { profile: PlayerProfile }) => {
-  const [sessionsResult, elos] = await Promise.all([
+  const [sessionsResult, elos, gameMeta] = await Promise.all([
     fetchSessions(profile.id),
     fetchGameElos(profile.id),
+    fetchGameMeta(profile.id),
   ]);
   // Newest first, only sessions this player was in
   const sessions = filterSessionData(
@@ -86,40 +92,77 @@ const PlayerStats = async ({ profile }: { profile: PlayerProfile }) => {
     sessionsResult.data ?? [],
   ).filter((s) => s.isPlayer);
   const latest = sessions[0];
+  const today = new Date();
+  const images = await getGameImages([...new Set(sessions.map((s) => s.gameId))]);
+  const favouriteIds = new Set(profile.favouriteGames.map((g) => g.bggId));
+  const games = playedGames(sessions, elos, favouriteIds).map((g) => ({
+    ...g,
+    image: images[g.gameId] ?? g.thumbnail,
+    categories: gameMeta.categories[g.gameId] ?? [],
+    mechanics: gameMeta.mechanics[g.gameId] ?? [],
+  }));
 
   return (
     <>
-      <PlayerHeader
-        firstName={profile.firstName}
-        lastName={profile.lastName}
-        username={profile.username}
-        image={profile.image}
-        joinedAt={profile.joinedAt}
-        lastPlayed={latest?.datePlayed ?? null}
-      />
-
-      {latest ? (
-        <div className="mt-8 flex flex-col gap-4">
-          <LatestSessionBanner session={latest} profileId={profile.id} />
-          <RecordsStrip
-            wpa={averageWpa(sessions, profile.id)}
-            sessionCount={sessions.length}
-            topGame={mostPlayedGame(sessions)}
-            topElo={highestEloGame(elos, sessions)}
-            tribe={topTribe(sessions)}
-          />
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="min-w-0 lg:col-span-2">
-              <WeeklySessionsChart weeks={weeklySessions(sessions, new Date())} />
-            </div>
-            <DifficultyBars bands={difficultyBreakdown(sessions)} />
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <PlayerHeader
+          firstName={profile.firstName}
+          lastName={profile.lastName}
+          username={profile.username}
+          image={profile.image}
+          joinedAt={profile.joinedAt}
+          lastPlayed={latest?.datePlayed ?? null}
+        />
+        {latest && (
+          <div className="lg:w-md lg:shrink-0">
+            <LatestSessionBanner
+              session={latest}
+              profileId={profile.id}
+              image={images[latest.gameId] ?? null}
+            />
           </div>
-        </div>
-      ) : (
-        <p className="mt-8 rounded-xl border bg-card p-6 text-muted-foreground">
-          No sessions yet.
-        </p>
-      )}
+        )}
+      </div>
+
+      <PlayerTabs
+        profileContent={
+          latest ? (
+            <div className="flex flex-col gap-4">
+              <RecordsStrip
+                wpa={averageWpa(sessions, profile.id)}
+                sessionCount={sessions.length}
+                complexity={averageComplexity(sessions)}
+                topGame={mostPlayedGame(sessions)}
+                topElo={highestEloGame(elos, sessions)}
+                tribe={topTribe(sessions)}
+              />
+              <SessionFrequencyChart
+                weeks={weeklySessions(sessions, today)}
+                averages={lastMonthAverages(sessions, today)}
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TopTagsChart
+                  title="Top Mechanics"
+                  tags={topTags(sessions, gameMeta.mechanics)}
+                  tone="cool"
+                  empty="No mechanic data yet."
+                />
+                <TopTagsChart
+                  title="Top Categories"
+                  tags={topTags(sessions, gameMeta.categories)}
+                  tone="warm"
+                  empty="No category data yet."
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="rounded-xl border bg-card p-6 text-muted-foreground">
+              No sessions yet.
+            </p>
+          )
+        }
+        gamesContent={<PlayerGames games={games} />}
+      />
     </>
   );
 };
@@ -153,11 +196,13 @@ const PlayerContent = async ({ params }: { params: PlayerParams }) => {
 
 const PlayerPageSkeleton = () => (
   <div className="space-y-6">
-    <div className="flex items-center gap-6">
-      <Skeleton className="size-22 rounded-full" />
-      <div className="space-y-2">
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8">
+      <Skeleton className="size-28 rounded-full sm:size-36" />
+      <div className="flex flex-col items-center gap-2 sm:items-start">
         <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-4 w-80" />
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-4 w-44" />
       </div>
     </div>
     <Skeleton className="h-32 w-full rounded-xl" />

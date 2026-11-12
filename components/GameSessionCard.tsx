@@ -13,7 +13,7 @@ import {
 } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
-import { eloDisplay, eloTier, type EloTier } from "@/utils/elo";
+import { ELO_TIER_CLASS, eloDisplay, eloTier, type EloTier } from "@/utils/elo";
 import { format } from "date-fns";
 import {
   ArrowDown,
@@ -36,17 +36,8 @@ import React, { useState } from "react";
 import { sessionHref, useRowLink } from "@/hooks/use-row-link";
 import SessionTitleLink from "@/components/SessionTitleLink";
 
-// Elo box colour by tier. Iron, bronze, purple and maroon are dark enough for
-// white text; the lighter tiers use the dark text of the gain pill
-export const ELO_TIER_CLASS: Record<EloTier, string> = {
-  iron: "bg-elo-iron text-white",
-  bronze: "bg-elo-bronze text-white",
-  silver: "bg-elo-silver text-[oklch(25.3%_0.0321_265.95)]",
-  gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
-  emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
-  purple: "bg-elo-purple text-white",
-  maroon: "bg-elo-maroon text-white",
-};
+// Lives in utils/elo so server components get the real map, not a client reference
+export { ELO_TIER_CLASS } from "@/utils/elo";
 
 // Elo shown as text in its tier colour, without the box
 export const ELO_TIER_TEXT_CLASS: Record<EloTier, string> = {
