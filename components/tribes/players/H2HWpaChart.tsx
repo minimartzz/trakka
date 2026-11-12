@@ -257,7 +257,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
         .filter((d) => new Date(d.date + "T12:00:00").getDate() === 1)
         .map((d) => d.date);
     }
-    // 6M, 1Y, ALL — monthly-collapsed data, show all (one per month)
+    // 6M, 1Y, ALL - monthly-collapsed data, show all (one per month)
     return filteredData.map((d) => d.date);
   }, [filteredData, period]);
 
@@ -300,7 +300,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
             ))}
           </div>
         </div>
-        {/* Legend — HTML so WPA value boxes can never overlap it */}
+        {/* Legend - HTML so WPA value boxes can never overlap it */}
         <div className="flex items-center gap-4 pt-1">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span
@@ -386,7 +386,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
                           {p1Name}
                         </span>
                         <span className="font-semibold tabular-nums">
-                          {point.p1Wpa !== null ? point.p1Wpa.toFixed(2) : "—"}
+                          {point.p1Wpa !== null ? point.p1Wpa.toFixed(2) : "-"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-4">
@@ -398,7 +398,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
                           {p2Name}
                         </span>
                         <span className="font-semibold tabular-nums">
-                          {point.p2Wpa !== null ? point.p2Wpa.toFixed(2) : "—"}
+                          {point.p2Wpa !== null ? point.p2Wpa.toFixed(2) : "-"}
                         </span>
                       </div>
                     </div>
@@ -465,7 +465,7 @@ const H2HWpaChart: React.FC<H2HWpaChartProps> = ({
           </ComposedChart>
         </div>
 
-        {/* Mobile period filters — below chart, evenly spread */}
+        {/* Mobile period filters - below chart, evenly spread */}
         <div className="flex sm:hidden justify-between w-full mt-3 px-1">
           {PERIODS.map((p) => (
             <button

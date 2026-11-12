@@ -442,7 +442,7 @@ const DashboardPlayers: React.FC<DashboardPlayersProps> = ({
                                     </span>
                                   </>
                                 ) : (
-                                  "—"
+                                  "-"
                                 )}
                               </p>
                             </div>
@@ -474,7 +474,7 @@ const DashboardPlayers: React.FC<DashboardPlayersProps> = ({
                                   </span>
                                 </div>
                               ) : (
-                                <p className="mt-1">—</p>
+                                <p className="mt-1">-</p>
                               )}
                             </div>
 

@@ -14,7 +14,7 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    // Resolve the authenticated user's profile — ignore any client-supplied profileId
+    // Resolve the authenticated user's profile - ignore any client-supplied profileId
     const [profile] = await db
       .select({ id: profileTable.id })
       .from(profileTable)

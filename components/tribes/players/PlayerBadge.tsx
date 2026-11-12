@@ -75,7 +75,7 @@ const PlayerBadge: React.FC<PlayerBadgeProps> = ({
         />
       </button>
 
-      {/* Popover — to the left */}
+      {/* Popover - to the left */}
       {showTooltip && (
         <div
           className={cn(

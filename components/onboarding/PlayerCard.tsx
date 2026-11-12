@@ -52,10 +52,10 @@ export const PlayerCard = ({ state, glow, className }: PlayerCardProps) => {
   const slotMotion = reduceMotion
     ? {}
     : {
-        initial: { scale: 0.9, opacity: 0 },
-        animate: { scale: 1, opacity: 1 },
-        transition: { duration: 0.16, ease: [0.165, 0.84, 0.44, 1] as const },
-      };
+      initial: { scale: 0.9, opacity: 0 },
+      animate: { scale: 1, opacity: 1 },
+      transition: { duration: 0.16, ease: [0.165, 0.84, 0.44, 1] as const },
+    };
 
   return (
     <div
@@ -160,7 +160,7 @@ export const PlayerCard = ({ state, glow, className }: PlayerCardProps) => {
                 {claimedCount} {claimedCount === 1 ? "player" : "players"}
               </motion.span>
             ) : (
-              <span className="text-muted-foreground/50">—</span>
+              <span className="text-muted-foreground/50">-</span>
             )}
           </dd>
         </div>

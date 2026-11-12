@@ -204,7 +204,7 @@ export async function submitNewSession(payload: SessionLogInput[]) {
       await lockGamesForElo(tx, [payload[0].gameId]);
 
       const logs: CompGameLog[] = [];
-      // Session-level, identical on every row — grab it once.
+      // Session-level, identical on every row - grab it once.
       const expansionIds = payload[0].expansionIds ?? [];
 
       for (const { anonymousPlayer, expansionIds: _expansionIds, ...log } of payload) {
@@ -338,7 +338,7 @@ export async function upsertGameDetails(selectedGame: BGGDetailsInterface) {
   try {
     const gameId = parseInt(selectedGame.id);
 
-    // 1. Upsert the game record — returns rows only if a new game was inserted
+    // 1. Upsert the game record - returns rows only if a new game was inserted
     const inserted = await db
       .insert(gameTable)
       .values({

@@ -51,7 +51,7 @@ const DashboardContent = async () => {
         image: user.image,
         memberSince: user.confirmed_at
           ? format(new Date(user.confirmed_at), "MMM yyyy")
-          : "—",
+          : "-",
         favouriteGames: user.favourite_games ?? [],
         showcaseSlots: user.showcase_slots ?? [],
         gameElos,

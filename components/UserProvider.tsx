@@ -18,7 +18,7 @@ export function UserProvider({
 }
 
 // Returns the signed-in user. Only valid inside a layout that has already
-// gated on auth, which is why the user is non-nullable here — callers would
+// gated on auth, which is why the user is non-nullable here - callers would
 // never have rendered otherwise.
 export function useUser(): User {
   const user = useContext(UserContext);

@@ -72,7 +72,7 @@ const TribeDemo = async ({
     const sessions = processGameSessions(gameLogsRaw);
     const membersWithStats = processMembersWithStats(tribeMembers, sessions);
 
-    // Demo viewer is a neutral observer — no membership, no admin rights.
+    // Demo viewer is a neutral observer - no membership, no admin rights.
     const tribeAdmins = tribeMembers
       .filter((m) => m.profileGroup.roleId === 1)
       .map((admin) => ({
@@ -84,12 +84,12 @@ const TribeDemo = async ({
         },
         profile: admin.profile
           ? {
-              id: admin.profile.id,
-              username: admin.profile.username,
-              firstName: admin.profile.firstName,
-              lastName: admin.profile.lastName,
-              image: admin.profile.image,
-            }
+            id: admin.profile.id,
+            username: admin.profile.username,
+            firstName: admin.profile.firstName,
+            lastName: admin.profile.lastName,
+            image: admin.profile.image,
+          }
           : null,
       }));
 

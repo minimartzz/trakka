@@ -71,13 +71,13 @@ const Hero = () => {
               for crawlers. aria-hidden on the visual copy avoids a double read. */}
           <h1 className="font-display font-bold uppercase leading-[0.95] tracking-[-0.01em] text-[clamp(3rem,9vw,5.75rem)]">
             <span className="sr-only">
-              Trakka — the board game tracker for your group
+              Trakka - the board game tracker for your group
             </span>
             <span
               aria-hidden
               className="inline-flex items-baseline justify-center gap-[0.22em] flex-wrap"
             >
-              {/* Rotating word — fixed width so the rest of the line doesn't shift */}
+              {/* Rotating word - fixed width so the rest of the line doesn't shift */}
               <span
                 className="relative inline-block overflow-hidden"
                 style={{ minWidth: "4ch" }}

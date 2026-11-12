@@ -23,7 +23,7 @@ import { notificationsTable } from "@/db/schema/notifications";
 export type FavouriteGame = {
   bggId: number;
   title: string;
-  // Full BGG image, not the thumbnail — the account page renders these at
+  // Full BGG image, not the thumbnail - the account page renders these at
   // card size, where a thumbnail would upscale visibly.
   image: string | null;
 };
@@ -79,7 +79,7 @@ export const profileTable = pgTable("profile", {
     .$type<FavouriteGame[]>()
     .notNull()
     .default([]),
-  // Dashboard showcase picks — one game id (or null for an empty slot) per
+  // Dashboard showcase picks - one game id (or null for an empty slot) per
   // slot position, in slot order
   showcaseSlots: jsonb("showcase_slots")
     .$type<(number | null)[]>()

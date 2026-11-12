@@ -24,15 +24,15 @@ Success is a **game-night habit**: tribes log every session, return weekly, and 
 
 Three words: **Community, Nerdy, Interactive**.
 
-- **Community** — Not a solo stats tracker. The tribe is the unit. Who won game night, where everyone stands, what the rivalry looks like. Faces, names, and relative standings should appear earlier and more often than raw counts.
-- **Nerdy** — Users love numbers. Don't bury stats behind progressive disclosure; reward the data-hungry. Information density is a feature, not a problem to flatten away.
-- **Interactive** — The app should feel alive. Standings change. Streaks are threatened. Comparisons should feel like challenges. The interface has stakes.
+- **Community** - Not a solo stats tracker. The tribe is the unit. Who won game night, where everyone stands, what the rivalry looks like. Faces, names, and relative standings should appear earlier and more often than raw counts.
+- **Nerdy** - Users love numbers. Don't bury stats behind progressive disclosure; reward the data-hungry. Information density is a feature, not a problem to flatten away.
+- **Interactive** - The app should feel alive. Standings change. Streaks are threatened. Comparisons should feel like challenges. The interface has stakes.
 
 ## Anti-references
 
-- **Notion / Linear** — too flat, too pastel, too "productivity tool". Trakka should feel more like a sports platform than a workspace.
-- **Generic SaaS dashboards** — icon + heading + text card grids, hero-metric templates, gradient text headlines. Already present in the codebase and being phased out.
-- **Mobile games (candy / casual)** — not playful or cartoonish. The nerdy user base takes their stats seriously.
+- **Notion / Linear** - too flat, too pastel, too "productivity tool". Trakka should feel more like a sports platform than a workspace.
+- **Generic SaaS dashboards** - icon + heading + text card grids, hero-metric templates, gradient text headlines. Already present in the codebase and being phased out.
+- **Mobile games (candy / casual)** - not playful or cartoonish. The nerdy user base takes their stats seriously.
 
 ## Design Principles
 

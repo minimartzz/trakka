@@ -23,7 +23,7 @@ export const getCallerProfileRow = cache(async () => {
 });
 
 export default cache(async function fetchUser() {
-  // From auth.users table — shared with requireAuth() so the render only makes
+  // From auth.users table - shared with requireAuth() so the render only makes
   // one round trip to Supabase Auth
   const user = await getAuthUser();
   if (!user) {

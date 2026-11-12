@@ -12,7 +12,7 @@ interface FavouriteGameCardProps {
   game: FavouriteGame;
   onRemoved: (bggId: number) => void;
   /** Touch-tapped open state. Owned by the parent grid so tapping a second
-   * card closes the first — only one card is open at a time on touch. */
+   * card closes the first - only one card is open at a time on touch. */
   tapped: boolean;
   onToggleTapped: () => void;
 }

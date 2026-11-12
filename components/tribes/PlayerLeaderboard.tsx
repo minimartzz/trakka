@@ -417,7 +417,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
                 )}
               </div>
 
-              {/* Show more button — only visible once scrolled to bottom */}
+              {/* Show more button - only visible once scrolled to bottom */}
               {isAtBottom && hasMore && (
                 <div className="mt-3 pt-3 border-t">
                   <Button

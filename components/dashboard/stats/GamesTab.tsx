@@ -221,7 +221,7 @@ const FlipCard: React.FC<{
 const CardStats: React.FC<{ stats: GameStats }> = ({ stats }) => {
   const winRate = Math.round((stats.wins / stats.plays) * 100);
   const wpa =
-    stats.scoreCount > 0 ? (stats.scoreSum / stats.scoreCount).toFixed(2) : "—";
+    stats.scoreCount > 0 ? (stats.scoreSum / stats.scoreCount).toFixed(2) : "-";
 
   return (
     <>
@@ -261,7 +261,7 @@ const CardStats: React.FC<{ stats: GameStats }> = ({ stats }) => {
         <div>
           <dt className="text-[10px] text-muted-foreground">Best VP</dt>
           <dd className="font-semibold tabular-nums">
-            {stats.bestVp !== null ? stats.bestVp : "—"}
+            {stats.bestVp !== null ? stats.bestVp : "-"}
           </dd>
         </div>
       </dl>

@@ -10,7 +10,7 @@ type Gender = "Male" | "Female" | "Others";
 type updatedProfile = Omit<typeof profileTable.$inferInsert, "uuid" | "email">;
 
 export async function updateProfile(formData: FormData) {
-  // Resolve the caller's identity from their session — never trust client-supplied userId
+  // Resolve the caller's identity from their session - never trust client-supplied userId
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, message: "Unauthorized" };
@@ -65,7 +65,7 @@ export async function updateProfile(formData: FormData) {
 }
 
 /**
- * Persists a new profile picture on its own — used by the header avatar's
+ * Persists a new profile picture on its own - used by the header avatar's
  * click-to-edit dialog, which shouldn't require entering the full profile
  * edit form just to change a photo.
  */

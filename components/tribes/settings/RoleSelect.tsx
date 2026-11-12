@@ -15,7 +15,7 @@ import {
 import { Roles } from "@/lib/interfaces";
 
 const ROLE_DESCRIPTIONS: Record<number, string> = {
-  [Roles.SuperAdmin]: "Full control — settings, members & claim codes",
+  [Roles.SuperAdmin]: "Full control - settings, members & claim codes",
   [Roles.Admin]: "Can create and edit sessions",
   [Roles.Member]: "Plays and views stats",
 };

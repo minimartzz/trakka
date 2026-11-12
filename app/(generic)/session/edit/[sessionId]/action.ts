@@ -277,7 +277,7 @@ export async function updateSession(
         })),
       );
 
-      // Step 4: Apply new rolling stats — same rated/unrated branch as create.
+      // Step 4: Apply new rolling stats - same rated/unrated branch as create.
       const rollingStats = newPayload.map((log) => ({
         profileId: log.profileId,
         groupId: log.groupId,

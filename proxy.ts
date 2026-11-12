@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
 
   // Signed-in users skip the landing page entirely, so they never paint it
   // before being sent on. The authoritative auth check still lives in the
-  // account layout — this is a UX redirect, not a security boundary.
+  // account layout - this is a UX redirect, not a security boundary.
   if (user && pathname === "/") {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";

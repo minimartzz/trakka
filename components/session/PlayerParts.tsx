@@ -223,7 +223,7 @@ export const EloMovement: React.FC<{ player: SessionPagePlayer }> = ({
 }) => {
   const display = eloDisplay(player);
   if (!display || player.eloBefore === null) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">-</span>;
   }
 
   const before = Math.round(player.eloBefore);

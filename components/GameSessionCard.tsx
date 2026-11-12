@@ -503,7 +503,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                   team.hasCurrentUser && "bg-primary/12 dark:bg-primary/18",
                 )}
               >
-                {/* Shared position — vertically centered across the team */}
+                {/* Shared position - vertically centered across the team */}
                 <div className="flex w-11 shrink-0 items-center justify-center border-r border-border/60 sm:w-12">
                   <span
                     className={cn(
@@ -538,7 +538,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                             isTie={team.isTie}
                           />
                           <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                            {team.victoryPoints ?? "—"}
+                            {team.victoryPoints ?? "-"}
                           </span>
                         </>
                       ) : (
@@ -561,7 +561,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 Group Score
               </span>
               <span className="font-display text-lg font-bold tabular-nums">
-                {players[0]?.victoryPoints ?? "—"}
+                {players[0]?.victoryPoints ?? "-"}
               </span>
             </div>
             <ul className="divide-y divide-border/60">
@@ -598,7 +598,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
                   {/* Victory points */}
                   <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                    {player.victoryPoints ?? "—"}
+                    {player.victoryPoints ?? "-"}
                   </span>
                 </li>
               );
@@ -639,7 +639,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
                   {/* Victory points */}
                   <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                    {player.victoryPoints ?? "—"}
+                    {player.victoryPoints ?? "-"}
                   </span>
                 </li>
               );

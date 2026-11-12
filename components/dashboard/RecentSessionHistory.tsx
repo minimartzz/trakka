@@ -33,7 +33,7 @@ interface RecentSessionHistoryProps {
   recentActivity: GroupedSession[];
 }
 
-/** Fixed window — deliberately independent of the dashboard timeframe filter */
+/** Fixed window - deliberately independent of the dashboard timeframe filter */
 const WINDOW_DAYS = 30;
 
 /** Avatars shown before collapsing the rest into a "+N" chip */
@@ -157,7 +157,7 @@ const SessionDetails: React.FC<{
             </Badge>
           )}
           <Badge variant="outline" className="font-semibold">
-            {me?.position ? positionOrdinalSuffix(me.position) : "—"}
+            {me?.position ? positionOrdinalSuffix(me.position) : "-"}
             {session.isTied && " 🤝"}
           </Badge>
         </div>
@@ -231,7 +231,7 @@ const SessionDetails: React.FC<{
             <p className="mt-1 font-display text-base font-bold leading-none text-accent-4">
               {me?.score !== null && me?.score !== undefined
                 ? me.score.toFixed(2)
-                : "—"}
+                : "-"}
             </p>
           </div>
 
@@ -241,10 +241,10 @@ const SessionDetails: React.FC<{
             </p>
             <p className="mt-1 font-display text-base font-bold leading-none text-accent-3">
               {session.isVp &&
-              me?.victoryPoints !== null &&
-              me?.victoryPoints !== undefined
+                me?.victoryPoints !== null &&
+                me?.victoryPoints !== undefined
                 ? me.victoryPoints
-                : "—"}
+                : "-"}
             </p>
           </div>
         </div>
@@ -403,7 +403,7 @@ const RecentSessionHistory: React.FC<RecentSessionHistoryProps> = ({
                     );
                     const posText = me?.position
                       ? positionOrdinalSuffix(me.position)
-                      : "—";
+                      : "-";
 
                     return (
                       <TableRow
@@ -510,7 +510,7 @@ const RecentSessionHistory: React.FC<RecentSessionHistoryProps> = ({
                               </Badge>
                             ) : (
                               <span className="text-xs text-muted-foreground">
-                                —
+                                -
                               </span>
                             )}
                           </div>
@@ -524,7 +524,7 @@ const RecentSessionHistory: React.FC<RecentSessionHistoryProps> = ({
           ) : (
             /* ── Graph view ─────────────────────────────────────────────
                Details sit to the left on desktop, below the graph on
-               mobile — hence the order-* swap. */
+               mobile - hence the order-* swap. */
             <div className="flex flex-col gap-4 lg:flex-row">
               <div className="order-2 shrink-0 lg:order-1 lg:w-80 lg:border-r lg:pr-5">
                 <SessionDetails userId={userId} session={selected} />
@@ -578,7 +578,7 @@ const RecentSessionHistory: React.FC<RecentSessionHistoryProps> = ({
                       ))}
                     </div>
 
-                    {/* X axis — label every 5th day to avoid crowding */}
+                    {/* X axis - label every 5th day to avoid crowding */}
                     <div className="mt-2 flex min-w-125 justify-between gap-0.5 border-t pt-1.5">
                       {days.map((day, i) => (
                         <span

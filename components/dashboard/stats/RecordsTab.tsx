@@ -307,7 +307,7 @@ const RecordsTab: React.FC<RecordsTabProps> = ({
               {tile.label}
             </div>
             <p className="font-display text-4xl font-bold leading-none tabular-nums xl:text-5xl">
-              {tile.value ?? <span className="text-muted-foreground">—</span>}
+              {tile.value ?? <span className="text-muted-foreground">-</span>}
             </p>
             <p
               className="truncate text-xs text-muted-foreground"
@@ -486,7 +486,7 @@ const RivalryCard: React.FC<RivalryCardProps> = ({
                 <div className="flex items-center gap-0.5">
                   <Trophy className="size-2.5 text-amber-400" />
                   <span className="max-w-12 truncate text-[10px] font-semibold text-amber-500">
-                    {winner?.firstName ?? "—"}
+                    {winner?.firstName ?? "-"}
                   </span>
                 </div>
                 <span className="text-[10px] text-muted-foreground">

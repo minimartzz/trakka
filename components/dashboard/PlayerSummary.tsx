@@ -182,7 +182,7 @@ const PlayerSummary: React.FC<PlayerSummaryProps> = ({
 
   const formatValue = (value: number | null) =>
     value === null
-      ? "—"
+      ? "-"
       : stat === "avgWpa"
         ? value.toFixed(1)
         : Math.round(value).toString();

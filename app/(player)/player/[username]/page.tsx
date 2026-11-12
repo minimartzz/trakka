@@ -180,7 +180,7 @@ const PlayerContent = async ({ params }: { params: PlayerParams }) => {
     <>
       {!profile.isPublic && (
         <p className="mb-6 rounded-lg border px-4 py-3 text-sm">
-          Only you can see this —{" "}
+          Only you can see this -{" "}
           <Link
             href="/account?tab=accounts"
             className="font-semibold text-primary underline underline-offset-4"

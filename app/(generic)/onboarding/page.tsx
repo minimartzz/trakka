@@ -62,7 +62,7 @@ const OnboardingContent = async () => {
   const inviteTribe = await resolveInviteTribe(user.user_metadata?.inviteCode);
   // Seed the invite tribe only until the user has actually been past the tribe
   // slide (a saved step of 3+ means they left it). After that the draft is the
-  // truth — if they removed the invited tribe, it stays removed.
+  // truth - if they removed the invited tribe, it stays removed.
   const draftTribes = draft.tribes ?? [];
   const seedInvite =
     inviteTribe !== null &&

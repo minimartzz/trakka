@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 // Server-side gate for the session routes. These pages previously relied on the
-// client-side useAuth hook, which only redirects after hydration — the markup
+// client-side useAuth hook, which only redirects after hydration - the markup
 // was already sent by then. Checking here mirrors the account layout so
 // anonymous visitors are redirected before any HTML is produced.
 export default function SessionLayout({

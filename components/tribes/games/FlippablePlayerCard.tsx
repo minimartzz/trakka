@@ -171,7 +171,7 @@ export function FlippablePlayerCard({
                     accent.numberText,
                   )}
                 >
-                  {player.avgVp !== null ? player.avgVp : "—"}
+                  {player.avgVp !== null ? player.avgVp : "-"}
                 </p>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-1.5">
                   Avg VP
@@ -264,7 +264,7 @@ export function FlippablePlayerCard({
                       </span>
                     </div>
                   ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground">-</span>
                   )}
                 </div>
               ))

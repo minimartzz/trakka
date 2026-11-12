@@ -58,7 +58,7 @@ const ResultMarkers: React.FC<{ group: StandingGroup<SessionPagePlayer> }> = ({
 
 const Vp: React.FC<{ value: number | null }> = ({ value }) => (
   <span className="font-display text-right text-3xl font-bold leading-none tabular-nums">
-    {value ?? "—"}
+    {value ?? "-"}
   </span>
 );
 
@@ -112,9 +112,9 @@ const PlayerRow: React.FC<{
   // Hovering or tapping a row points at the player's line in the Elo race
   const linkToChart = rated
     ? {
-        ...hoverHandlers(highlight, player.profileId),
-        onClick: () => highlight.togglePin(player.profileId),
-      }
+      ...hoverHandlers(highlight, player.profileId),
+      onClick: () => highlight.togglePin(player.profileId),
+    }
     : {};
 
   return (

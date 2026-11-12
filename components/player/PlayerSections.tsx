@@ -227,7 +227,7 @@ const NamedHighlight: React.FC<{
   mesh: string;
   name: string | undefined;
   detail: React.ReactNode;
-}> = ({ label, mesh, name = "—", detail }) => (
+}> = ({ label, mesh, name = "-", detail }) => (
   <HighlightCard label={label} mesh={mesh}>
     <div
       title={name}
@@ -259,7 +259,7 @@ export const RecordsStrip: React.FC<{
     <StatHighlight
       label="Average Complexity"
       mesh={MESH.complexity}
-      value={complexity === null ? "—" : complexity.toFixed(1)}
+      value={complexity === null ? "-" : complexity.toFixed(1)}
       className={complexity === null ? undefined : getWeightColor(complexity)}
     />
     <NamedHighlight

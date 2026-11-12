@@ -94,7 +94,7 @@ interface RadarPoint {
 
 const formatValue = (value: number | null, stat: Stat) =>
   value === null
-    ? "—"
+    ? "-"
     : stat === "winRate"
       ? `${Math.round(value)}%`
       : value.toFixed(2);

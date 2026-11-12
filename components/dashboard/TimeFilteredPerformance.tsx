@@ -175,11 +175,11 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
     const filtered = activeRange
       ? sessionsWithDates.filter((s) =>
-          isWithinInterval(s.parsedDate, {
-            start: activeRange.from,
-            end: activeRange.to,
-          }),
-        )
+        isWithinInterval(s.parsedDate, {
+          start: activeRange.from,
+          end: activeRange.to,
+        }),
+      )
       : sessionsWithDates;
 
     const topPlayers = topOpponents(userId, filtered);
@@ -189,7 +189,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
   // ── Metric calculations ───────────────────────────────────────────────────
 
-  // Most recent session overall — like the profile card, it ignores the
+  // Most recent session overall - like the profile card, it ignores the
   // timeframe filter so it always shows the actual latest game.
   const latestSession = useMemo(
     () =>
@@ -200,7 +200,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
     [recentActivity],
   );
 
-  // Profile card shows lifetime totals — it's an identity card, so it stays
+  // Profile card shows lifetime totals - it's an identity card, so it stays
   // fixed while the timeframe filter changes everything around it.
   const lifetimeGamesPlayed = recentActivity.length;
   const lifetimeGamesWon = recentActivity.filter((a) => a.isWinner).length;
@@ -286,10 +286,10 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
     const inWindow = activeRange
       ? daily.filter(
-          (d) =>
-            d.time >= activeRange.from.getTime() &&
-            d.time <= activeRange.to.getTime(),
-        )
+        (d) =>
+          d.time >= activeRange.from.getTime() &&
+          d.time <= activeRange.to.getTime(),
+      )
       : daily;
 
     const mean = (rows: { wpa: number }[]) =>
@@ -420,7 +420,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
 
           <DashboardStatCard
             title="Win Rate"
-            value={winRate !== null ? winRate.toFixed(0) : "—"}
+            value={winRate !== null ? winRate.toFixed(0) : "-"}
             suffix={winRate !== null ? "%" : ""}
             trend={winRateTrend}
             trendLabel="vs. previous period"
@@ -431,7 +431,7 @@ const TimeFilteredPerformance: React.FC<TimeFilteredPerformanceProps> = ({
           />
           <DashboardStatCard
             title="WPA"
-            value={wpa !== null ? wpa.toFixed(2) : "—"}
+            value={wpa !== null ? wpa.toFixed(2) : "-"}
             trend={wpaTrend}
             trendLabel="vs. previous period"
             series={wpaSeries}

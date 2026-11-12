@@ -160,15 +160,15 @@ const GamePerformance: React.FC<GamePerformanceProps> = ({
         me.eloAfter !== null &&
         me.eloSessionsBefore !== null
         ? [
-            {
-              sessionId: s.sessionId,
-              datePlayed: s.datePlayed,
-              tribe: s.tribe,
-              eloBefore: me.eloBefore,
-              eloAfter: me.eloAfter,
-              eloSessionsBefore: me.eloSessionsBefore,
-            },
-          ]
+          {
+            sessionId: s.sessionId,
+            datePlayed: s.datePlayed,
+            tribe: s.tribe,
+            eloBefore: me.eloBefore,
+            eloAfter: me.eloAfter,
+            eloSessionsBefore: me.eloSessionsBefore,
+          },
+        ]
         : [];
     });
 
@@ -329,7 +329,7 @@ const EloChart: React.FC<{ series: EloPoint[]; label: string }> = ({
 
   const dateFormat =
     series[1].session!.datePlayed.slice(0, 4) ===
-    last.session!.datePlayed.slice(0, 4)
+      last.session!.datePlayed.slice(0, 4)
       ? "d MMM"
       : "MMM ''yy";
   const tickLabel = (index: number) =>
@@ -341,8 +341,8 @@ const EloChart: React.FC<{ series: EloPoint[]; label: string }> = ({
     tickCount === 1
       ? [sessionCount]
       : Array.from({ length: tickCount }, (_, i) =>
-          Math.round(1 + (i * (sessionCount - 1)) / (tickCount - 1)),
-        );
+        Math.round(1 + (i * (sessionCount - 1)) / (tickCount - 1)),
+      );
   const ticks = spread.filter(
     (index, i) => i === 0 || tickLabel(index) !== tickLabel(spread[i - 1]),
   );
@@ -616,7 +616,7 @@ const LatestSession: React.FC<{
           <dt className="text-xs text-muted-foreground">Position</dt>
           <dd className="mt-0.5 flex items-baseline gap-1.5">
             <span className="font-display text-2xl font-bold leading-none">
-              {me ? positionOrdinalSuffix(me.position) : "—"}
+              {me ? positionOrdinalSuffix(me.position) : "-"}
             </span>
             {me && (
               <span className="text-xs text-muted-foreground">
@@ -634,7 +634,7 @@ const LatestSession: React.FC<{
         <div>
           <dt className="text-xs text-muted-foreground">VP earned</dt>
           <dd className="mt-0.5 font-display text-2xl font-bold leading-none">
-            {vp ?? "—"}
+            {vp ?? "-"}
           </dd>
         </div>
       </dl>

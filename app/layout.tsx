@@ -11,7 +11,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 
-// Display font — sports broadcast energy, condensed standings/headings
+// Display font - sports broadcast energy, condensed standings/headings
 const barlowCondensed = Barlow_Condensed({
   variable: "--font-barlow-condensed",
   subsets: ["latin"],
@@ -19,7 +19,7 @@ const barlowCondensed = Barlow_Condensed({
   display: "swap",
 });
 
-// Heading/body-alt font — readable at data-dense sizes
+// Heading/body-alt font - readable at data-dense sizes
 const barlow = Barlow({
   variable: "--font-barlow",
   subsets: ["latin"],
@@ -27,7 +27,7 @@ const barlow = Barlow({
   display: "swap",
 });
 
-// Body font — humanist, community-warm, highly readable
+// Body font - humanist, community-warm, highly readable
 const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
@@ -35,7 +35,7 @@ const figtree = Figtree({
   display: "swap",
 });
 
-// Monospace — code, session IDs
+// Monospace - code, session IDs
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -45,7 +45,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Trakka — Board Game Tracker & Stats for Your Group",
+    default: "Trakka - Board Game Tracker & Stats for Your Group",
     // Page-level titles render as "Recent Games · Trakka"
     template: `%s · ${SITE_NAME}`,
   },
@@ -56,12 +56,12 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: "Trakka — Board Game Tracker & Stats for Your Group",
+    title: "Trakka - Board Game Tracker & Stats for Your Group",
     description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Trakka — Board Game Tracker & Stats for Your Group",
+    title: "Trakka - Board Game Tracker & Stats for Your Group",
     description: SITE_DESCRIPTION,
   },
   robots: {
@@ -96,7 +96,7 @@ const siteSchema = {
       operatingSystem: "Web",
       url: SITE_URL,
       description: SITE_DESCRIPTION,
-      // Free product — this matches the "Free to use" claim on the hero.
+      // Free product - this matches the "Free to use" claim on the hero.
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     },
   ],

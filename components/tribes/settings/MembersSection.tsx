@@ -125,13 +125,13 @@ const MembersSection = ({
       prev.map((p) =>
         p.profileId === rowId
           ? {
-              ...p,
-              profileId: picked.profileId,
-              firstName: picked.firstName,
-              lastName: picked.lastName,
-              username: picked.username,
-              profilePic: picked.profilePic,
-            }
+            ...p,
+            profileId: picked.profileId,
+            firstName: picked.firstName,
+            lastName: picked.lastName,
+            username: picked.username,
+            profilePic: picked.profilePic,
+          }
           : p,
       ),
     );
@@ -145,13 +145,13 @@ const MembersSection = ({
       prev.map((p) =>
         p.profileId === rowId
           ? {
-              ...p,
-              profileId: tempId,
-              firstName: "",
-              lastName: "",
-              username: "",
-              profilePic: "",
-            }
+            ...p,
+            profileId: tempId,
+            firstName: "",
+            lastName: "",
+            username: "",
+            profilePic: "",
+          }
           : p,
       ),
     );
@@ -368,7 +368,7 @@ const MembersSection = ({
                         disabledReason={roleState.reason}
                       />
                     ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
+                      <span className="text-sm text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">

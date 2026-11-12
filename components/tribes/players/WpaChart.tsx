@@ -129,7 +129,7 @@ const WpaChart: React.FC<WpaChartProps> = ({
     if (color) setLineColor(color);
   }, []);
 
-  // Build daily data points — one per snapshot date (no aggregation)
+  // Build daily data points - one per snapshot date (no aggregation)
   const allData = useMemo((): WpaDataPoint[] => {
     const historical = dailyStats
       .filter(
@@ -199,7 +199,7 @@ const WpaChart: React.FC<WpaChartProps> = ({
         .filter((d) => new Date(d.date + "T12:00:00").getDate() % 2 === 1)
         .map((d) => d.date);
     }
-    // 3M, 6M, 1Y, ALL — all daily data, show month starts only
+    // 3M, 6M, 1Y, ALL - all daily data, show month starts only
     return filteredData
       .filter((d) => new Date(d.date + "T12:00:00").getDate() === 1)
       .map((d) => d.date);
@@ -248,7 +248,7 @@ const WpaChart: React.FC<WpaChartProps> = ({
             className="px-3 py-1.5 rounded-lg border-2 font-black text-2xl tabular-nums"
             style={{ borderColor: lineColor, color: lineColor }}
           >
-            {latestValue !== null ? latestValue.toFixed(2) : "—"}
+            {latestValue !== null ? latestValue.toFixed(2) : "-"}
           </div>
           {change !== null && change !== 0 && (
             <div className="flex flex-col">
@@ -340,7 +340,7 @@ const WpaChart: React.FC<WpaChartProps> = ({
           </AreaChart>
         </div>
 
-        {/* Mobile period filters — below chart, evenly spread */}
+        {/* Mobile period filters - below chart, evenly spread */}
         <div className="flex sm:hidden justify-between w-full mt-3 px-1">
           {PERIODS.map((p) => (
             <button

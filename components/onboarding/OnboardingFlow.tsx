@@ -259,7 +259,7 @@ const OnboardingFlow = ({
         </aside>
       </div>
 
-      {/* Actions. Sticky on mobile, opaque — not a blur. */}
+      {/* Actions. Sticky on mobile, opaque - not a blur. */}
       <div className="sticky bottom-0 z-20 -mx-4 mt-10 flex items-center gap-3 border-t bg-background px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0">
         <Button
           type="button"

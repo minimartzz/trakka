@@ -291,13 +291,13 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
     });
   };
 
-  // Fixed two slots — long-press props built per slot rather than in a loop,
+  // Fixed two slots - long-press props built per slot rather than in a loop,
   // since NUM_SHOWCASE_SLOTS is a compile-time constant.
   const longPressSlot0 = useLongPress(() => openPicker(0));
   const longPressSlot1 = useLongPress(() => openPicker(1));
   const longPressBySlot = [longPressSlot0, longPressSlot1];
 
-  // Total time spent playing — game length (playingTime) stands in for
+  // Total time spent playing - game length (playingTime) stands in for
   // actual session duration, which isn't tracked.
   const timeSpent = React.useMemo(() => {
     const totalMinutes = recentActivity.reduce(
@@ -576,8 +576,8 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
                 className={cn(
                   "flex items-center gap-3 rounded-xl border border-border p-2.5 text-left transition-colors hover:bg-muted/50",
                   openShowcase !== null &&
-                    slotGameIds[openShowcase] === game.gameId &&
-                    "border-primary bg-muted/40",
+                  slotGameIds[openShowcase] === game.gameId &&
+                  "border-primary bg-muted/40",
                 )}
               >
                 <GameThumbnail game={game} size={44} />

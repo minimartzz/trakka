@@ -19,7 +19,7 @@ interface GameFlipCardProps {
 // e.g. "05 Mar 2026". parseISO reads YYYY-MM-DD as a local date, so the day
 // doesn't shift for users behind UTC
 const formatLastPlayed = (dateStr: string | null): string =>
-  dateStr ? format(parseISO(dateStr), "dd MMM yyyy") : "—";
+  dateStr ? format(parseISO(dateStr), "dd MMM yyyy") : "-";
 
 const StatRow: React.FC<{ label: string; value: string | number }> = ({
   label,
@@ -56,7 +56,7 @@ const GameFlipCard: React.FC<GameFlipCardProps> = ({ game, variant, elo }) => {
       style={{ perspective: "1000px" }}
       onClick={() => setFlipped((f) => !f)}
       role="button"
-      aria-label={`${label}: ${game.gameTitle} — tap to see detailed stats`}
+      aria-label={`${label}: ${game.gameTitle} - tap to see detailed stats`}
     >
       <div
         className="relative w-full h-full"
@@ -108,7 +108,7 @@ const GameFlipCard: React.FC<GameFlipCardProps> = ({ game, variant, elo }) => {
             </div>
           </div>
 
-          {/* Win rate — centered */}
+          {/* Win rate - centered */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-4xl font-black text-white leading-none">
               {game.winRate}
@@ -182,7 +182,7 @@ const GameFlipCard: React.FC<GameFlipCardProps> = ({ game, variant, elo }) => {
               <StatRow label="BGA Rate" value={`${game.bgaWinRate}%`} />
               <StatRow
                 label="Game WPA"
-                value={game.gameWpa !== null ? game.gameWpa.toFixed(2) : "—"}
+                value={game.gameWpa !== null ? game.gameWpa.toFixed(2) : "-"}
               />
               <StatRow
                 label="Last Played"

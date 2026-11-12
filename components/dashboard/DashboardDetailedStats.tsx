@@ -123,13 +123,13 @@ const sessionStats = (session: GroupedSession, userId: number) => {
   return {
     myVp:
       session.isVp &&
-      me?.victoryPoints !== null &&
-      me?.victoryPoints !== undefined
+        me?.victoryPoints !== null &&
+        me?.victoryPoints !== undefined
         ? String(me.victoryPoints)
-        : "—",
-    winningVp: session.isVp && vps.length > 0 ? String(Math.max(...vps)) : "—",
+        : "-",
+    winningVp: session.isVp && vps.length > 0 ? String(Math.max(...vps)) : "-",
     wpa:
-      me?.score !== null && me?.score !== undefined ? me.score.toFixed(2) : "—",
+      me?.score !== null && me?.score !== undefined ? me.score.toFixed(2) : "-",
     // Null when the session doesn't affect Elo
     elo: me ? eloDisplay(me) : null,
   };
@@ -148,7 +148,7 @@ const EloValue: React.FC<{ elo: EloDisplay | null }> = ({ elo }) =>
       {elo.calibrating && <CalibratingMark />}
     </span>
   ) : (
-    <span className="text-sm text-muted-foreground">—</span>
+    <span className="text-sm text-muted-foreground">-</span>
   );
 
 const PlayersDice: React.FC<{ session: GroupedSession }> = ({ session }) => (
@@ -441,9 +441,9 @@ const DashboardDetailedStats: React.FC<DashboardDetailedStatsProps> = ({
                                       title={session.gameTitle}
                                     >
                                       <SessionTitleLink
-                                    sessionId={session.sessionId}
-                                    gameTitle={session.gameTitle}
-                                  />
+                                        sessionId={session.sessionId}
+                                        gameTitle={session.gameTitle}
+                                      />
                                     </span>
                                   </div>
                                 </TableCell>

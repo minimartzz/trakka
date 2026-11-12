@@ -397,7 +397,7 @@ const ActivityLog = () => {
     // Persist to database
     const result = await markNotificationsAsRead(ids);
     if (result.error) {
-      // Revert via refetch — re-pulls truth from server without snapshotting
+      // Revert via refetch - re-pulls truth from server without snapshotting
       ids.forEach((id) => markedAsReadIds.current.delete(id));
       refetch();
       console.error("Failed to mark notifications as read");

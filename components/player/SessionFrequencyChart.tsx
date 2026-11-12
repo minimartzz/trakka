@@ -98,7 +98,7 @@ const SessionFrequencyChart: React.FC<{
               mode.key === "complexity" && average !== null && getWeightColor(average),
             )}
           >
-            {average === null ? "—" : average.toFixed(1)}
+            {average === null ? "-" : average.toFixed(1)}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             {mode.stat}, last month

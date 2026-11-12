@@ -80,7 +80,7 @@ const Navbar = ({ variant }: { variant?: "player" }) => {
             )
           ) : (
             <Link href="/" aria-label="Trakka home" className="shrink-0">
-              {/* Full logo — light mode */}
+              {/* Full logo - light mode */}
               <Image
                 src={fullLogoLight}
                 alt="Trakka"
@@ -88,7 +88,7 @@ const Navbar = ({ variant }: { variant?: "player" }) => {
                 className="hidden sm:block dark:hidden"
                 priority
               />
-              {/* Full logo — dark mode */}
+              {/* Full logo - dark mode */}
               <Image
                 src={fullLogoDark}
                 alt="Trakka"
@@ -96,7 +96,7 @@ const Navbar = ({ variant }: { variant?: "player" }) => {
                 className="hidden dark:sm:block"
                 priority
               />
-              {/* Small logo — light mode */}
+              {/* Small logo - light mode */}
               <Image
                 src={smallLogoLight}
                 alt="Trakka"
@@ -105,7 +105,7 @@ const Navbar = ({ variant }: { variant?: "player" }) => {
                 className="block sm:hidden dark:hidden"
                 priority
               />
-              {/* Small logo — dark mode */}
+              {/* Small logo - dark mode */}
               <Image
                 src={smallLogoDark}
                 alt="Trakka"
@@ -119,27 +119,27 @@ const Navbar = ({ variant }: { variant?: "player" }) => {
 
           {isSignedIn
             ? !isPlayerPage && (
-                <Button asChild>
-                  <Link href="/dashboard">Open dashboard</Link>
-                </Button>
-              )
+              <Button asChild>
+                <Link href="/dashboard">Open dashboard</Link>
+              </Button>
+            )
             : isSignedIn === false && (
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="text-foreground/80 hover:text-foreground"
-                  >
-                    <Link href="/login?tab=login">Log in</Link>
-                  </Button>
-                  <Button
-                    asChild
-                    className="shadow-(--shadow-elegant) transition-shadow hover:shadow-(--shadow-glow)"
-                  >
-                    <Link href="/login?tab=sign-up">Sign up free</Link>
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-foreground/80 hover:text-foreground"
+                >
+                  <Link href="/login?tab=login">Log in</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="shadow-(--shadow-elegant) transition-shadow hover:shadow-(--shadow-glow)"
+                >
+                  <Link href="/login?tab=sign-up">Sign up free</Link>
+                </Button>
+              </div>
+            )}
         </div>
       </nav>
     </header>

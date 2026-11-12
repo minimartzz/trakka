@@ -31,7 +31,7 @@ async function fetchTickerResults(): Promise<TickerResult[]> {
         ? `${r.victoryPoints} VP`
         : r.score != null
           ? `${Math.round(r.score)} pts`
-          : "—",
+          : "-",
   }));
 }
 
