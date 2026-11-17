@@ -70,8 +70,9 @@ export const config = {
      * Fast Origin Transfer charge on Vercel.
      * - _next/static, _next/image: build output and optimized images
      * - api: route handlers call supabase.auth.getUser() themselves
+     * - ingest: PostHog analytics proxied via rewrites in next.config.ts
      * - favicon/robots/sitemap and any file with a static asset extension
      */
-    "/((?!_next/static|_next/image|api/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf)$).*)",
+    "/((?!_next/static|_next/image|api/|ingest/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf)$).*)",
   ],
 };

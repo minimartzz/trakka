@@ -1,11 +1,14 @@
 import posthog from "posthog-js";
 
 const posthogProjectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
-const posthogHost = "https://us.i.posthog.com";
+// Reverse proxy (rewrites in next.config.ts) so blockers don't drop events
+const posthogHost = "/ingest";
 
 if (posthogProjectToken && posthogHost) {
   posthog.init(posthogProjectToken, {
     api_host: posthogHost,
+    // Toolbar and replay links still open the real PostHog app
+    ui_host: "https://us.posthog.com",
     defaults: "2026-01-30",
     capture_exceptions: true,
     // Errors are only reported from production deployments. Previews and
@@ -18,11 +21,7 @@ if (posthogProjectToken && posthogHost) {
     debug: process.env.NODE_ENV === "development",
   });
 } else if (process.env.NODE_ENV === "development") {
-  const missingVariable = posthogProjectToken
-    ? "https://us.i.posthog.com"
-    : "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN";
-
   throw new Error(
-    `${missingVariable} variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once ${missingVariable} is configured`,
+    "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN is configured",
   );
 }
