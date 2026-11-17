@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Share, Share2 } from "lucide-react";
+import { Loader2, Send, Share, Share2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import posthog from "posthog-js";
@@ -93,7 +93,7 @@ const ShareButton = ({ userId, tribes }: ShareButtonProps) => {
           className="gap-x-2 bg-accent-4 hover:bg-accent-4/80 dark:bg-accent-4/80 dark:hover:bg-accent-4"
           variant="outline"
         >
-          <Share className="h-4 w-4 text-white" />
+          <Send className="h-4 w-4 text-white" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-85">
