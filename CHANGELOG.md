@@ -2,9 +2,25 @@
 
 All notable changes to Trakka are recorded in this changelog
 
+## [0.8.0] Public Players Pages - 2026-11-16
+
+### Added
+
+- Public players page: displays your general performance for all to see. Can be privated from the accounts settings page
+- Global search bar can now search for users, tribes and games
+
+### Changed
+
+- Games tab in Dashboard now displays individual ELO stats for user’s games
+- Now routing analytics through site rather than directly to posthog
+
+### Fix
+
+- Posthog tracks through site so no logs are recorded under dev
+
 ## [0.7.1] Migration to PostHog - 2026-10-21
 
-## Changed
+### Changed
 
 - Migration for web analytics and error tracking to PostHog only away from Sentry
 
