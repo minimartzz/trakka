@@ -11,7 +11,7 @@ interface SparklineProps {
   className?: string;
 }
 
-// Internal coordinate space only — the SVG stretches to fill its container,
+// Internal coordinate space only - the SVG stretches to fill its container,
 // so these set the curve's proportions rather than its rendered size.
 const WIDTH = 160;
 const HEIGHT = 56;
@@ -35,7 +35,7 @@ const Sparkline: React.FC<SparklineProps> = ({
   const max = Math.max(...data);
   const span = max - min;
 
-  // A flat series would divide by zero — pin it to the vertical centre
+  // A flat series would divide by zero - pin it to the vertical centre
   const points = data.map((value, i) => {
     const x = (i / (data.length - 1)) * WIDTH;
     const y =

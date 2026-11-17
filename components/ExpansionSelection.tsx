@@ -51,7 +51,7 @@ const ExpansionSelection = ({
   const [search, setSearch] = useState("");
   const [fetched, setFetched] = useState(false);
 
-  // A different base game means a different expansion list — re-arm the
+  // A different base game means a different expansion list - re-arm the
   // lazy fetch so the popover doesn't keep showing the old game's options.
   const linkSignature = expansionLinks.map((link) => link.id).join(",");
   useEffect(() => {

@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Confirmation links are single-use, so opening one twice — or on a second
-  // device — lands here. That isn't an error worth a dead end: if the visitor
+  // Confirmation links are single-use, so opening one twice - or on a second
+  // device - lands here. That isn't an error worth a dead end: if the visitor
   // already has a session, just send them on.
   const {
     data: { user },

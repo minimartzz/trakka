@@ -10,7 +10,7 @@ const MAX_FAVOURITE_GAMES = 5;
 
 /**
  * Resolve the caller's profile from their Supabase session. Never trust a
- * client-supplied profile id — matches the pattern in account/claim/action.ts.
+ * client-supplied profile id - matches the pattern in account/claim/action.ts.
  */
 async function getCallerProfile() {
   const supabase = await createClient();

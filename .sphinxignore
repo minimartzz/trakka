@@ -1,0 +1,11 @@
+# Files excluded from Sphinx assessments before content is read.
+# Add project-specific private or generated paths below.
+# Examples (uncomment as needed):
+# dist/
+# coverage/
+# **/*.generated.*
+# /private-notes/
+
+# Supports *, **, ?, leading /, trailing /, and local ! exceptions.
+# Built-in sensitive files, global ignores, and config exclusions cannot be restored.
+# .env/.env.*, private keys, and common credentials files are always excluded.

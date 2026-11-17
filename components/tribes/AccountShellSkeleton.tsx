@@ -52,14 +52,12 @@ export default function AccountShellSkeleton() {
       <div className="flex flex-1 flex-col">
         {/* Header */}
         <header className="flex h-20 shrink-0 items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-10 px-4">
-            <Skeleton className="h-7 w-7 rounded-md" />
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-9 w-40 rounded-md" />
-              <Skeleton className="h-9 w-9 rounded-md" />
-            </div>
+          <div className="flex flex-1 min-w-0 items-center gap-2 sm:gap-10 px-4">
+            <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
+            <Skeleton className="h-9 flex-1 rounded-md" />
           </div>
-          <div className="flex items-center gap-x-4 px-4 sm:pr-10">
+          <div className="flex shrink-0 items-center gap-x-4 px-4 sm:pr-10">
+            <Skeleton className="h-10 w-10 rounded-full" />
             <Skeleton className="h-9 w-9 rounded-md" />
             <Skeleton className="h-10 w-12 sm:w-36 rounded-full" />
           </div>

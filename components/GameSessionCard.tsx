@@ -13,7 +13,7 @@ import {
 } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { positionOrdinalSuffix } from "@/utils/recordsProcessing";
-import { eloDisplay, eloTier, type EloTier } from "@/utils/elo";
+import { ELO_TIER_CLASS, eloDisplay, eloTier, type EloTier } from "@/utils/elo";
 import { format } from "date-fns";
 import {
   ArrowDown,
@@ -36,17 +36,8 @@ import React, { useState } from "react";
 import { sessionHref, useRowLink } from "@/hooks/use-row-link";
 import SessionTitleLink from "@/components/SessionTitleLink";
 
-// Elo box colour by tier. Iron, bronze, purple and maroon are dark enough for
-// white text; the lighter tiers use the dark text of the gain pill
-export const ELO_TIER_CLASS: Record<EloTier, string> = {
-  iron: "bg-elo-iron text-white",
-  bronze: "bg-elo-bronze text-white",
-  silver: "bg-elo-silver text-[oklch(25.3%_0.0321_265.95)]",
-  gold: "bg-elo-gold text-[oklch(25.3%_0.0321_265.95)]",
-  emerald: "bg-elo-emerald text-[oklch(25.3%_0.0321_265.95)]",
-  purple: "bg-elo-purple text-white",
-  maroon: "bg-elo-maroon text-white",
-};
+// Lives in utils/elo so server components get the real map, not a client reference
+export { ELO_TIER_CLASS } from "@/utils/elo";
 
 // Elo shown as text in its tier colour, without the box
 export const ELO_TIER_TEXT_CLASS: Record<EloTier, string> = {
@@ -314,14 +305,29 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
       {/* Name + username */}
       <div className="min-w-0 flex-1">
-        <span
-          className={cn(
-            "block truncate font-medium text-foreground",
-            highlight && "font-semibold text-primary",
-          )}
-        >
-          {player.firstName}
-        </span>
+        {/* The name opens the player's page; the rest of the card the
+            session's (useRowLink skips clicks on links). Anonymous players
+            have no page. */}
+        {player.isAnonymous ? (
+          <span
+            className={cn(
+              "block truncate font-medium text-foreground",
+              highlight && "font-semibold text-primary",
+            )}
+          >
+            {player.firstName}
+          </span>
+        ) : (
+          <Link
+            href={`/player/${player.username}`}
+            className={cn(
+              "block truncate font-medium text-foreground underline-offset-4 hover:underline",
+              highlight && "font-semibold text-primary",
+            )}
+          >
+            {player.firstName}
+          </Link>
+        )}
         <span className="block truncate text-xs text-muted-foreground">
           @{player.username}
         </span>
@@ -497,7 +503,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                   team.hasCurrentUser && "bg-primary/12 dark:bg-primary/18",
                 )}
               >
-                {/* Shared position — vertically centered across the team */}
+                {/* Shared position - vertically centered across the team */}
                 <div className="flex w-11 shrink-0 items-center justify-center border-r border-border/60 sm:w-12">
                   <span
                     className={cn(
@@ -532,7 +538,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                             isTie={team.isTie}
                           />
                           <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                            {team.victoryPoints ?? "—"}
+                            {team.victoryPoints ?? "-"}
                           </span>
                         </>
                       ) : (
@@ -555,7 +561,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
                 Group Score
               </span>
               <span className="font-display text-lg font-bold tabular-nums">
-                {players[0]?.victoryPoints ?? "—"}
+                {players[0]?.victoryPoints ?? "-"}
               </span>
             </div>
             <ul className="divide-y divide-border/60">
@@ -592,7 +598,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
                   {/* Victory points */}
                   <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                    {player.victoryPoints ?? "—"}
+                    {player.victoryPoints ?? "-"}
                   </span>
                 </li>
               );
@@ -633,7 +639,7 @@ const GameSessionCard: React.FC<GameSessionsCardProps> = ({
 
                   {/* Victory points */}
                   <span className="font-display w-12 shrink-0 text-right text-lg font-bold tabular-nums sm:w-16">
-                    {player.victoryPoints ?? "—"}
+                    {player.victoryPoints ?? "-"}
                   </span>
                 </li>
               );

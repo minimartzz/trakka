@@ -92,7 +92,7 @@ export const OutcomeCircle: React.FC<{
   className?: string;
 }> = ({ session, className }) => {
   if (!session.isPlayer) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">-</span>;
   }
 
   const result = sessionResult(session);

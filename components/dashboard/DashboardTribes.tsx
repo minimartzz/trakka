@@ -463,7 +463,7 @@ const DashboardTribes: React.FC<DashboardTribesProps> = ({
                                 Avg WPA
                               </p>
                               <p className="mt-0.5 font-display text-xl font-bold leading-none tabular-nums text-accent-4">
-                                {wpa !== null ? wpa.toFixed(2) : "—"}
+                                {wpa !== null ? wpa.toFixed(2) : "-"}
                               </p>
                             </div>
 
@@ -494,7 +494,7 @@ const DashboardTribes: React.FC<DashboardTribesProps> = ({
                                   </span>
                                 </div>
                               ) : (
-                                <p className="mt-1">—</p>
+                                <p className="mt-1">-</p>
                               )}
                             </div>
 

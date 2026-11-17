@@ -200,7 +200,7 @@ const MostPlayedFlipCard: React.FC<{
       style={{ perspective: "1000px" }}
       onClick={() => setFlipped((f) => !f)}
       role="button"
-      aria-label="Most played game — tap to see recent sessions"
+      aria-label="Most played game - tap to see recent sessions"
     >
       <div
         className="relative w-full h-full"
@@ -339,7 +339,7 @@ const MostPlayedFlipCard: React.FC<{
                       className="text-[11px] font-black tabular-nums flex-1 text-right"
                       style={{ color: p1Better ? p1Color : `${p1Color}55` }}
                     >
-                      {p1Pos !== null ? ordinal(p1Pos) : "—"}
+                      {p1Pos !== null ? ordinal(p1Pos) : "-"}
                     </span>
                     <span className="text-[9px] text-muted-foreground/40 shrink-0 w-4 text-center">
                       vs
@@ -348,7 +348,7 @@ const MostPlayedFlipCard: React.FC<{
                       className="text-[11px] font-black tabular-nums flex-1"
                       style={{ color: p2Better ? p2Color : `${p2Color}55` }}
                     >
-                      {p2Pos !== null ? ordinal(p2Pos) : "—"}
+                      {p2Pos !== null ? ordinal(p2Pos) : "-"}
                     </span>
                   </div>
                 );
@@ -409,7 +409,7 @@ const WinStreakCard: React.FC<{
       style={{ perspective: "1000px" }}
       onClick={() => setFlipped((f) => !f)}
       role="button"
-      aria-label="Win streak — tap to see past streaks"
+      aria-label="Win streak - tap to see past streaks"
     >
       <div
         className="relative w-full h-full"
@@ -491,13 +491,13 @@ const WinStreakCard: React.FC<{
             </div>
           )}
 
-          {/* Streak number — hero element */}
+          {/* Streak number - hero element */}
           <div className="flex-1 flex flex-col items-center justify-center">
             <p
               className="text-7xl font-black tabular-nums leading-none"
               style={{ color: streakColor }}
             >
-              {streak?.streak ?? "—"}
+              {streak?.streak ?? "-"}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1.5">
               win streak

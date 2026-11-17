@@ -123,7 +123,7 @@ const DeltaBadge: React.FC<{
 }> = ({ delta, suffix = "%", decimals = 1 }) => {
   if (delta === null) {
     return (
-      <span className="text-xs text-muted-foreground">— vs last 30d</span>
+      <span className="text-xs text-muted-foreground">- vs last 30d</span>
     );
   }
   const positive = delta >= 0;
@@ -164,124 +164,124 @@ const FlipWinRateCard: React.FC<{
   sparklineConv,
   sparklineBga,
 }) => {
-  const [flipped, setFlipped] = useState(false);
+    const [flipped, setFlipped] = useState(false);
 
-  const losses = gamesPlayed - wins;
+    const losses = gamesPlayed - wins;
 
-  return (
-    <div
-      className="relative cursor-pointer select-none h-full"
-      style={{ perspective: "1000px" }}
-      onClick={() => setFlipped((f) => !f)}
-      role="button"
-      aria-label={`Win rate card — tap to switch to ${flipped ? "Standard" : "BGA"} view`}
-    >
+    return (
       <div
-        className="relative w-full h-full"
-        style={{
-          transformStyle: "preserve-3d",
-          transition: "transform 0.52s cubic-bezier(0.4, 0, 0.2, 1)",
-          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
+        className="relative cursor-pointer select-none h-full"
+        style={{ perspective: "1000px" }}
+        onClick={() => setFlipped((f) => !f)}
+        role="button"
+        aria-label={`Win rate card - tap to switch to ${flipped ? "Standard" : "BGA"} view`}
       >
-        {/* ── Front: Standard Win Rate ──── */}
         <div
-          className="relative rounded-xl overflow-hidden h-full bg-card border border-primary/25"
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          {/* Soft diagonal accent wash */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/30 via-primary/10 to-transparent dark:from-primary/45 dark:via-primary/15"
-          />
-          <div className="relative p-4 sm:p-5 h-full">
-            {/* Header row */}
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
-                  Win Rate
-                </p>
-                <p className="text-xs text-muted-foreground">Standard</p>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
-                <RotateCcw className="w-3 h-3" />
-                BGA
-              </div>
-            </div>
-
-            {/* Big number */}
-            <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
-              {conventionalRate}
-              <span className="text-2xl font-bold text-foreground/70">%</span>
-            </p>
-
-            {/* Record */}
-            <p className="text-xs text-muted-foreground mb-3">
-              {wins}W · {losses}L · {gamesPlayed} games
-            </p>
-
-            {/* Delta */}
-            <DeltaBadge delta={delta.delta} />
-
-            {/* Sparkline */}
-            <div className="mt-3 -mx-1">
-              <Sparkline data={sparklineConv} color="var(--primary)" />
-            </div>
-          </div>
-        </div>
-
-        {/* ── Back: BGA Win Rate ──────────── */}
-        <div
-          className="absolute inset-0 rounded-xl overflow-hidden bg-card border border-accent-5/25"
+          className="relative w-full h-full"
           style={{
-            backfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
+            transformStyle: "preserve-3d",
+            transition: "transform 0.52s cubic-bezier(0.4, 0, 0.2, 1)",
+            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
           }}
         >
-          {/* Soft diagonal accent wash */}
+          {/* ── Front: Standard Win Rate ──── */}
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-linear-to-br from-accent-5/30 via-accent-5/10 to-transparent dark:from-accent-5/45 dark:via-accent-5/15"
-          />
-          <div className="relative p-4 sm:p-5 h-full">
-            {/* Header row */}
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
-                  Win Rate
-                </p>
-                <p className="text-xs text-muted-foreground">BGA Formula</p>
+            className="relative rounded-xl overflow-hidden h-full bg-card border border-primary/25"
+            style={{ backfaceVisibility: "hidden" }}
+          >
+            {/* Soft diagonal accent wash */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/30 via-primary/10 to-transparent dark:from-primary/45 dark:via-primary/15"
+            />
+            <div className="relative p-4 sm:p-5 h-full">
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
+                    Win Rate
+                  </p>
+                  <p className="text-xs text-muted-foreground">Standard</p>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
+                  <RotateCcw className="w-3 h-3" />
+                  BGA
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
-                <RotateCcw className="w-3 h-3" />
-                STD
+
+              {/* Big number */}
+              <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
+                {conventionalRate}
+                <span className="text-2xl font-bold text-foreground/70">%</span>
+              </p>
+
+              {/* Record */}
+              <p className="text-xs text-muted-foreground mb-3">
+                {wins}W · {losses}L · {gamesPlayed} games
+              </p>
+
+              {/* Delta */}
+              <DeltaBadge delta={delta.delta} />
+
+              {/* Sparkline */}
+              <div className="mt-3 -mx-1">
+                <Sparkline data={sparklineConv} color="var(--primary)" />
               </div>
             </div>
+          </div>
 
-            {/* Big number */}
-            <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
-              {bgaRate}
-              <span className="text-2xl font-bold text-foreground/70">%</span>
-            </p>
+          {/* ── Back: BGA Win Rate ──────────── */}
+          <div
+            className="absolute inset-0 rounded-xl overflow-hidden bg-card border border-accent-5/25"
+            style={{
+              backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          >
+            {/* Soft diagonal accent wash */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-linear-to-br from-accent-5/30 via-accent-5/10 to-transparent dark:from-accent-5/45 dark:via-accent-5/15"
+            />
+            <div className="relative p-4 sm:p-5 h-full">
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-widest text-foreground/70 mb-0.5">
+                    Win Rate
+                  </p>
+                  <p className="text-xs text-muted-foreground">BGA Formula</p>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
+                  <RotateCcw className="w-3 h-3" />
+                  STD
+                </div>
+              </div>
 
-            {/* Formula note */}
-            <p className="hidden sm:block text-xs text-muted-foreground">
-              Weighted by player count
-            </p>
+              {/* Big number */}
+              <p className="text-5xl sm:text-6xl font-black tracking-tight text-foreground leading-none mb-1">
+                {bgaRate}
+                <span className="text-2xl font-bold text-foreground/70">%</span>
+              </p>
 
-            {/* Delta (same sessions, different metric) */}
-            <DeltaBadge delta={null} />
+              {/* Formula note */}
+              <p className="hidden sm:block text-xs text-muted-foreground">
+                Weighted by player count
+              </p>
 
-            {/* Sparkline */}
-            <div className="mt-3 -mx-1">
-              <Sparkline data={sparklineBga} color="var(--accent-5)" />
+              {/* Delta (same sessions, different metric) */}
+              <DeltaBadge delta={null} />
+
+              {/* Sparkline */}
+              <div className="mt-3 -mx-1">
+                <Sparkline data={sparklineBga} color="var(--accent-5)" />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 // ── WPA Stat card ────────────────────────────────────────────────────
 
@@ -335,8 +335,8 @@ const WpaStatCard: React.FC<{
 const PlayerBanner: React.FC<{
   member: TribeMember;
   badges: ReturnType<typeof calculateBadges> extends Map<number, infer V>
-    ? V
-    : never;
+  ? V
+  : never;
 }> = ({ member, badges }) => {
   const roleLabel = getRoleLabel(member.roleId);
 
@@ -391,7 +391,7 @@ const PlayerBanner: React.FC<{
             </div>
           </div>
 
-          {/* Badges cluster — top right */}
+          {/* Badges cluster - top right */}
           {badges.length > 0 && (
             <div className="flex flex-wrap justify-end gap-1.5 shrink-0 max-w-22 sm:max-w-none">
               {badges.map((badge) => (
@@ -765,9 +765,9 @@ const IndividualPlayerView: React.FC<IndividualPlayerViewProps> = ({
       );
     return entry
       ? {
-          elo: Math.round(entry.elo),
-          calibrating: !isCalibrated(entry.sessionsPlayed),
-        }
+        elo: Math.round(entry.elo),
+        calibrating: !isCalibrated(entry.sessionsPlayed),
+      }
       : null;
   };
 

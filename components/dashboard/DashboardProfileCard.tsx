@@ -16,12 +16,11 @@ import {
 } from "@/components/ui/sheet";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { GroupedSession } from "@/lib/interfaces";
 import type { FavouriteGame } from "@/db/schema/profile";
-import {
-  updateShowcaseSlots,
-  type GameElo,
-} from "@/app/(account)/dashboard/action";
+import { updateShowcaseSlots } from "@/app/(account)/dashboard/action";
+import type { GameElo } from "@/app/(account)/dashboard/data";
 import { CalibratingMark, ELO_TIER_CLASS } from "@/components/GameSessionCard";
 import {
   sessionResult,
@@ -292,13 +291,13 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
     });
   };
 
-  // Fixed two slots — long-press props built per slot rather than in a loop,
+  // Fixed two slots - long-press props built per slot rather than in a loop,
   // since NUM_SHOWCASE_SLOTS is a compile-time constant.
   const longPressSlot0 = useLongPress(() => openPicker(0));
   const longPressSlot1 = useLongPress(() => openPicker(1));
   const longPressBySlot = [longPressSlot0, longPressSlot1];
 
-  // Total time spent playing — game length (playingTime) stands in for
+  // Total time spent playing - game length (playingTime) stands in for
   // actual session duration, which isn't tracked.
   const timeSpent = React.useMemo(() => {
     const totalMinutes = recentActivity.reduce(
@@ -349,9 +348,12 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="font-semibold truncate">
+                  <Link
+                    href={`/player/${username}`}
+                    className="block font-semibold truncate underline-offset-4 hover:underline"
+                  >
                     {firstName} {lastName}
-                  </p>
+                  </Link>
                   <p className="text-sm text-muted-foreground truncate">
                     @{username}
                   </p>
@@ -409,9 +411,12 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
             </Avatar>
 
             <div className="min-w-0 flex-1">
-              <p className="text-lg font-semibold truncate">
+              <Link
+                href={`/player/${username}`}
+                className="block text-lg font-semibold truncate underline-offset-4 hover:underline"
+              >
                 {firstName} {lastName}
-              </p>
+              </Link>
               <p className="text-sm text-muted-foreground truncate">
                 @{username}
               </p>
@@ -571,8 +576,8 @@ const DashboardProfileCard: React.FC<DashboardProfileCardProps> = ({
                 className={cn(
                   "flex items-center gap-3 rounded-xl border border-border p-2.5 text-left transition-colors hover:bg-muted/50",
                   openShowcase !== null &&
-                    slotGameIds[openShowcase] === game.gameId &&
-                    "border-primary bg-muted/40",
+                  slotGameIds[openShowcase] === game.gameId &&
+                  "border-primary bg-muted/40",
                 )}
               >
                 <GameThumbnail game={game} size={44} />

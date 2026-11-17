@@ -23,7 +23,7 @@ import { notificationsTable } from "@/db/schema/notifications";
 export type FavouriteGame = {
   bggId: number;
   title: string;
-  // Full BGG image, not the thumbnail — the account page renders these at
+  // Full BGG image, not the thumbnail - the account page renders these at
   // card size, where a thumbnail would upscale visibly.
   image: string | null;
 };
@@ -53,6 +53,8 @@ export const profileTable = pgTable("profile", {
   gender: varchar("gender", { enum: ["Male", "Female", "Others"] }).notNull(),
   image: text("image").notNull(),
   isAnonymous: boolean("is_anonymous").notNull().default(false),
+  // Public player page (/player/[username]) visibility; owners can turn it off
+  isPublic: boolean("is_public").notNull().default(true),
   // ==== Claim-related ====
   claimCode: varchar("claim_code").unique(),
   // Pending-claim lock: Set to the claiming user's profile id while a claim
@@ -77,7 +79,7 @@ export const profileTable = pgTable("profile", {
     .$type<FavouriteGame[]>()
     .notNull()
     .default([]),
-  // Dashboard showcase picks — one game id (or null for an empty slot) per
+  // Dashboard showcase picks - one game id (or null for an empty slot) per
   // slot position, in slot order
   showcaseSlots: jsonb("showcase_slots")
     .$type<(number | null)[]>()

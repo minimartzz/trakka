@@ -33,7 +33,7 @@ const MONTH_NAMES = [
 ];
 const WEEKS_TO_SHOW = 52;
 const GAP = 3;
-const LABEL_WIDTH = 30; // px — day label column width
+const LABEL_WIDTH = 30; // px - day label column width
 
 const getColor = (count: number, maxCount: number): string => {
   if (count === 0) return "bg-muted/60";
@@ -171,7 +171,7 @@ const PlayHeatmap: React.FC<PlayHeatmapProps> = ({ data, className }) => {
 
   return (
     <div ref={containerRef} className={cn("w-full relative", className)}>
-      {/* Scrollable area — auto-scrolls to right (current date) on mount */}
+      {/* Scrollable area - auto-scrolls to right (current date) on mount */}
       <div ref={scrollRef} className="overflow-x-auto">
         <div className="inline-flex flex-col" style={{ gap: GAP }}>
           {/* Month labels row */}
@@ -283,7 +283,7 @@ const PlayHeatmap: React.FC<PlayHeatmapProps> = ({ data, className }) => {
         </div>
       </div>
 
-      {/* Tooltip — fixed so it escapes scroll/overflow containers */}
+      {/* Tooltip - fixed so it escapes scroll/overflow containers */}
       {tooltip && (
         <div
           className="fixed z-50 pointer-events-none bg-popover border rounded-lg shadow-xl px-3 py-2 -translate-x-1/2 -translate-y-full"

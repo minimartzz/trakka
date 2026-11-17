@@ -10,5 +10,5 @@ export const SITE_NAME = "Trakka";
 export const SITE_DESCRIPTION =
   "Trakka is a free board game tracker for groups. Log every session, track win rates and head-to-head records, and rank players with a single cross-game rating.";
 
-/** Absolute URL helper — schema and metadata both require absolute URLs. */
+/** Absolute URL helper - schema and metadata both require absolute URLs. */
 export const absoluteUrl = (path = "/") => new URL(path, SITE_URL).toString();

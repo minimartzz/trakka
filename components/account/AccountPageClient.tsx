@@ -19,6 +19,7 @@ interface AccountUser {
   gender: string;
   description: string;
   image: string;
+  is_public: boolean;
 }
 
 interface AccountPageClientProps {
@@ -78,7 +79,9 @@ const AccountPageClient = ({
             initialClaimCode={initialClaimCode}
           />
         }
-        accountsContent={<AccountsTab />}
+        accountsContent={
+          <AccountsTab username={user.username} isPublic={user.is_public} />
+        }
       />
     </div>
   );

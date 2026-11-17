@@ -397,7 +397,7 @@ const ActivityLog = () => {
     // Persist to database
     const result = await markNotificationsAsRead(ids);
     if (result.error) {
-      // Revert via refetch — re-pulls truth from server without snapshotting
+      // Revert via refetch - re-pulls truth from server without snapshotting
       ids.forEach((id) => markedAsReadIds.current.delete(id));
       refetch();
       console.error("Failed to mark notifications as read");
@@ -558,7 +558,7 @@ const ActivityLog = () => {
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-muted hover:bg-muted/70">
           <Bell className="h-6 w-5" />
           {unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-white font-semibold">
@@ -567,7 +567,7 @@ const ActivityLog = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-85 sm:w-95 p-0" align="start">
+      <PopoverContent className="w-85 sm:w-95 p-0" align="end">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
           <span className="font-semibold text-sm">Activity Log</span>

@@ -22,21 +22,21 @@ const MODES: {
   ending: string;
   url: (name: string) => string;
 }[] = [
-  {
-    key: "recent-games",
-    word: "MARTIN",
-    tagline: "Every session a player has logged, filterable in one place.",
-    ending: "recent games",
-    url: (name) => `trakka.co/${name.toLowerCase()}/recent-games`,
-  },
-  {
-    key: "tribe",
-    word: "JOHN",
-    ending: "tribe",
-    tagline: "Standings, players and games for a whole group. Tap the tabs.",
-    url: (name) => `trakka.co/${name.toLowerCase()}/tribe`,
-  },
-];
+    {
+      key: "recent-games",
+      word: "MARTIN",
+      tagline: "Every session a player has logged, filterable in one place.",
+      ending: "recent games",
+      url: (name) => `trakka.co/${name.toLowerCase()}/recent-games`,
+    },
+    {
+      key: "tribe",
+      word: "JOHN",
+      ending: "tribe",
+      tagline: "Standings, players and games for a whole group. Tap the tabs.",
+      url: (name) => `trakka.co/${name.toLowerCase()}/tribe`,
+    },
+  ];
 
 const ProfileDemo = ({
   profile,
@@ -100,7 +100,7 @@ const ProfileDemo = ({
             </AnimatePresence>
           </span>
 
-          {/* Recurring tap indicator — fades in and out to draw the eye. */}
+          {/* Recurring tap indicator - fades in and out to draw the eye. */}
           {!reduceMotion && (
             <motion.span
               aria-hidden

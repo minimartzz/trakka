@@ -3,11 +3,13 @@
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
-import { Dices } from "lucide-react";
+import { Dices, Star } from "lucide-react";
 import type { FavouriteGame } from "@/db/schema/profile";
 import AddFavouriteGameCard from "@/components/account/games/AddFavouriteGameCard";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { GroupedSession } from "@/lib/interfaces";
+import GamePerformance from "./GamePerformance";
 import { sessionResult, winRateClass } from "./shared";
 
 interface GamesTabProps {
@@ -18,6 +20,9 @@ interface GamesTabProps {
 
 // Same favourite games as the accounts page
 const MAX_FAVOURITE_GAMES = 5;
+
+// A favourite's width in the row; the card inside fills it
+const FAVOURITE_SLOT = "w-32 shrink-0 *:w-full sm:w-auto";
 
 interface GameStats {
   plays: number;
@@ -31,7 +36,7 @@ interface GameStats {
 }
 
 /**
- * GamesTab - The user's favourite games cards
+ * GamesTab - One game's performance, then the user's favourite games cards
  *
  * Front is the cover and title
  * Back carries the aggregated record for the game
@@ -95,31 +100,49 @@ const GamesTab: React.FC<GamesTabProps> = ({
     setFlippedId((cur) => (cur === bggId ? null : bggId));
 
   return (
-    <>
-      {games.length === 0 && (
-        <p className="mb-4 text-sm text-muted-foreground">
-          No favourite games yet. Select up to {MAX_FAVOURITE_GAMES} games as
-          your favourite.
-        </p>
-      )}
+    // Wider than the gaps inside each section, so the divider reads as the break
+    <div className="flex flex-col gap-6">
+      <GamePerformance userId={userId} sessions={sessions} />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {games.map((game) => (
-          <FlipCard
-            key={game.bggId}
-            game={game}
-            stats={statsByGame.get(game.bggId) ?? null}
-            flipped={flippedId === game.bggId}
-            onToggle={() => toggleFlipped(game.bggId)}
-          />
-        ))}
-        {games.length < MAX_FAVOURITE_GAMES && (
-          <AddFavouriteGameCard
-            onAdded={(game) => setGames((prev) => [...prev, game])}
-          />
+      <Separator />
+
+      <section aria-labelledby="favourite-games-heading">
+        <div className="mb-3 flex items-center gap-2">
+          <Star className="size-5 text-primary" />
+          <h2 id="favourite-games-heading" className="text-lg font-semibold">
+            Favourite Games
+          </h2>
+        </div>
+
+        {games.length === 0 && (
+          <p className="mb-4 text-sm text-muted-foreground">
+            No favourite games yet. Select up to {MAX_FAVOURITE_GAMES} games as
+            your favourite.
+          </p>
         )}
-      </div>
-    </>
+
+        {/* One row: scrolls sideways on phones, five capped columns above */}
+        <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-[repeat(5,minmax(0,9rem))] sm:overflow-visible sm:px-0">
+          {games.map((game) => (
+            <div key={game.bggId} className={FAVOURITE_SLOT}>
+              <FlipCard
+                game={game}
+                stats={statsByGame.get(game.bggId) ?? null}
+                flipped={flippedId === game.bggId}
+                onToggle={() => toggleFlipped(game.bggId)}
+              />
+            </div>
+          ))}
+          {games.length < MAX_FAVOURITE_GAMES && (
+            <div className={FAVOURITE_SLOT}>
+              <AddFavouriteGameCard
+                onAdded={(game) => setGames((prev) => [...prev, game])}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
   );
 };
 
@@ -198,7 +221,7 @@ const FlipCard: React.FC<{
 const CardStats: React.FC<{ stats: GameStats }> = ({ stats }) => {
   const winRate = Math.round((stats.wins / stats.plays) * 100);
   const wpa =
-    stats.scoreCount > 0 ? (stats.scoreSum / stats.scoreCount).toFixed(2) : "—";
+    stats.scoreCount > 0 ? (stats.scoreSum / stats.scoreCount).toFixed(2) : "-";
 
   return (
     <>
@@ -238,7 +261,7 @@ const CardStats: React.FC<{ stats: GameStats }> = ({ stats }) => {
         <div>
           <dt className="text-[10px] text-muted-foreground">Best VP</dt>
           <dd className="font-semibold tabular-nums">
-            {stats.bestVp !== null ? stats.bestVp : "—"}
+            {stats.bestVp !== null ? stats.bestVp : "-"}
           </dd>
         </div>
       </dl>

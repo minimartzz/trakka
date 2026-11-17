@@ -10,7 +10,7 @@ type Gender = "Male" | "Female" | "Others";
 type updatedProfile = Omit<typeof profileTable.$inferInsert, "uuid" | "email">;
 
 export async function updateProfile(formData: FormData) {
-  // Resolve the caller's identity from their session — never trust client-supplied userId
+  // Resolve the caller's identity from their session - never trust client-supplied userId
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, message: "Unauthorized" };
@@ -65,7 +65,7 @@ export async function updateProfile(formData: FormData) {
 }
 
 /**
- * Persists a new profile picture on its own — used by the header avatar's
+ * Persists a new profile picture on its own - used by the header avatar's
  * click-to-edit dialog, which shouldn't require entering the full profile
  * edit form just to change a photo.
  */
@@ -94,5 +94,39 @@ export async function updateProfileImage(image: string) {
   } catch (error) {
     console.error("Failed to update profile picture in Database:", error);
     return { success: false, message: "Failed to update profile picture" };
+  }
+}
+
+/**
+ * Turns the caller's public player page (/player/[username]) on or off.
+ * Saved straight from the Account Visibility switch, no form.
+ */
+export async function updateProfileVisibility(isPublic: boolean) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, message: "Unauthorized" };
+  if (typeof isPublic !== "boolean")
+    return { success: false, message: "Invalid visibility value" };
+
+  try {
+    const [updated] = await db
+      .update(profileTable)
+      .set({ isPublic })
+      .where(eq(profileTable.uuid, user.id))
+      .returning({ id: profileTable.id });
+
+    if (!updated) return { success: false, message: "Unauthorized" };
+
+    revalidatePath("/account");
+
+    return {
+      success: true,
+      message: isPublic
+        ? "Your profile is now public"
+        : "Your profile is now private",
+    };
+  } catch (error) {
+    console.error("Failed to update profile visibility in Database:", error);
+    return { success: false, message: "Failed to update profile visibility" };
   }
 }

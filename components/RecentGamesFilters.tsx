@@ -48,7 +48,7 @@ interface ResultChip {
 }
 
 // A quiet segmented toggle for small mutually-exclusive option sets (game type,
-// rating). Deliberately plainer than the Result chips — no dots, no counts — so
+// rating). Deliberately plainer than the Result chips - no dots, no counts - so
 // it reads as a secondary control.
 interface SegmentedFilterProps<K extends string> {
   label: string;
@@ -152,7 +152,7 @@ function MultiSelectFilter<K extends string | number>({
         align="start"
         className="w-72 p-0"
         onOpenAutoFocus={(e) => {
-          // Don't pull focus into the search input on touch devices — it pops
+          // Don't pull focus into the search input on touch devices - it pops
           // the soft keyboard. Coarse pointers tap into the field themselves.
           if (
             typeof window !== "undefined" &&
@@ -162,7 +162,7 @@ function MultiSelectFilter<K extends string | number>({
           }
         }}
       >
-        {/* Embedded search — transparent so it blends with the popover */}
+        {/* Embedded search - transparent so it blends with the popover */}
         <div className="flex items-center gap-2 border-b px-3">
           <Search className="size-4 shrink-0 text-muted-foreground" />
           <Input
@@ -341,7 +341,7 @@ const RecentGamesFilters: React.FC<RecentGamesFiltersProps> = ({
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-10">
-        {/* Row 1 — Result */}
+        {/* Row 1 - Result */}
         <div className="space-y-1.5">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Result
@@ -374,7 +374,7 @@ const RecentGamesFilters: React.FC<RecentGamesFiltersProps> = ({
           </div>
         </div>
 
-        {/* Game Type — competitive/coop + rated/unrated */}
+        {/* Game Type - competitive/coop + rated/unrated */}
         <div className="flex flex-wrap gap-x-8 gap-y-4">
           <SegmentedFilter
             label="Game type"
@@ -400,7 +400,7 @@ const RecentGamesFilters: React.FC<RecentGamesFiltersProps> = ({
           />
         </div>
 
-        {/* Row 2 — Tribe + game + date */}
+        {/* Row 2 - Tribe + game + date */}
         <div className="space-y-1.5">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Tribe, game &amp; date

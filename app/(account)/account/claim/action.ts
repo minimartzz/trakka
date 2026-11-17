@@ -20,7 +20,7 @@ import {
 } from "@/utils/eloReplay";
 
 // Resolve the caller's profile id from their Supabase session. Never trust a
-// client-supplied id — matches the inline auth pattern used elsewhere in the
+// client-supplied id - matches the inline auth pattern used elsewhere in the
 // repo (account/action.ts, tribeRequests.ts).
 async function getCallerProfileId() {
   const supabase = await createClient();
@@ -40,7 +40,7 @@ async function getCallerProfileId() {
 /**
  * Step 2-3 of the claim flow: look up an anonymous profile by its claim code
  * and, if it's available, return its identity + 3 most recent games so the
- * claimer can confirm before requesting. Read-only — does not lock anything.
+ * claimer can confirm before requesting. Read-only - does not lock anything.
  */
 export async function verifyClaimCode(code: string) {
   try {
@@ -69,7 +69,7 @@ export async function verifyClaimCode(code: string) {
     if (!anon) return { success: false, message: "code_not_found" };
 
     // Only one claim can be pending per anonymous user, regardless of who
-    // requested it (including this same caller) — no second request allowed.
+    // requested it (including this same caller) - no second request allowed.
     if (anon.claimRequestedBy) {
       return { success: false, message: "already_claiming" };
     }
@@ -150,7 +150,7 @@ export async function requestClaim(anonProfileId: number) {
         return { success: false, message: "code_not_found" };
       }
       // Only one claim can be pending per anonymous user, regardless of who
-      // requested it — including the same user re-submitting.
+      // requested it - including the same user re-submitting.
       if (anon.claimRequestedBy) {
         return { success: false, message: "already_claiming" };
       }
@@ -303,7 +303,7 @@ export async function respondToClaim(
         .where(eq(groupTable.id, groupId));
 
       if (decision === "reject") {
-        // Unlock — the anonymous profile stays as-is.
+        // Unlock - the anonymous profile stays as-is.
         await tx
           .update(profileTable)
           .set({ claimRequestedBy: null, claimRequestedAt: null })
@@ -344,7 +344,7 @@ export async function respondToClaim(
         }
 
         // 2. hist_daily_player_stats (histDaily + histMonthly Drizzle consts
-        // both map to this one physical table — repoint once). For (profile,
+        // both map to this one physical table - repoint once). For (profile,
         // group) collisions keep the claimer's own snapshot and drop the
         // anon's; repoint the rest.
         await tx

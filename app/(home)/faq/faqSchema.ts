@@ -4,7 +4,7 @@ import { QUESTIONS, type AnswerBlock } from "./questions";
 /**
  * Flatten a ReactNode answer body to plain text. Answers are authored as JSX
  * (some contain inline <FaqLink>s), but FAQPage schema requires text, and
- * deriving it here keeps the markup in sync with what users actually see —
+ * deriving it here keeps the markup in sync with what users actually see -
  * a hand-maintained copy would silently drift.
  */
 function nodeToText(node: ReactNode): string {

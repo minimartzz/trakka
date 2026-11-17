@@ -8,7 +8,7 @@ import { faqSchema } from "./faqSchema";
 export const metadata: Metadata = {
   title: "FAQ & About",
   description:
-    "Answers to common questions about Trakka — what we track, how our statistics work, and how to get started.",
+    "Answers to common questions about Trakka - what we track, how our statistics work, and how to get started.",
   alternates: { canonical: absoluteUrl("/faq") },
 };
 

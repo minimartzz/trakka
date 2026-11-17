@@ -34,7 +34,7 @@ const LogDemo = () => {
   // Bump this to restart the full loop
   const [cycle, setCycle] = useState(0);
 
-  // Typing animation — restarts each cycle
+  // Typing animation - restarts each cycle
   useEffect(() => {
     if (reduceMotion || !inView) return;
     setStep("searching");
@@ -126,7 +126,7 @@ const LogDemo = () => {
           </span>
         </div>
 
-        {/* Search result dropdown — floats over content so it doesn't shift layout */}
+        {/* Search result dropdown - floats over content so it doesn't shift layout */}
         <AnimatePresence>
           {step === "searching" && query.length > 4 && (
             <motion.div

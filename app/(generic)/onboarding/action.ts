@@ -66,7 +66,7 @@ async function getCaller() {
  * Deliberately an explicit read-then-write rather than ON CONFLICT: `uuid` has
  * no unique constraint of its own, so there is nothing for conflict inference
  * to match. The unique index on it is a race guard, not a correctness
- * dependency — if two submits land at once the loser gets 23505 and is told to
+ * dependency - if two submits land at once the loser gets 23505 and is told to
  * retry, rather than silently creating a second profile.
  */
 export async function saveProfileStep(
@@ -98,32 +98,32 @@ export async function saveProfileStep(
 
     const [saved] = existing
       ? await db
-          .update(profileTable)
-          .set({
-            firstName,
-            lastName,
-            username,
-            description,
-            gender,
-            image,
-            onboardingStep: sql`greatest(${profileTable.onboardingStep}, 1)`,
-          })
-          .where(eq(profileTable.id, existing.id))
-          .returning({ id: profileTable.id })
+        .update(profileTable)
+        .set({
+          firstName,
+          lastName,
+          username,
+          description,
+          gender,
+          image,
+          onboardingStep: sql`greatest(${profileTable.onboardingStep}, 1)`,
+        })
+        .where(eq(profileTable.id, existing.id))
+        .returning({ id: profileTable.id })
       : await db
-          .insert(profileTable)
-          .values({
-            uuid: user.id,
-            firstName,
-            lastName,
-            email: user.email!,
-            username,
-            description,
-            gender,
-            image,
-            onboardingStep: 1,
-          })
-          .returning({ id: profileTable.id });
+        .insert(profileTable)
+        .values({
+          uuid: user.id,
+          firstName,
+          lastName,
+          email: user.email!,
+          username,
+          description,
+          gender,
+          image,
+          onboardingStep: 1,
+        })
+        .returning({ id: profileTable.id });
 
     return { success: true, profileId: saved.id };
   } catch (error) {
@@ -141,7 +141,7 @@ export async function saveProfileStep(
       }
       return {
         success: false,
-        message: "Your profile was just saved elsewhere — try again.",
+        message: "Your profile was just saved elsewhere - try again.",
       };
     }
     console.error("Failed to save onboarding profile:", error);
@@ -298,7 +298,7 @@ export async function getTribeById(
 /**
  *
  * The end of the flow. Writes the collected content, marks onboarding done and
- * only now sends the queued join requests — inserting a group_join_requests row
+ * only now sends the queued join requests - inserting a group_join_requests row
  * is what puts the request in front of every SuperAdmin of that tribe.
  *
  * Idempotent: if another device already completed the flow the profile write is
@@ -366,7 +366,7 @@ export async function completeOnboarding(payload: {
       }
     });
 
-    // The invite has been acted on (or deliberately dropped) — clear it so the
+    // The invite has been acted on (or deliberately dropped) - clear it so the
     // same link can't queue a second request on a later visit.
     if (
       caller.user.user_metadata?.inviteCode ||

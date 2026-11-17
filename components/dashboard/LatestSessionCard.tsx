@@ -140,7 +140,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                         className={cn(
                           "ml-auto inline-flex shrink-0 items-center gap-0.5 font-bold tabular-nums",
                           myElo.delta > 0 &&
-                            "text-emerald-600 dark:text-emerald-400",
+                          "text-emerald-600 dark:text-emerald-400",
                           myElo.delta < 0 && "text-destructive",
                         )}
                       >
@@ -213,7 +213,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                           value={
                             me.position
                               ? positionOrdinalSuffix(me.position)
-                              : "—"
+                              : "-"
                           }
                           className="bg-accent-3/15"
                           valueClassName="text-accent-3"
@@ -223,7 +223,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                           value={
                             session.isVp && me.victoryPoints !== null
                               ? String(me.victoryPoints)
-                              : "—"
+                              : "-"
                           }
                           className="bg-accent-5/15"
                           valueClassName="text-accent-5"
@@ -233,7 +233,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                           value={
                             me.score !== null && me.score !== undefined
                               ? me.score.toFixed(2)
-                              : "—"
+                              : "-"
                           }
                           className="bg-accent-4/15"
                           valueClassName="text-accent-4"
@@ -247,7 +247,7 @@ const LatestSessionCard: React.FC<LatestSessionCardProps> = ({
                                 {myElo.calibrating && <CalibratingMark />}
                               </>
                             ) : (
-                              "—"
+                              "-"
                             )
                           }
                           className={

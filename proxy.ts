@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
 
   // Signed-in users skip the landing page entirely, so they never paint it
   // before being sent on. The authoritative auth check still lives in the
-  // account layout — this is a UX redirect, not a security boundary.
+  // account layout - this is a UX redirect, not a security boundary.
   if (user && pathname === "/") {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
@@ -70,8 +70,9 @@ export const config = {
      * Fast Origin Transfer charge on Vercel.
      * - _next/static, _next/image: build output and optimized images
      * - api: route handlers call supabase.auth.getUser() themselves
+     * - ingest: PostHog analytics proxied via rewrites in next.config.ts
      * - favicon/robots/sitemap and any file with a static asset extension
      */
-    "/((?!_next/static|_next/image|api/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf)$).*)",
+    "/((?!_next/static|_next/image|api/|ingest/|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf)$).*)",
   ],
 };

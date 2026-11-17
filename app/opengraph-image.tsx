@@ -5,10 +5,10 @@ import { SITE_NAME } from "@/lib/seo";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = `${SITE_NAME} — board game tracker and stats for your group`;
+export const alt = `${SITE_NAME} - board game tracker and stats for your group`;
 
 // DESIGN.md tokens, converted from oklch(). Satori has no oklch support, so
-// these are the hex equivalents of the documented palette — no new colors.
+// these are the hex equivalents of the documented palette - no new colors.
 const BRAND_BLUE = "#1b4498"; // brand-blue
 const INK_NIGHT = "#0e121b"; // ink-night
 const CARD_NIGHT = "#121721"; // ink-card-night
@@ -20,7 +20,7 @@ const LOSS_RED = "#e06666"; // loss-red-night
 
 /**
  * A standings ladder, not a stat card. Per DESIGN.md the tribe is the unit and
- * numbers are the hero — so the card leads with real rows and live deltas
+ * numbers are the hero - so the card leads with real rows and live deltas
  * rather than the hero-metric template listed in PRODUCT.md's anti-references.
  */
 const ROWS = [
@@ -76,7 +76,7 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* The claim — the focal point, sized to lead */}
+        {/* The claim - the focal point, sized to lead */}
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
@@ -129,7 +129,7 @@ export default async function Image() {
                   display: "flex",
                   fontSize: 26,
                   fontWeight: 800,
-                  // Leader marked with the win token, not brand blue — the
+                  // Leader marked with the win token, not brand blue - the
                   // position number itself is the non-colour indicator.
                   color: r.pos === 1 ? WIN_GREEN : MUTED_NIGHT,
                   width: 40,

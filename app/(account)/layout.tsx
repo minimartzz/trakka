@@ -95,17 +95,17 @@ async function AuthenticatedShell({ children }: { children: React.ReactNode }) {
           />
           <SidebarInset>
             <header className="flex h-20 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
-              <div className="flex items-center gap-2 sm:gap-10 px-4">
+              <div className="flex flex-1 min-w-0 items-center gap-2 sm:gap-10 px-4">
                 <SidebarTrigger className="-ml-1" />
-                <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
                   <GlobalSearchBar />
-                  <ActivityLog />
                 </div>
               </div>
-              <div className="flex gap-x-4 items-center justify-center">
+              <div className="flex shrink-0 gap-x-4 items-center justify-center">
+                <ActivityLog />
                 <ShareButton userId={user.id} tribes={groups} />
                 <Button
-                  className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-10 bg-[#1e4790] hover:bg-primary"
+                  className="rounded-full h-12 w-12 sm:h-10 sm:w-auto px-2 mr-4 sm:mr-10 bg-[#1e4790] hover:bg-primary"
                   asChild
                 >
                   <Link href="/session/create">

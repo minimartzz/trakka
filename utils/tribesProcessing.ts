@@ -36,7 +36,7 @@ export interface SessionLogRow {
   >;
   profile: Pick<
     SelectProfile,
-    "username" | "firstName" | "lastName" | "image"
+    "username" | "firstName" | "lastName" | "image" | "isAnonymous"
   > | null;
   gameDetails: Pick<
     SelectGame,
@@ -77,6 +77,7 @@ export function processGameSessions(logs: SessionLogRow[]): GameSession[] {
       firstName: profile?.firstName || "Anonymous User",
       lastName: profile?.lastName || "",
       image: profile?.image || null,
+      isAnonymous: profile?.isAnonymous ?? true,
       isWinner: compGameLog.isWinner,
       position: compGameLog.position,
       score: compGameLog.score,

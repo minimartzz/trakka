@@ -191,7 +191,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
     [innerHeight],
   );
 
-  // Zoom-aware scales — recomputed when transform or container size changes
+  // Zoom-aware scales - recomputed when transform or container size changes
   const xZoomed = useMemo(
     () => transform.rescaleX(xScale),
     [transform, xScale],
@@ -258,7 +258,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
   const isZoomed =
     transform.k !== 1 || transform.x !== 0 || transform.y !== 0;
 
-  // While a touch-tooltip is showing, dismiss it on any pointer release —
+  // While a touch-tooltip is showing, dismiss it on any pointer release -
   // even if the user's finger drifts off the dot.
   const touchTooltipShowing =
     isTouchInteraction && activePlayer !== null;
@@ -346,7 +346,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
       ? playerData.find((p) => p.profileId === activePlayer) ?? null
       : null;
 
-  // Tooltip positioning relative to container — flips below if it would clip
+  // Tooltip positioning relative to container - flips below if it would clip
   // the top of the chart area.
   const tooltipPos = useMemo(() => {
     if (!activeData) return null;
@@ -491,7 +491,7 @@ const PlayerComplexityChart: React.FC<PlayerComplexityChartProps> = ({
                       strokeOpacity={0.7}
                     />
 
-                    {/* Player dots — constant pixel size regardless of zoom */}
+                    {/* Player dots - constant pixel size regardless of zoom */}
                     {playerData.map((p) => {
                       const cx = xZoomed(p.avgComplexity);
                       const cy = yZoomed(p.winRate);

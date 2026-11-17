@@ -80,7 +80,7 @@ interface RecentSessionsProps {
   initialTimeFilter?: TimeFilter;
   /**
    * When true, an "Edit mode" toggle is shown. While active, each session
-   * exposes an edit action that redirects to its edit page — available to
+   * exposes an edit action that redirects to its edit page - available to
    * tribe admins regardless of whether they played in the session. The edit
    * page re-validates the user's role server-side, so this flag is UX only.
    */
@@ -167,17 +167,17 @@ const sessionWon = (session: GameSession): boolean =>
   session.players.some((p) => p.isWinner);
 
 const TYPE_META: Record<SessionKind, { label: string; icon: React.ReactNode }> =
-  {
-    solo: { label: "Solo", icon: <User className="size-4" /> },
-    cooperative: {
-      label: "Co-op",
-      icon: <HandshakeIcon weight="fill" className="size-4" />,
-    },
-    competitive: {
-      label: "Competitive",
-      icon: <SwordIcon weight="fill" className="size-4" />,
-    },
-  };
+{
+  solo: { label: "Solo", icon: <User className="size-4" /> },
+  cooperative: {
+    label: "Co-op",
+    icon: <HandshakeIcon weight="fill" className="size-4" />,
+  },
+  competitive: {
+    label: "Competitive",
+    icon: <SwordIcon weight="fill" className="size-4" />,
+  },
+};
 
 // ── Icon-only column/cell header, tooltip carries the label ──────────────────
 
@@ -234,7 +234,7 @@ const GameThumb: React.FC<{
   );
 };
 
-// Game type pill — mobile card only, top right corner
+// Game type pill - mobile card only, top right corner
 const GameTypePill: React.FC<{ type: SessionKind }> = ({ type }) => {
   const meta = TYPE_META[type];
   return (
@@ -245,7 +245,7 @@ const GameTypePill: React.FC<{ type: SessionKind }> = ({ type }) => {
   );
 };
 
-// Game type icon — desktop table only, leading column
+// Game type icon - desktop table only, leading column
 const SessionTypeIcon: React.FC<{ type: SessionKind }> = ({ type }) => (
   <Tooltip>
     <TooltipTrigger asChild>
@@ -528,99 +528,99 @@ const FilterMultiSelect: React.FC<{
   avatarShape,
   emptyMessage,
 }) => {
-  const [search, setSearch] = useState("");
+    const [search, setSearch] = useState("");
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((o) => o.label.toLowerCase().includes(q));
-  }, [options, search]);
+    const filtered = useMemo(() => {
+      const q = search.trim().toLowerCase();
+      if (!q) return options;
+      return options.filter((o) => o.label.toLowerCase().includes(q));
+    }, [options, search]);
 
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {icon}
-          {label}
-        </span>
-        {selectedIds.length > 0 && (
-          <span className="text-xs font-medium tabular-nums text-primary">
-            {selectedIds.length} selected
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {icon}
+            {label}
           </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 rounded-md border px-2.5">
-        <Search className="size-3.5 shrink-0 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={placeholder}
-          aria-label={placeholder}
-          className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
-        />
-      </div>
-
-      <ScrollArea className="h-36 rounded-md border">
-        <ul className="p-1" role="group" aria-label={label}>
-          {filtered.length === 0 ? (
-            <li className="px-2 py-6 text-center text-sm text-muted-foreground">
-              {emptyMessage}
-            </li>
-          ) : (
-            filtered.map((option) => {
-              const checked = selectedIds.includes(option.id);
-              return (
-                <li key={option.id}>
-                  <label
-                    className={cn(
-                      "flex w-full cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 text-sm transition-colors",
-                      checked ? "bg-accent/60" : "hover:bg-accent",
-                    )}
-                  >
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={() => onToggle(option.id)}
-                      aria-label={option.label}
-                    />
-                    {option.imageUrl ? (
-                      <div
-                        className={cn(
-                          "relative size-6 shrink-0 overflow-hidden bg-muted",
-                          avatarShape === "round" ? "rounded-full" : "rounded-md",
-                        )}
-                      >
-                        <Image
-                          src={option.imageUrl}
-                          alt=""
-                          fill
-                          sizes="24px"
-                          className="object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className={cn(
-                          "flex size-6 shrink-0 items-center justify-center bg-muted text-[10px] font-semibold text-muted-foreground",
-                          avatarShape === "round" ? "rounded-full" : "rounded-md",
-                        )}
-                      >
-                        {option.label[0]}
-                      </div>
-                    )}
-                    <span className="min-w-0 flex-1 truncate">
-                      {option.label}
-                    </span>
-                  </label>
-                </li>
-              );
-            })
+          {selectedIds.length > 0 && (
+            <span className="text-xs font-medium tabular-nums text-primary">
+              {selectedIds.length} selected
+            </span>
           )}
-        </ul>
-      </ScrollArea>
-    </div>
-  );
-};
+        </div>
+
+        <div className="flex items-center gap-2 rounded-md border px-2.5">
+          <Search className="size-3.5 shrink-0 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={placeholder}
+            aria-label={placeholder}
+            className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          />
+        </div>
+
+        <ScrollArea className="h-36 rounded-md border">
+          <ul className="p-1" role="group" aria-label={label}>
+            {filtered.length === 0 ? (
+              <li className="px-2 py-6 text-center text-sm text-muted-foreground">
+                {emptyMessage}
+              </li>
+            ) : (
+              filtered.map((option) => {
+                const checked = selectedIds.includes(option.id);
+                return (
+                  <li key={option.id}>
+                    <label
+                      className={cn(
+                        "flex w-full cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 text-sm transition-colors",
+                        checked ? "bg-accent/60" : "hover:bg-accent",
+                      )}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => onToggle(option.id)}
+                        aria-label={option.label}
+                      />
+                      {option.imageUrl ? (
+                        <div
+                          className={cn(
+                            "relative size-6 shrink-0 overflow-hidden bg-muted",
+                            avatarShape === "round" ? "rounded-full" : "rounded-md",
+                          )}
+                        >
+                          <Image
+                            src={option.imageUrl}
+                            alt=""
+                            fill
+                            sizes="24px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            "flex size-6 shrink-0 items-center justify-center bg-muted text-[10px] font-semibold text-muted-foreground",
+                            avatarShape === "round" ? "rounded-full" : "rounded-md",
+                          )}
+                        >
+                          {option.label[0]}
+                        </div>
+                      )}
+                      <span className="min-w-0 flex-1 truncate">
+                        {option.label}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </ScrollArea>
+      </div>
+    );
+  };
 
 const FilterPanelBody: React.FC<{
   timeFilter: TimeFilter;
@@ -645,43 +645,43 @@ const FilterPanelBody: React.FC<{
   onReset,
   activeFilterCount,
 }) => (
-  <div className="flex flex-col gap-4">
-    <TimeFilterChips value={timeFilter} onChange={onTimeFilterChange} />
-    <Separator />
-    <FilterMultiSelect
-      label="Game"
-      icon={<Dices className="size-3.5" />}
-      placeholder="Search games"
-      options={gameOptions}
-      selectedIds={selectedGameIds}
-      onToggle={onToggleGame}
-      avatarShape="square"
-      emptyMessage="No games found"
-    />
-    <Separator />
-    <FilterMultiSelect
-      label="Players"
-      icon={<Users className="size-3.5" />}
-      placeholder="Search players"
-      options={playerOptions}
-      selectedIds={selectedPlayerIds}
-      onToggle={onTogglePlayer}
-      avatarShape="round"
-      emptyMessage="No players found"
-    />
-    <Separator />
-    <Button
-      variant="ghost"
-      size="sm"
-      className="w-full text-xs text-muted-foreground hover:text-foreground"
-      onClick={onReset}
-      disabled={activeFilterCount === 0}
-    >
-      <RotateCcw className="size-3.5" />
-      Reset filters
-    </Button>
-  </div>
-);
+    <div className="flex flex-col gap-4">
+      <TimeFilterChips value={timeFilter} onChange={onTimeFilterChange} />
+      <Separator />
+      <FilterMultiSelect
+        label="Game"
+        icon={<Dices className="size-3.5" />}
+        placeholder="Search games"
+        options={gameOptions}
+        selectedIds={selectedGameIds}
+        onToggle={onToggleGame}
+        avatarShape="square"
+        emptyMessage="No games found"
+      />
+      <Separator />
+      <FilterMultiSelect
+        label="Players"
+        icon={<Users className="size-3.5" />}
+        placeholder="Search players"
+        options={playerOptions}
+        selectedIds={selectedPlayerIds}
+        onToggle={onTogglePlayer}
+        avatarShape="round"
+        emptyMessage="No players found"
+      />
+      <Separator />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full text-xs text-muted-foreground hover:text-foreground"
+        onClick={onReset}
+        disabled={activeFilterCount === 0}
+      >
+        <RotateCcw className="size-3.5" />
+        Reset filters
+      </Button>
+    </div>
+  );
 
 const RecentSessions: React.FC<RecentSessionsProps> = ({
   sessions,
@@ -851,7 +851,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                 <EditModeToggle editMode={editMode} onToggle={setEditMode} />
               )}
 
-              {/* Filter — comprehensive popover on desktop, bottom sheet on
+              {/* Filter - comprehensive popover on desktop, bottom sheet on
                   mobile. Only one overlay is ever mounted: both are Radix
                   portals with their own focus/dismiss handling, so rendering
                   both at once (even CSS-hidden) makes them fight over focus
@@ -972,7 +972,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                         </div>
                       </div>
 
-                      {/* Winner — its own row, as in the previous design */}
+                      {/* Winner - its own row, as in the previous design */}
                       <div className="mt-3 border-t pt-3">
                         <WinnerCell
                           session={session}
@@ -1012,7 +1012,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 />
                               ) : (
                                 <span className="text-muted-foreground text-sm">
-                                  —
+                                  -
                                 </span>
                               )}
                             </div>
@@ -1023,7 +1023,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                             <Crown className="size-3.5" />
                           </HeaderIcon>
                           <p className="mt-1 text-sm tabular-nums text-muted-foreground">
-                            {winner?.victoryPoints ?? "—"}
+                            {winner?.victoryPoints ?? "-"}
                           </p>
                         </div>
                         {currentUserId && (
@@ -1039,7 +1039,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                   : "text-foreground",
                               )}
                             >
-                              {currentUser?.victoryPoints ?? "—"}
+                              {currentUser?.victoryPoints ?? "-"}
                             </p>
                           </div>
                         )}
@@ -1059,7 +1059,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                               >
                                 {sessionWpa !== undefined
                                   ? sessionWpa.toFixed(2)
-                                  : "—"}
+                                  : "-"}
                               </p>
                             </div>
                             <div>
@@ -1073,7 +1073,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                   <EloValue elo={sessionElo} />
                                 ) : (
                                   <span className="text-muted-foreground">
-                                    —
+                                    -
                                   </span>
                                 )}
                               </p>
@@ -1193,7 +1193,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                             </div>
                           </TableCell>
 
-                          {/* Winner — first of the stat-detail columns */}
+                          {/* Winner - first of the stat-detail columns */}
                           <TableCell>
                             <WinnerCell
                               session={session}
@@ -1220,7 +1220,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground text-sm">
-                                  —
+                                  -
                                 </span>
                               )}
                             </TableCell>
@@ -1237,7 +1237,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 </span>
                               ) : (
                                 <span className="text-muted-foreground text-sm">
-                                  —
+                                  -
                                 </span>
                               );
                             })()}
@@ -1247,7 +1247,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                           {currentUserId && (
                             <TableCell className="text-right">
                               {currentUser?.victoryPoints !== null &&
-                              currentUser?.victoryPoints !== undefined ? (
+                                currentUser?.victoryPoints !== undefined ? (
                                 <span
                                   className={cn(
                                     "text-sm font-medium",
@@ -1260,7 +1260,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                 </span>
                               ) : (
                                 <span className="text-muted-foreground text-sm">
-                                  —
+                                  -
                                 </span>
                               )}
                             </TableCell>
@@ -1277,7 +1277,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                   </span>
                                 ) : (
                                   <span className="text-muted-foreground text-sm">
-                                    —
+                                    -
                                   </span>
                                 )}
                               </TableCell>
@@ -1286,7 +1286,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                   <EloValue elo={sessionElo} />
                                 ) : (
                                   <span className="text-muted-foreground text-sm">
-                                    —
+                                    -
                                   </span>
                                 )}
                               </TableCell>
@@ -1298,14 +1298,14 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                                   />
                                 ) : (
                                   <span className="text-muted-foreground text-sm">
-                                    —
+                                    -
                                   </span>
                                 )}
                               </TableCell>
                             </>
                           )}
 
-                          {/* Edit action — sticky to the right so it stays
+                          {/* Edit action - sticky to the right so it stays
                               reachable while the row scrolls horizontally on
                               narrow screens. Solid background occludes the
                               scrolled content beneath it. */}
@@ -1331,7 +1331,7 @@ const RecentSessions: React.FC<RecentSessionsProps> = ({
                 </Table>
               </div>
 
-              {/* Show more button — always at the bottom of the scroll area,
+              {/* Show more button - always at the bottom of the scroll area,
                   so the user reveals it by scrolling rather than it popping
                   into view. Hidden only when no more games remain. */}
               {hasMore && (

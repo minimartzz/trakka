@@ -33,20 +33,20 @@
   --font-brand: "Asimovian", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* ── Type scale (fixed rem — app UI, not fluid)  ────────────────────────
+  /* ── Type scale (fixed rem - app UI, not fluid)  ────────────────────────
    * Use font-display + these sizes for stats/standings headlines.
    * Use font-body + text-sm/text-base for all other UI text.
    *
-   *  xs    12px  — badges, chip labels, timestamps
-   *  sm    14px  — table cells, secondary text, sidebar items
-   *  base  16px  — body default
-   *  md    18px  — emphasized body, input labels
-   *  lg    20px  — card titles, subheadings
-   *  xl    24px  — section headings
-   *  2xl   30px  — page headings
-   *  3xl   36px  — display (standings rank, big scores)
-   *  4xl   48px  — hero numbers (win rate, total sessions)
-   *  5xl   60px  — marketing hero (landing page only, use clamp there)
+   *  xs    12px  - badges, chip labels, timestamps
+   *  sm    14px  - table cells, secondary text, sidebar items
+   *  base  16px  - body default
+   *  md    18px  - emphasized body, input labels
+   *  lg    20px  - card titles, subheadings
+   *  xl    24px  - section headings
+   *  2xl   30px  - page headings
+   *  3xl   36px  - display (standings rank, big scores)
+   *  4xl   48px  - hero numbers (win rate, total sessions)
+   *  5xl   60px  - marketing hero (landing page only, use clamp there)
    * ─────────────────────────────────────────────────────────────────────── */
 
   /* Semantic color tokens */
@@ -259,7 +259,7 @@
     font-family: var(--font-body);
     font-size: 1rem;
     line-height: 1.6;
-    /* Tabular nums globally: stat-heavy app — numbers should always align */
+    /* Tabular nums globally: stat-heavy app - numbers should always align */
     font-variant-numeric: tabular-nums;
   }
 

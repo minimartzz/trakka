@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { ChevronDown, Dices, Info, Skull, Swords } from "lucide-react";
@@ -40,6 +41,8 @@ interface PlayerStats {
   profileId: number;
   firstName: string;
   lastName: string;
+  username: string;
+  isAnonymous: boolean;
   profilePic: string;
   games: number;
   // Competitive games against opposing player
@@ -110,6 +113,8 @@ const DashboardPlayers: React.FC<DashboardPlayersProps> = ({
           profileId: p.profileId,
           firstName: p.firstName,
           lastName: p.lastName,
+          username: p.username,
+          isAnonymous: p.isAnonymous,
           profilePic: p.profilePic,
           games: 0,
           h2h: { wins: 0, ties: 0, losses: 0 },
@@ -273,12 +278,26 @@ const DashboardPlayers: React.FC<DashboardPlayersProps> = ({
                       {/* ── Name, titles, meta ─────────────────────────── */}
                       <div className="col-start-2 row-start-1 min-w-0">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <p
-                            className="truncate font-medium"
-                            title={`${player.firstName} ${player.lastName}`}
-                          >
-                            {player.firstName}
-                          </p>
+                          {player.isAnonymous ? (
+                            <p
+                              className="truncate font-medium"
+                              title={`${player.firstName} ${player.lastName}`}
+                            >
+                              {player.firstName}
+                            </p>
+                          ) : (
+                            // The row toggles its details; the name opens
+                            // the player's page instead
+                            <Link
+                              href={`/player/${player.username}`}
+                              className="truncate font-medium underline-offset-4 hover:underline"
+                              title={`${player.firstName} ${player.lastName}`}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                            >
+                              {player.firstName}
+                            </Link>
+                          )}
                           {held.map((t) => (
                             <Tooltip key={t}>
                               <TooltipTrigger asChild>
@@ -423,7 +442,7 @@ const DashboardPlayers: React.FC<DashboardPlayersProps> = ({
                                     </span>
                                   </>
                                 ) : (
-                                  "—"
+                                  "-"
                                 )}
                               </p>
                             </div>
@@ -455,7 +474,7 @@ const DashboardPlayers: React.FC<DashboardPlayersProps> = ({
                                   </span>
                                 </div>
                               ) : (
-                                <p className="mt-1">—</p>
+                                <p className="mt-1">-</p>
                               )}
                             </div>
 

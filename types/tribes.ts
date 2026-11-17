@@ -23,6 +23,8 @@ export interface GameSession {
     firstName: string;
     lastName: string;
     image: string | null;
+    // Anonymous players have no public player page to link to
+    isAnonymous?: boolean;
     isWinner: boolean;
     position: number;
     score: number | null;

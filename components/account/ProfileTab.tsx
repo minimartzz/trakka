@@ -175,7 +175,7 @@ const ProfileTab = ({ user, editMode, onEditModeChange }: ProfileTabProps) => {
               />
             </div>
             <div className="flex flex-col gap-1">
-              {/* Email can't be changed here — no input, just a
+              {/* Email can't be changed here - no input, just a
                   disabled-looking field so it reads as inert. */}
               <FieldLabel htmlFor="email-display">Email</FieldLabel>
               <div

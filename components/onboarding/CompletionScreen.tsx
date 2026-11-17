@@ -132,7 +132,7 @@ const CompletionScreen = ({ state, onRetryFailed }: CompletionScreenProps) => {
         {phase === "failed" ? (
           <>
             <p className="mt-2 text-sm text-muted-foreground">
-              {message} Your answers are safe — nothing was lost.
+              {message} Your answers are safe - nothing was lost.
             </p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Button type="button" onClick={run} className="h-11">
@@ -153,9 +153,8 @@ const CompletionScreen = ({ state, onRetryFailed }: CompletionScreenProps) => {
             <StatusLine label="Saving your profile" status={workStatus} />
             {tribeCount > 0 && (
               <StatusLine
-                label={`Sending ${tribeCount} tribe ${
-                  tribeCount === 1 ? "request" : "requests"
-                }`}
+                label={`Sending ${tribeCount} tribe ${tribeCount === 1 ? "request" : "requests"
+                  }`}
                 status={workStatus}
               />
             )}

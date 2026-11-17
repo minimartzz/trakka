@@ -6,7 +6,7 @@ import { cache } from "react";
  * The one auth round trip per request.
  *
  * `getUser()` is a network call to Supabase Auth, and it was being made twice per
- * render — once by `fetchUser()` for the account layout and again by `requireAuth()`
+ * render - once by `fetchUser()` for the account layout and again by `requireAuth()`
  * inside every server action on the same page. Both now share this request-scoped
  * cache, so a page render costs a single Auth call.
  */

@@ -169,7 +169,7 @@ export function GameInfoSection({
                   </div>
                 </div>
 
-                {/* Quick stats — desktop only (mobile version is full-width below) */}
+                {/* Quick stats - desktop only (mobile version is full-width below) */}
                 <div className="hidden sm:grid grid-cols-4 gap-x-3 gap-y-2.5">
                   {gameDetails.maxPlayers && (
                     <div className="flex flex-col gap-0.5">
@@ -230,7 +230,7 @@ export function GameInfoSection({
           )}
         </div>
 
-        {/* Rating box — far right */}
+        {/* Rating box - far right */}
         {loadingDetails ? (
           <Skeleton className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl shrink-0" />
         ) : (
@@ -249,7 +249,7 @@ export function GameInfoSection({
         )}
       </div>
 
-      {/* Quick stats — mobile only, full width below image/title/rating row */}
+      {/* Quick stats - mobile only, full width below image/title/rating row */}
       {!loadingDetails && gameDetails && (
         <div className="grid sm:hidden grid-cols-2 gap-x-3 gap-y-2.5">
           {gameDetails.maxPlayers && (
@@ -388,7 +388,7 @@ export function GameInfoSection({
             value={
               lastPlayedDate
                 ? format(new Date(lastPlayedDate), "MMM d, yyyy")
-                : "—"
+                : "-"
             }
           />
           <TribeMetric
@@ -397,9 +397,9 @@ export function GameInfoSection({
             value={
               lastPlayedDate
                 ? formatDistanceToNow(new Date(lastPlayedDate), {
-                    addSuffix: false,
-                  })
-                : "—"
+                  addSuffix: false,
+                })
+                : "-"
             }
           />
         </div>

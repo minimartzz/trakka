@@ -26,7 +26,7 @@ interface TribeSearchRowProps {
 
 /**
  * One search bar at a time: type, pick from the top five, check the admins who
- * will get the request, confirm. Confirming queues the tribe — the request
+ * will get the request, confirm. Confirming queues the tribe - the request
  * itself is only sent when the whole flow completes.
  */
 const TribeSearchRow = ({ onConfirm, excludedIds }: TribeSearchRowProps) => {
@@ -119,7 +119,7 @@ const TribeSearchRow = ({ onConfirm, excludedIds }: TribeSearchRowProps) => {
             </div>
           ) : admins.length === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">
-              This tribe has no admins listed — your request may sit unanswered.
+              This tribe has no admins listed - your request may sit unanswered.
             </p>
           ) : (
             <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-2">

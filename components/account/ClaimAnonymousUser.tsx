@@ -189,7 +189,7 @@ const ClaimRow = ({
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="text-sm font-medium tabular-nums">
-                      {game.victoryPoints ?? "—"}
+                      {game.victoryPoints ?? "-"}
                     </div>
                     {game.isWinner && (
                       <div className="text-[10px] font-medium uppercase text-amber-600">

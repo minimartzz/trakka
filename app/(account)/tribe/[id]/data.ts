@@ -71,6 +71,7 @@ export async function getTribeGameSessionsCached(groupId: string) {
         firstName: profileTable.firstName,
         lastName: profileTable.lastName,
         image: profileTable.image,
+        isAnonymous: profileTable.isAnonymous,
       },
       gameDetails: {
         imageUrl: gameTable.imageUrl,

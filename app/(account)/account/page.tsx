@@ -74,6 +74,7 @@ const AccountContent = async ({
         gender: user.gender,
         description: user.description,
         image: user.image,
+        is_public: user.is_public,
       }}
       memberSince={formatDate(user.confirmed_at)}
       tribes={tribes}

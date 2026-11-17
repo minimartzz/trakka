@@ -234,14 +234,14 @@ function ProfileBanner({
       label: "Last Played",
       value: stats.lastPlayed
         ? format(new Date(stats.lastPlayed), "MMM d, yyyy")
-        : "—",
+        : "-",
       tone: "slate" as const,
     },
     {
       icon: <Hourglass className="w-4 h-4" />,
       label: "Days Since Play",
       value:
-        stats.daysSinceLastPlay !== null ? `${stats.daysSinceLastPlay}` : "—",
+        stats.daysSinceLastPlay !== null ? `${stats.daysSinceLastPlay}` : "-",
       tone: "amber" as const,
     },
     {
@@ -255,33 +255,33 @@ function ProfileBanner({
   ];
 
   const toneStyles: Record<string, { bg: string; text: string; icon: string }> =
-    {
-      primary: {
-        bg: "bg-primary/10",
-        text: "text-primary",
-        icon: "text-primary",
-      },
-      emerald: {
-        bg: "bg-emerald-500/10",
-        text: "text-emerald-600 dark:text-emerald-400",
-        icon: "text-emerald-500",
-      },
-      slate: {
-        bg: "bg-slate-500/10",
-        text: "text-slate-700 dark:text-slate-300",
-        icon: "text-slate-500",
-      },
-      amber: {
-        bg: "bg-amber-500/10",
-        text: "text-amber-600 dark:text-amber-400",
-        icon: "text-amber-500",
-      },
-      rose: {
-        bg: "bg-rose-500/10",
-        text: "text-rose-600 dark:text-rose-400",
-        icon: "text-rose-500",
-      },
-    };
+  {
+    primary: {
+      bg: "bg-primary/10",
+      text: "text-primary",
+      icon: "text-primary",
+    },
+    emerald: {
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-600 dark:text-emerald-400",
+      icon: "text-emerald-500",
+    },
+    slate: {
+      bg: "bg-slate-500/10",
+      text: "text-slate-700 dark:text-slate-300",
+      icon: "text-slate-500",
+    },
+    amber: {
+      bg: "bg-amber-500/10",
+      text: "text-amber-600 dark:text-amber-400",
+      icon: "text-amber-500",
+    },
+    rose: {
+      bg: "bg-rose-500/10",
+      text: "text-rose-600 dark:text-rose-400",
+      icon: "text-rose-500",
+    },
+  };
 
   // Elo in this game, coloured by tier, at the right end of the name row
   const eloBox = elo && (
@@ -459,7 +459,7 @@ function ScoreDeltaCard({
               t.number,
             )}
           >
-            {playerValue !== null ? playerValue : "—"}
+            {playerValue !== null ? playerValue : "-"}
           </span>
           {playerValue !== null && (
             <span className="text-xs font-semibold text-muted-foreground">
@@ -723,24 +723,24 @@ function PlayTimeline({
   const areaPath =
     entries.length > 1
       ? entries
-          .map((e, i) => {
-            const x = xFor(e.dateMs);
-            const y = yFor(cumulative[i]);
-            return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-          })
-          .join(" ") +
-        ` L ${xFor(entries[entries.length - 1].dateMs)} ${baselineY} L ${xFor(entries[0].dateMs)} ${baselineY} Z`
+        .map((e, i) => {
+          const x = xFor(e.dateMs);
+          const y = yFor(cumulative[i]);
+          return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+        })
+        .join(" ") +
+      ` L ${xFor(entries[entries.length - 1].dateMs)} ${baselineY} L ${xFor(entries[0].dateMs)} ${baselineY} Z`
       : null;
 
   const linePath =
     entries.length > 1
       ? entries
-          .map((e, i) => {
-            const x = xFor(e.dateMs);
-            const y = yFor(cumulative[i]);
-            return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-          })
-          .join(" ")
+        .map((e, i) => {
+          const x = xFor(e.dateMs);
+          const y = yFor(cumulative[i]);
+          return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+        })
+        .join(" ")
       : null;
 
   // Pick a reasonable tick count given width (~80px per label)
@@ -927,7 +927,7 @@ function AggregatesSection({
   tribeStats: TribeGameStats;
 }) {
   const winRateDisplay = `${Math.round(stats.winRate * 100)}%`;
-  const wpaDisplay = stats.wpa !== null ? stats.wpa.toFixed(2) : "—";
+  const wpaDisplay = stats.wpa !== null ? stats.wpa.toFixed(2) : "-";
 
   // Map WPA (usually 0..2+) to 0..1 by clamping against a 2.0 ceiling for gauge fill.
   const wpaFill = stats.wpa !== null ? Math.min(1, stats.wpa / 2) : 0;
@@ -1020,9 +1020,9 @@ export function PlayerPerformanceSection({
     );
     return entry
       ? {
-          elo: Math.round(entry.elo),
-          calibrating: !isCalibrated(entry.sessionsPlayed),
-        }
+        elo: Math.round(entry.elo),
+        calibrating: !isCalibrated(entry.sessionsPlayed),
+      }
       : null;
   }, [memberElos, selectedPlayerId, selectedGameId]);
 
@@ -1081,7 +1081,7 @@ export function PlayerPerformanceSection({
           transition={{ duration: 0.25 }}
           className="space-y-5"
         >
-          {/* Plays — profile banner */}
+          {/* Plays - profile banner */}
           <ProfileBanner
             player={selectedPlayer}
             stats={stats}
@@ -1090,7 +1090,7 @@ export function PlayerPerformanceSection({
             elo={selectedElo}
           />
 
-          {/* Scores — stat cards with deltas */}
+          {/* Scores - stat cards with deltas */}
           <div>
             <div className="flex items-center gap-1.5 mb-2.5">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -1126,7 +1126,7 @@ export function PlayerPerformanceSection({
             </div>
           </div>
 
-          {/* Aggregates — win rate + WPA radial gauges */}
+          {/* Aggregates - win rate + WPA radial gauges */}
           <div>
             <div className="flex items-center gap-1.5 mb-2.5">
               <Zap className="w-4 h-4 text-primary" />
@@ -1137,7 +1137,7 @@ export function PlayerPerformanceSection({
             <AggregatesSection stats={stats} tribeStats={tribeStats} />
           </div>
 
-          {/* Historical — play timeline */}
+          {/* Historical - play timeline */}
           <div>
             <div className="flex items-center gap-1.5 mb-2.5">
               <CalendarDays className="w-4 h-4 text-primary" />
